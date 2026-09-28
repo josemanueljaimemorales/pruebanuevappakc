@@ -388,3 +388,24 @@ body:before{
 .card .btn{flex:1;min-height:74px!important;margin:0!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:17px!important;background:linear-gradient(145deg,rgba(19,40,62,.98),rgba(5,14,26,.98))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 12px 28px rgba(0,0,0,.28)!important;text-align:left!important;padding:15px 18px!important;color:#fff!important;transition:.18s!important}
 .card .btn:hover{transform:translateX(3px)!important;border-color:rgba(38,156,255,.60)!important}
 .card .info{color:#7ed6ff!important;font-size:10px!important;letter-spacing:.04em}
+
+/* Selector compacto de atleta */
+.athlete-select{
+  width:100%;
+  box-sizing:border-box;
+  appearance:auto;
+  -webkit-appearance:menulist;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  padding:14px 16px;
+  background:#151515;
+  color:#fff;
+  font-size:17px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.athlete-select:focus{
+  outline:2px solid rgba(255,255,255,.35);
+  outline-offset:2px;
+}

@@ -40,11 +40,31 @@ async function loadClubAthletes(){
 
 
 function renderAthletes(){
-  const box=document.querySelector('.atletas');
-  if(!box) return;
-  box.innerHTML=clubAthletes.length
-    ? clubAthletes.map(n=>`<button class="athlete-chip" onclick="seleccionarAtleta('${String(n).replace(/\\/g,'\\\\').replace(/'/g,"\\'") }')"><span>AT</span>${n}<b>›</b></button>`).join('')
-    : '<div class="empty-athletes">No se encontraron atletas AKC.</div>';
+  const select=document.getElementById('atletaSelect');
+  if(!select) return;
+
+  const actual=localStorage.getItem('atleta') || '';
+  select.innerHTML = '<option value="">Elige atleta</option>' +
+    clubAthletes.map(n=>{
+      const value=String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return `<option value="${value}">${value}</option>`;
+    }).join('');
+
+  if(actual && clubAthletes.includes(actual)) select.value=actual;
+
+  select.onchange=function(){
+    if(this.value){
+      localStorage.setItem('atleta', this.value);
+    }else{
+      localStorage.removeItem('atleta');
+    }
+  };
+}
+
+function seleccionarAtleta(nombre){
+  const select=document.getElementById('atletaSelect');
+  if(select) select.value=nombre;
+  if(nombre) localStorage.setItem('atleta', nombre);
 }
 
 function home(first=false){

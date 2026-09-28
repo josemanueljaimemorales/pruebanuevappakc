@@ -30,7 +30,9 @@
   <section class="athlete-panel" aria-label="Selección de atleta">
     <div class="section-label">ATLETA</div>
     <div class="atletas">
-      <div class="loading-athletes">Cargando atletas AKC…</div>
+      <select id="atletaSelect" class="athlete-select" aria-label="Elige atleta">
+        <option value="">Elige atleta</option>
+      </select>
     </div>
   </section>
 
@@ -51,10 +53,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-function seleccionarAtleta(nombre){
- localStorage.setItem("atleta", nombre);
- alert("Atleta seleccionado: " + nombre);
-}
 </script>
 
 </body>
