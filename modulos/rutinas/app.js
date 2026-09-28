@@ -3,164 +3,143 @@ let NP = {};
 let DIFICULTAD = {};
 let GRUPOS = {};
 let OBL = [];
+const screen = document.getElementById('screen');
 
-const screen = document.getElementById("screen");
+const norm = v => String(v ?? '').trim();
+const keyName = v => norm(v).toUpperCase();
 
-function norm(v){
-  return String(v ?? "")
-    .trim()
-    .toUpperCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+function escapeHtml(v){
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function num(v){
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+function unique(values){
+  return [...new Set(values.map(norm).filter(Boolean))];
 }
 
-function fmt(v){
-  const n = num(v);
-  return n === null ? (v ?? "") : n.toFixed(1);
+async function loadExcel(){
+  try{
+    const res = await fetch('./Excel_Solo_Valores.xlsx', {cache:'no-store'});
+    if(!res.ok) throw new Error(`No se pudo cargar Excel_Solo_Valores.xlsx (HTTP ${res.status})`);
+    const buffer = await res.arrayBuffer();
+    const wb = XLSX.read(buffer, {cellDates:false});
+
+    const read = name => wb.Sheets[name] ? XLSX.utils.sheet_to_json(wb.Sheets[name], {defval:''}) : [];
+    data = read('BASEAPPRUTINAS');
+    const npRows = read('NP');
+    const diffRows = read('Dificultad');
+    const groupRows = read('GRUPOS');
+    OBL = read('OBLIGATORIOS');
+
+    NP = indexByFirstColumn(npRows);
+    DIFICULTAD = indexByFirstColumn(diffRows);
+    GRUPOS = indexByFirstColumn(groupRows);
+
+    if(!data.length) throw new Error('La hoja BASEAPPRUTINAS está vacía.');
+    showHome();
+  }catch(err){
+    screen.innerHTML = `<div class="card"><h2>Error al cargar Rutinas</h2><p>${escapeHtml(err.message)}</p></div>`;
+    console.error(err);
+  }
 }
 
-function tableByAthlete(rows){
+function indexByFirstColumn(rows){
   const out = {};
-  rows.forEach(r => {
+  rows.forEach(r=>{
     const keys = Object.keys(r);
-    const nameKey = keys.find(k => norm(k) === "__EMPTY") || keys[0];
-    const name = norm(r[nameKey]);
+    const name = keyName(r[keys[0]]);
     if(name) out[name] = r;
   });
   return out;
 }
 
-async function loadExcel(){
-  try{
-    const res = await fetch("Excel_Solo_Valores.xlsx", {cache:"no-store"});
-    if(!res.ok) throw new Error(`No se pudo cargar Excel_Solo_Valores.xlsx (${res.status})`);
-    const buffer = await res.arrayBuffer();
-    const wb = XLSX.read(buffer, {type:"array"});
-
-    const required = ["BASEAPPRUTINAS","NP","Dificultad","GRUPOS","OBLIGATORIOS"];
-    const missing = required.filter(s => !wb.Sheets[s]);
-    if(missing.length) throw new Error("Faltan hojas: " + missing.join(", "));
-
-    data = XLSX.utils.sheet_to_json(wb.Sheets["BASEAPPRUTINAS"], {defval:""});
-    NP = tableByAthlete(XLSX.utils.sheet_to_json(wb.Sheets["NP"], {defval:""}));
-    DIFICULTAD = tableByAthlete(XLSX.utils.sheet_to_json(wb.Sheets["Dificultad"], {defval:""}));
-    GRUPOS = tableByAthlete(XLSX.utils.sheet_to_json(wb.Sheets["GRUPOS"], {defval:""}));
-    OBL = XLSX.utils.sheet_to_json(wb.Sheets["OBLIGATORIOS"], {defval:""});
-
-    // Fuente única de atletas: BASEAPPRUTINAS del Excel de AKC MASTER FUSION.
-    data = data.filter(r => norm(r["ATLETA"]));
-
-    if(!data.length) throw new Error("BASEAPPRUTINAS no contiene atletas.");
-    showHome();
-  }catch(err){
-    console.error(err);
-    screen.innerHTML = `<div class="card error"><h2>Error al leer Rutinas</h2><p>${err.message}</p><p>Verifica que <b>Excel_Solo_Valores.xlsx</b> esté en la misma carpeta que app.js.</p></div>`;
-  }
+function getApparatusValue(index, name, apparatus){
+  const row = index[keyName(name)];
+  if(!row) return '';
+  const target = keyName(apparatus);
+  const aliases = target === 'PARALELAS' ? ['PARALELA','PARALELAS'] :
+                  target === 'ANILLOS' ? ['ANILLO','ANILLOS'] :
+                  target === 'ARZON' ? ['ARZON','HONGO  ARZON','HONGO ARZON'] : [target];
+  const col = Object.keys(row).find(k => aliases.includes(keyName(k)) || aliases.some(a => keyName(k).includes(a)));
+  return col ? row[col] : '';
 }
 
 function showHome(){
   screen.innerHTML = `
-    <div class="button" onclick="showAthletes()">Rutinas</div>
-    <div class="button" onclick="showObligatorios()">Obligatorios</div>
-  `;
+    <div class="button" data-action="athletes">Rutinas</div>
+    <div class="button" data-action="obligatorios">Obligatorios</div>`;
 }
 
 function showAthletes(){
-  const athletes = [...new Set(data.map(d => String(d["ATLETA"]).trim()).filter(Boolean))];
-  screen.innerHTML = `<div class="back" onclick="showHome()">⬅️</div>`;
-  athletes.forEach(a => {
-    screen.innerHTML += `<div class="button" onclick="showAparatos(${JSON.stringify(a)})">${a}</div>`;
+  const athletes = unique(data.map(d=>d.ATLETA));
+  screen.innerHTML = `<div class="back" data-action="home">⬅️</div><h2>Selecciona atleta</h2>`;
+  athletes.forEach(a=>{
+    screen.insertAdjacentHTML('beforeend', `<div class="button" data-action="athlete" data-value="${escapeHtml(a)}">${escapeHtml(a)}</div>`);
   });
 }
 
 function showAparatos(name){
-  const key = norm(name);
-  const aparatos = [...new Set(
-    data.filter(d => norm(d["ATLETA"]) === key).map(d => String(d["APARATO"] ?? "").trim()).filter(Boolean)
-  )];
-  screen.innerHTML = `<div class="back" onclick="showAthletes()">⬅️</div><h2>${name}</h2>`;
-  aparatos.forEach(ap => {
-    screen.innerHTML += `<div class="button" onclick="showRutina(${JSON.stringify(name)},${JSON.stringify(ap)})">${ap}</div>`;
+  const aparatos = unique(data.filter(d=>norm(d.ATLETA)===norm(name)).map(d=>d.APARATO));
+  screen.innerHTML = `<div class="back" data-action="athletes">⬅️</div><h2>${escapeHtml(name)}</h2>`;
+  aparatos.forEach(ap=>{
+    screen.insertAdjacentHTML('beforeend', `<div class="button" data-action="apparatus" data-athlete="${escapeHtml(name)}" data-value="${escapeHtml(ap)}">${escapeHtml(ap)}</div>`);
   });
 }
 
-function apparatusKey(ap){
-  const k = norm(ap);
-  const aliases = {
-    "PISO":"PISO",
-    "ARZON":"ARZON",
-    "ARZONES":"ARZON",
-    "ANILLOS":"ANILLO",
-    "ANILLO":"ANILLO",
-    "SALTO":"SALTO",
-    "PARALELAS":"PARALELA",
-    "PARALELA":"PARALELA",
-    "FIJA":"FIJA"
-  };
-  return aliases[k] || k;
-}
+function showRutina(name, apparatus){
+  const rutina = data.filter(d=>norm(d.ATLETA)===norm(name) && norm(d.APARATO)===norm(apparatus));
+  const np = getApparatusValue(NP,name,apparatus);
+  const dificultad = getApparatusValue(DIFICULTAD,name,apparatus);
+  const grupos = getApparatusValue(GRUPOS,name,apparatus);
 
-function getTableValue(table, name, aparato){
-  const row = table[norm(name)];
-  if(!row) return "";
-  const key = apparatusKey(aparato);
-  const col = Object.keys(row).find(c => apparatusKey(c) === key);
-  return col ? row[col] : "";
-}
-
-function getNP(name, aparato){ return getTableValue(NP, name, aparato); }
-function getDificultad(name, aparato){ return getTableValue(DIFICULTAD, name, aparato); }
-function getGrupos(name, aparato){ return getTableValue(GRUPOS, name, aparato); }
-
-function showRutina(name, aparato){
-  const rutina = data.filter(d => norm(d["ATLETA"]) === norm(name) && norm(d["APARATO"]) === norm(aparato));
-  const np = getNP(name, aparato);
-  const dificultad = getDificultad(name, aparato);
-  const grupos = getGrupos(name, aparato);
-
-  let html = `<div class="back" onclick="showAparatos(${JSON.stringify(name)})">⬅️</div>`;
-  html += `<h2>${name} - ${aparato}</h2>`;
-  html += `<div class="np">Nota de partida: ${fmt(np) || "-"}</div>`;
-  html += `<div class="np">Dificultad: ${fmt(dificultad) || "-"}</div>`;
-  html += `<div class="np">Grupos: ${fmt(grupos) || "-"}</div>`;
-
+  let html = `<div class="back" data-action="apparatusList" data-athlete="${escapeHtml(name)}">⬅️</div>`;
+  html += `<h2>${escapeHtml(name)} - ${escapeHtml(apparatus)}</h2>`;
+  html += `<div class="np">Nota de partida: ${escapeHtml(np || '-')}</div>`;
+  html += `<div class="np">Dificultad: ${escapeHtml(dificultad || '-')}</div>`;
+  html += `<div class="np">Grupos: ${escapeHtml(grupos || '-')}</div>`;
   html += `<table class="table"><tr><th>Elemento</th><th>ID</th><th>Grupo</th><th>Valor</th><th>VD</th></tr>`;
-  rutina.forEach(r => {
-    html += `<tr><td>${r["ELEMENTO"] || ""}</td><td>${r["NÚM DE ID"] || ""}</td><td>${r["GRUPO"] || ""}</td><td>${r["VALOR"] || ""}</td><td>${r["Valor decimal"] || ""}</td></tr>`;
+  rutina.forEach(r=>{
+    html += `<tr><td>${escapeHtml(r.ELEMENTO)}</td><td>${escapeHtml(r['NÚM DE ID'])}</td><td>${escapeHtml(r.GRUPO)}</td><td>${escapeHtml(r.VALOR)}</td><td>${escapeHtml(r['Valor decimal'])}</td></tr>`;
   });
   html += `</table>`;
   screen.innerHTML = html;
 }
 
 function showObligatorios(){
-  const names = OBL.map(r => r["NOMBRE"] ?? Object.values(r)[0]).filter(Boolean);
-  screen.innerHTML = `<div class="back" onclick="showHome()">⬅️</div>`;
-  names.forEach(n => {
-    screen.innerHTML += `<div class="button" onclick="showObligatorioDetalle(${JSON.stringify(n)})">${n}</div>`;
-  });
+  const names = unique(OBL.map(r=>r.NOMBRE || Object.values(r)[0]));
+  screen.innerHTML = `<div class="back" data-action="home">⬅️</div><h2>Obligatorios</h2>`;
+  names.forEach(n=>screen.insertAdjacentHTML('beforeend', `<div class="button" data-action="obligatorio" data-value="${escapeHtml(n)}">${escapeHtml(n)}</div>`));
 }
 
 function showObligatorioDetalle(name){
-  const r = OBL.find(x => String(x["NOMBRE"] ?? Object.values(x)[0]) === String(name));
+  const r = OBL.find(x=>norm(x.NOMBRE || Object.values(x)[0])===norm(name));
   if(!r) return;
-  const hongoValue = r["HONGO  ARZON"] ?? r["HONGO ARZON"] ?? "-";
-  let html = `<div class="back" onclick="showObligatorios()">⬅️</div>`;
-  html += `<h2>${name}</h2>`;
-  html += `<div class="np">Nivel: ${r["NIVEL"] ?? "-"}</div>`;
-  html += `<table class="table"><tr><th>Aparato</th><th>Nota</th></tr>
-    <tr><td>Piso</td><td>${r["PISO"] ?? "-"}</td></tr>
-    <tr><td>Hongo / Arzón</td><td>${hongoValue}</td></tr>
-    <tr><td>Anillo</td><td>${r["ANILLO"] ?? "-"}</td></tr>
-    <tr><td>Salto</td><td>${r["SALTO"] ?? "-"}</td></tr>
-    <tr><td>Paralela</td><td>${r["PARALELA"] ?? "-"}</td></tr>
-    <tr><td>Fija</td><td>${r["FIJA"] ?? "-"}</td></tr>
-  </table>`;
-  screen.innerHTML = html;
+  const hongo = r['HONGO  ARZON'] ?? r['HONGO ARZON'] ?? '-';
+  screen.innerHTML = `
+    <div class="back" data-action="obligatorios">⬅️</div>
+    <h2>${escapeHtml(name)}</h2>
+    <div class="np">Nivel: ${escapeHtml(r.NIVEL)}</div>
+    <table class="table">
+      <tr><th>Aparato</th><th>Nota</th></tr>
+      <tr><td>Piso</td><td>${escapeHtml(r.PISO)}</td></tr>
+      <tr><td>Hongo</td><td>${escapeHtml(hongo)}</td></tr>
+      <tr><td>Anillo</td><td>${escapeHtml(r.ANILLO)}</td></tr>
+      <tr><td>Salto</td><td>${escapeHtml(r.SALTO)}</td></tr>
+      <tr><td>Paralela</td><td>${escapeHtml(r.PARALELA)}</td></tr>
+      <tr><td>Fija</td><td>${escapeHtml(r.FIJA)}</td></tr>
+    </table>`;
 }
+
+screen.addEventListener('click', e=>{
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+  if(action==='home') return showHome();
+  if(action==='athletes') return showAthletes();
+  if(action==='obligatorios') return showObligatorios();
+  if(action==='athlete') return showAparatos(el.dataset.value);
+  if(action==='apparatus') return showRutina(el.dataset.athlete, el.dataset.value);
+  if(action==='apparatusList') return showAparatos(el.dataset.athlete);
+  if(action==='obligatorio') return showObligatorioDetalle(el.dataset.value);
+});
 
 loadExcel();
