@@ -78,9 +78,14 @@ function buildMonths(){
 
 function classify(d){
   const t=upper(d.description);
-  // Los domingos son descanso natural y NO aparecen en el listado de descansos.
-  const isSunday=upper(d.dow).startsWith('DOM');
-  if(!isSunday && (d.unit==='D' || /DESCANS|VACACION|PUENTE/.test(t))) return 'descansos';
+
+  // IMPORTANTE:
+  // "D" en la fila de unidad NO significa que sea un descanso para este módulo.
+  // Los domingos son descanso natural y nunca se listan.
+  // Un descanso/vacación/puente solo existe cuando está EXPRESAMENTE
+  // indicado en la descripción del Excel.
+  if(/DESCANS|VACACION|PUENTE/.test(t)) return 'descansos';
+
   if(d.unit==='C' || /COPA|COMPETENCIA|CAMPEONATO|OLIMPIADA|ESTATAL|TORNEO/.test(t)) return 'competencia';
   if(/CONTROL|EVENTO|PRUEBA|CEREMONIA/.test(t)) return 'eventos';
   return null;
