@@ -132,6 +132,42 @@ function makeEvents(){
   return events;
 }
 
+function monthIndex(name){
+  const order=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  return order.indexOf(norm(name));
+}
+
+function eventDate(event){
+  const mi=monthIndex(event.month);
+  if(mi<0) return null;
+  const firstMonth=monthIndex(monthData[0]?.name);
+  const firstYear=2026;
+  const year=mi < firstMonth ? firstYear+1 : firstYear;
+  return new Date(year, mi, Number(event.day)||1, 12, 0, 0);
+}
+
+function eventDistanceFromToday(event){
+  const d=eventDate(event);
+  if(!d) return Number.MAX_SAFE_INTEGER;
+  const today=new Date();
+  today.setHours(12,0,0,0);
+  return Math.round((d-today)/86400000);
+}
+
+function sortEventsChronologically(events){
+  return [...events].sort((a,b)=>{
+    const da=eventDistanceFromToday(a), db=eventDistanceFromToday(b);
+    const aFuture=da>=0, bFuture=db>=0;
+    if(aFuture!==bFuture) return aFuture ? -1 : 1;
+    if(aFuture) return da-db;
+    return Math.abs(da)-Math.abs(db);
+  });
+}
+
+function isLockedCompetition(event){
+  return event.type==='competencias' && /OLIMPIADA/.test(norm(event.description));
+}
+
 function typeMeta(type){
   return {
     competencias:{title:'Competencias',icon:'🏆',cls:'event-competencias'},
@@ -167,11 +203,16 @@ function renderHome(){
 }
 
 function showEventList(type){
-  const meta=typeMeta(type); const events=makeEvents().filter(e=>e.type===type);
+  const meta=typeMeta(type); const events=sortEventsChronologically(makeEvents().filter(e=>e.type===type));
   backBtn.style.visibility='visible'; backBtn.onclick=renderHome;
   content.innerHTML=`
     <section class="month-head ${meta.cls}"><div class="eyebrow">PLAN ANUAL</div><h2>${meta.icon} ${meta.title}</h2><p>Acceso directo a las fechas importantes sin recorrer mes por mes.</p></section>
-    <section class="event-list">${events.length ? events.map(e=>`<button class="event-card ${meta.cls}" data-event-id="${esc(e.id)}"><div class="event-date"><strong>${esc(e.day)}</strong><span>${esc(e.month)}</span></div><div class="event-info"><strong>${esc(e.description)}</strong><small>${e.days.length>1?`Del ${esc(e.days[0])} al ${esc(e.days[e.days.length-1])} de ${esc(e.month)}`:`${esc(e.month)} ${esc(e.day)}`}${e.week?` · Semana ${esc(e.week)}`:''}</small></div><span class="arrow">›</span></button>`).join(''):'<div class="empty">No hay eventos de esta categoría en el Excel.</div>'}</section>`;
+    <section class="event-list">${events.length ? events.map(e=>{
+      const locked=isLockedCompetition(e);
+      const tag=locked ? 'Solo fecha y calendario' : (e.type==='competencias' ? 'Sin información adicional' : 'Abrir detalle');
+      const card=`<div class="event-card ${meta.cls} ${locked?'event-locked':''}" ${locked?'':'data-event-id="'+esc(e.id)+'"'}><div class="event-date"><strong>${esc(e.day)}</strong><span>${esc(e.month)}</span></div><div class="event-info"><strong>${esc(e.description)}</strong><small>${e.days.length>1?`Del ${esc(e.days[0])} al ${esc(e.days[e.days.length-1])} de ${esc(e.month)}`:`${esc(e.month)} ${esc(e.day)}`}${e.week?` · Semana ${esc(e.week)}`:''}</small><em>${tag}</em></div>${locked?'':'<span class="arrow">›</span>'}</div>`;
+      return card;
+    }).join(''):'<div class="empty">No hay eventos de esta categoría en el Excel.</div>'}</section>`;
   document.querySelectorAll('[data-event-id]').forEach(b=>b.addEventListener('click',()=>showEvent(events.find(e=>e.id===b.dataset.eventId))));
 }
 
@@ -182,10 +223,11 @@ function showEvent(event){
   backBtn.style.visibility='visible'; backBtn.onclick=()=>showEventList(event.type);
   const target=monthData.find(m=>norm(m.name)===norm(event.month));
   const dayRow=target?.macroDays.find(r=>String(r.day)===String(event.day));
-  const details=dayRow ? [['Periodo',dayRow.Periodo],['Etapa',dayRow.Etapa],['Mesociclo',dayRow.Mesociclo],['Microciclo',dayRow.Microciclo],['Unidad',dayRow['Uni de entre'] || dayRow['UNIDAD DE ENTRENAMIENTO']],['Carga de fuerza',dayRow['CARGA DE FUERZA']]].filter(x=>!isBlank(x[1])) : [];
+  const details=event.type==='competencias' ? [] : (dayRow ? [['Periodo',dayRow.Periodo],['Etapa',dayRow.Etapa],['Mesociclo',dayRow.Mesociclo],['Microciclo',dayRow.Microciclo],['Unidad',dayRow['Uni de entre'] || dayRow['UNIDAD DE ENTRENAMIENTO']],['Carga de fuerza',dayRow['CARGA DE FUERZA']]].filter(x=>!isBlank(x[1])) : []);
+  const noInfo=event.type==='competencias';
   content.innerHTML=`
     <section class="event-detail ${meta.cls}"><div class="eyebrow">${meta.icon} ${esc(meta.title)}</div><h2>${esc(event.description)}</h2><div class="big-date">${esc(event.day)} <span>${esc(event.month)}</span></div>${event.days.length>1?`<p class="range">Periodo del evento: ${esc(event.days[0])}–${esc(event.days[event.days.length-1])} de ${esc(event.month)}</p>`:''}${event.week?`<p class="range">Semana ${esc(event.week)}</p>`:''}</section>
-    ${details.length?`<section class="details-panel">${details.map(d=>`<div><small>${esc(d[0])}</small><p>${esc(d[1])}</p></div>`).join('')}</section>`:''}
+    ${noInfo?`<section class="details-panel"><div class="no-info"><small>INFORMACIÓN</small><p>Sin información adicional registrada para esta competencia.</p></div></section>`:(details.length?`<section class="details-panel">${details.map(d=>`<div><small>${esc(d[0])}</small><p>${esc(d[1])}</p></div>`).join('')}</section>`:'')}
     <button class="go-calendar" id="goEventCalendar">Ver en el calendario del mes →</button>`;
   document.getElementById('goEventCalendar').addEventListener('click',()=>showMonth(event.month,event.day));
 }
@@ -216,9 +258,9 @@ function showMonth(name,highlightDay=null){
 }
 
 function showMonthEvents(month){
-  const events=makeEvents().filter(e=>norm(e.month)===norm(month));
+  const events=sortEventsChronologically(makeEvents().filter(e=>norm(e.month)===norm(month)));
   backBtn.style.visibility='visible'; backBtn.onclick=()=>showMonth(month);
-  content.innerHTML=`<section class="month-head"><div class="eyebrow">${esc(month)}</div><h2>Fechas importantes</h2><p>Competencias, controles, descansos y suspensiones detectados en este mes.</p></section><section class="event-list">${events.length?events.map(e=>{const m=typeMeta(e.type);return `<button class="event-card ${m.cls}" data-event-id="${esc(e.id)}"><div class="event-date"><strong>${esc(e.day)}</strong><span>${m.icon}</span></div><div class="event-info"><strong>${esc(e.description)}</strong><small>${m.title}${e.week?` · Semana ${esc(e.week)}`:''}</small></div><span class="arrow">›</span></button>`}).join(''):'<div class="empty">No hay fechas especiales detectadas en este mes.</div>'}</section>`;
+  content.innerHTML=`<section class="month-head"><div class="eyebrow">${esc(month)}</div><h2>Fechas importantes</h2><p>Competencias, controles, descansos y suspensiones detectados en este mes.</p></section><section class="event-list">${events.length?events.map(e=>{const m=typeMeta(e.type); const locked=isLockedCompetition(e); return `<div class="event-card ${m.cls} ${locked?'event-locked':''}" ${locked?'':'data-event-id="'+esc(e.id)+'"'}><div class="event-date"><strong>${esc(e.day)}</strong><span>${m.icon}</span></div><div class="event-info"><strong>${esc(e.description)}</strong><small>${m.title}${e.week?` · Semana ${esc(e.week)}`:''}</small>${locked?'<em>Solo fecha y calendario</em>':''}</div>${locked?'':'<span class="arrow">›</span>'}</div>`}).join(''):'<div class="empty">No hay fechas especiales detectadas en este mes.</div>'}</section>`;
   document.querySelectorAll('[data-event-id]').forEach(b=>b.addEventListener('click',()=>showEvent(events.find(e=>e.id===b.dataset.eventId))));
 }
 
