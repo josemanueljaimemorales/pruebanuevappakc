@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Águilas KC · Fuerza FIG</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="ambient ambient-a"></div>
+<div class="ambient ambient-b"></div>
+<div id="app">
+  <div id="home">
+    <header class="hero">
+      <div class="hero-mark">
+        <img src="logo_transparente.png" class="logo" alt="Águilas KC">
+      </div>
+      <div class="eyebrow">ÁGUILAS KC · KIDS CENTER</div>
+      <h1>FUERZA <span>FIG</span></h1>
+      <p class="subtitle">Sistema de fuerza y preparación física</p>
+    </header>
+
+    <section class="card week-card">
+      <div class="section-kicker">PROGRAMACIÓN</div>
+      <h2>Semana designada en pizarrón</h2>
+      <div class="week-grid">
+        <div class="wk alta"><span>ALTA</span><b>2×8</b><small>Peso máximo</small></div>
+        <div class="wk media"><span>MEDIA</span><b>2×12</b><small>Peso medio</small></div>
+        <div class="wk baja"><span>BAJA</span><b>3×12</b><small>Peso bajo</small></div>
+      </div>
+    </section>
+
+    <section class="days-section">
+      <div class="section-kicker">ENTRENAMIENTO</div>
+      <h2>Selecciona el día</h2>
+      <div id="days"></div>
+    </section>
+
+    <div class="brand-line"><i></i><span>AKC · GIMNASIA ARTÍSTICA VARONIL</span><i></i></div>
+  </div>
+
+  <div id="exerciseView" class="hidden"></div>
+  <div id="videoView" class="hidden"></div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,378 @@
+*{box-sizing:border-box}
+
+:root{
+  --bg:#030811;
+  --panel:rgba(10,20,34,.78);
+  --line:rgba(164,190,220,.20);
+  --text:#f5f8fc;
+  --muted:#9aaabd;
+  --blue:#1687ff;
+  --blue2:#53b5ff;
+}
+
+html,body{
+  margin:0;
+  min-height:100%;
+}
+
+body{
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(20,112,205,.28),transparent 42%),
+    radial-gradient(circle at 90% 30%,rgba(0,75,150,.12),transparent 35%),
+    var(--bg);
+  color:var(--text);
+  text-align:center;
+  overflow-x:hidden;
+}
+
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.025),transparent 35%,rgba(0,116,255,.025));
+}
+
+.akc-shell{
+  width:min(1100px,100%);
+  min-height:100vh;
+  margin:auto;
+  padding:22px 20px 46px;
+  position:relative;
+}
+
+.hero{
+  position:relative;
+  min-height:330px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border:1px solid rgba(150,190,230,.16);
+  border-radius:30px;
+  background:linear-gradient(145deg,rgba(7,18,32,.92),rgba(2,8,16,.72));
+  box-shadow:0 28px 70px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.05);
+}
+
+.eagle-bg{
+  position:absolute;
+  inset:-5% -12%;
+  background-image:url("../../cliente/logo.png");
+  background-repeat:no-repeat;
+  background-position:center;
+  background-size:82% auto;
+  opacity:.09;
+  filter:drop-shadow(0 0 25px rgba(22,135,255,.28));
+  transform:translateY(16%);
+}
+
+.hero:after{
+  content:"";
+  position:absolute;
+  inset:auto 8% 0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(83,181,255,.6),transparent);
+}
+
+.hero-content{
+  position:relative;
+  z-index:2;
+  width:100%;
+  padding:36px 20px 28px;
+}
+
+.logo{
+  width:min(210px,48vw);
+  height:auto;
+  display:block;
+  margin:0 auto 14px;
+  filter:drop-shadow(0 0 18px rgba(120,180,255,.16));
+}
+
+.eyebrow{
+  color:#a8c4df;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.24em;
+  margin-bottom:8px;
+}
+
+h1{
+  margin:0;
+  font-size:clamp(32px,6vw,58px);
+  line-height:1;
+  letter-spacing:.05em;
+  font-weight:900;
+}
+
+h1 span{
+  color:#4eaeff;
+}
+
+.hero p{
+  margin:12px 0 0;
+  color:var(--muted);
+  font-size:13px;
+  letter-spacing:.08em;
+}
+
+#contenido{
+  width:min(760px,100%);
+  margin:26px auto 0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+.button{
+  position:relative;
+  width:min(620px,100%);
+  margin:0;
+  padding:21px 26px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  color:#f7fbff;
+  background:
+    linear-gradient(135deg,rgba(20,45,72,.84),rgba(7,17,29,.94));
+  box-shadow:0 12px 28px rgba(0,0,0,.30),inset 0 1px rgba(255,255,255,.06);
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:.04em;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+
+.button:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:14px;
+  bottom:14px;
+  width:3px;
+  border-radius:10px;
+  background:linear-gradient(#1b91ff,#63c3ff);
+  box-shadow:0 0 14px rgba(22,135,255,.55);
+}
+
+.button:after{
+  content:"›";
+  position:absolute;
+  right:22px;
+  color:#65baff;
+  font-size:25px;
+  line-height:1;
+}
+
+.button:hover{
+  transform:translateY(-2px);
+  border-color:rgba(83,181,255,.48);
+  box-shadow:0 18px 34px rgba(0,0,0,.34),0 0 24px rgba(22,135,255,.10);
+}
+
+.button:active{
+  transform:scale(.985);
+}
+
+table{
+  width:min(900px,100%);
+  margin:18px auto 0;
+  border-collapse:collapse;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(5,12,21,.78);
+}
+
+td{
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:12px;
+}
+
+.np{
+  font-size:16px;
+  margin:8px;
+  color:#69bbff;
+  text-shadow:0 0 10px rgba(83,181,255,.25);
+}
+
+.back{
+  align-self:flex-start;
+  margin:0 0 8px;
+  cursor:pointer;
+  font-size:15px;
+  color:#d8e9fa;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(12,27,44,.7);
+}
+
+h2{
+  margin:6px 0 12px;
+}
+
+@media(max-width:600px){
+  .akc-shell{padding:12px 12px 36px}
+  .hero{min-height:300px;border-radius:24px}
+  .hero-content{padding:30px 14px 24px}
+  .logo{width:min(180px,58vw)}
+  .eyebrow{font-size:9px;letter-spacing:.18em}
+  h1{font-size:34px}
+  .hero p{font-size:11px}
+  .button{padding:18px 22px;font-size:16px;border-radius:16px}
+}
+
+@media(min-width:900px){
+  #contenido{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .button{width:100%}
+}
+
+/* --- Botones BÁSICOS: tratamiento principal --- */
+#contenido > button{
+  appearance:none;
+  -webkit-appearance:none;
+  position:relative;
+  width:100%;
+  min-height:92px;
+  padding:24px 58px 24px 28px;
+  border:1px solid rgba(91,177,255,.24);
+  border-radius:22px;
+  color:#f7fbff;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(65,157,255,.20),transparent 42%),
+    linear-gradient(145deg,rgba(18,42,68,.96),rgba(5,13,24,.98));
+  box-shadow:
+    0 16px 34px rgba(0,0,0,.34),
+    inset 0 1px 0 rgba(255,255,255,.07),
+    inset 0 -1px 0 rgba(0,0,0,.30);
+  font-family:inherit;
+  font-size:19px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  text-align:left;
+  cursor:pointer;
+  overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+
+#contenido > button::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:12px;
+  bottom:12px;
+  width:5px;
+  border-radius:0 8px 8px 0;
+  background:linear-gradient(180deg,#64c5ff,#1687ff);
+  box-shadow:0 0 18px rgba(22,135,255,.55);
+}
+
+#contenido > button::after{
+  content:"→";
+  position:absolute;
+  right:24px;
+  top:50%;
+  transform:translateY(-50%);
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(98,190,255,.25);
+  border-radius:50%;
+  color:#72c6ff;
+  background:rgba(52,139,214,.10);
+  font-size:19px;
+  font-weight:800;
+  transition:transform .18s ease,background .18s ease;
+}
+
+#contenido > button:hover{
+  transform:translateY(-4px);
+  border-color:rgba(91,190,255,.62);
+  background:
+    radial-gradient(circle at 12% 0%,rgba(65,157,255,.28),transparent 45%),
+    linear-gradient(145deg,rgba(22,54,87,.98),rgba(5,13,24,.98));
+  box-shadow:
+    0 22px 42px rgba(0,0,0,.40),
+    0 0 28px rgba(22,135,255,.12),
+    inset 0 1px 0 rgba(255,255,255,.09);
+}
+
+#contenido > button:hover::after{
+  transform:translate(3px,-50%);
+  background:rgba(52,139,214,.22);
+}
+
+#contenido > button:active{
+  transform:translateY(-1px) scale(.995);
+}
+
+#contenido > h2{
+  grid-column:1/-1;
+  width:100%;
+  margin:4px 0 2px;
+  padding:4px 0 14px;
+  font-size:clamp(24px,4vw,34px);
+  letter-spacing:.04em;
+  text-align:left;
+  border-bottom:1px solid rgba(91,177,255,.16);
+}
+
+/* A / B / C / D: botones de nivel con presencia visual */
+#contenido > h2 ~ button{
+  min-height:118px;
+  font-size:30px;
+  text-align:center;
+  padding:24px 48px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(70,165,255,.20),transparent 55%),
+    linear-gradient(145deg,rgba(18,42,68,.96),rgba(5,13,24,.98));
+}
+
+#contenido > h2 ~ button::before{
+  top:14px;
+  bottom:14px;
+  width:4px;
+}
+
+#contenido > h2 ~ button::after{
+  content:"›";
+  right:18px;
+}
+
+#contenido > h2 ~ button:last-child{
+  grid-column:1/-1;
+  min-height:62px;
+  font-size:15px;
+  text-transform:none;
+  text-align:center;
+  letter-spacing:.02em;
+  padding:17px 28px;
+  color:#c7d9ea;
+  background:rgba(9,22,37,.78);
+}
+
+#contenido > h2 ~ button:last-child::before{display:none}
+#contenido > h2 ~ button:last-child::after{display:none}
+
+@media(max-width:900px){
+  #contenido > button{min-height:88px;font-size:18px}
+  #contenido > h2 ~ button{min-height:104px;font-size:28px}
+}
+
+@media(max-width:600px){
+  #contenido{gap:12px;margin-top:22px}
+  #contenido > button{
+    min-height:84px;
+    padding:22px 54px 22px 24px;
+    border-radius:19px;
+    font-size:17px;
+  }
+  #contenido > h2 ~ button{
+    min-height:96px;
+    font-size:27px;
+  }
+}

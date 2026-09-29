@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Águilas Kids Center · Plataforma AKC</title>
+  <link rel="stylesheet" href="style.css?v=5">
+</head>
+<body>
+<div id="app">
+
+  <div id="home" class="screen active">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <div class="eagle-watermark" aria-hidden="true"></div>
+
+    <header class="header">
+      <div class="brand-mark">
+        <img src="logo.png" class="logo" alt="Águilas KC">
+      </div>
+      <div class="brand-copy">
+        <div class="brand-kicker">ÁGUILAS KC</div>
+        <h1>KIDS CENTER</h1>
+        <div class="brand-subtitle">GIMNASIA ARTÍSTICA VARONIL</div>
+      </div>
+    </header>
+
+    <div class="section-label"><span>PLATAFORMA DE ENTRENAMIENTO</span><i></i></div>
+
+    <main class="menu">
+      <button type="button" class="btn plan-anual" onclick="openScreen('planAnual')"><span class="icon">▦</span><span class="btn-copy"><strong>PLAN ANUAL</strong><small>Macrociclo y planificación anual</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn fuerza" onclick="openScreen('fuerza')"><span class="icon">✚</span><span class="btn-copy"><strong>FUERZA</strong><small>Prevención y orientación</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn fig" onclick="openScreen('FuerzaFIG')"><span class="icon">⌁</span><span class="btn-copy"><strong>FUERZA FIG</strong><small>Fuerza específica para FIG</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn cargas" onclick="openScreen('cargas')"><span class="icon">▥</span><span class="btn-copy"><strong>CARGA SEMANAL</strong><small>Carga semanal y sistemas</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn trabajo" onclick="openScreen('trabajo')"><span class="icon">◎</span><span class="btn-copy"><strong>TRAINING</strong><small>Trabajo específico por elementos</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn SISTEMAS" onclick="openScreen('SISTEMAS')"><span class="icon">⚙</span><span class="btn-copy"><strong>SISTEMAS</strong><small>Organización y control</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn rutinas" onclick="openScreen('rutinas')"><span class="icon">▤</span><span class="btn-copy"><strong>RUTINAS</strong><small>Rutinas NP</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn basicos" onclick="openScreen('basicos')"><span class="icon">◈</span><span class="btn-copy"><strong>BÁSICOS</strong><small>Fundamentos AKC</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn normativos" onclick="openScreen('normativos')"><span class="icon">✓</span><span class="btn-copy"><strong>NORMATIVOS</strong><small>Seguimiento técnico</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn calendar-btn" onclick="openScreen('calendar')"><span class="icon">▣</span><span class="btn-copy"><strong>CALENDARIO</strong><small>Agenda AKC</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn drive" onclick="openScreen('drive')"><span class="icon">□</span><span class="btn-copy"><strong>ARCHIVOS</strong><small>OneDrive</small></span><span class="arrow">›</span></button>
+    </main>
+
+    <footer class="footer">ÁGUILAS DE KIDS CENTER <span>•</span> SISTEMA AKC</footer>
+  </div>
+
+  <div id="viewerScreen" class="screen viewer-screen">
+    <button type="button" class="back" onclick="goHome()">← Volver</button>
+    <div class="viewer-wrap">
+      <iframe id="viewerFrame" title="Módulo AKC" allow="fullscreen; clipboard-read; clipboard-write"></iframe>
+    </div>
+  </div>
+
+  <div id="calendarScreen" class="screen viewer-screen">
+    <button type="button" class="back" onclick="goHome()">← Volver</button>
+    <div class="viewer-wrap">
+      <iframe src="https://calendar.google.com/calendar/embed?src=a2329715397da169f4918dafb153aab9ad464eb1b23ff58214249d7e5811e354%40group.calendar.google.com&ctz=America%2FMexico_City" title="Calendario AKC" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <div id="passwordModal" class="password-overlay" aria-hidden="true">
+    <div class="password-box" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+      <div class="modal-logo"><img src="logo.png" alt="Águilas KC"></div>
+      <h2 id="passwordTitle">NORMATIVOS</h2>
+      <p>Ingresa la contraseña para continuar.</p>
+      <input id="passwordInput" type="password" autocomplete="off" inputmode="text" placeholder="Contraseña">
+      <div id="passwordError" class="password-error"></div>
+      <div class="password-actions">
+        <button type="button" class="modal-btn cancel" onclick="closePassword()">Cancelar</button>
+        <button type="button" class="modal-btn enter" onclick="checkPassword()">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script src="script.js?v=5"></script>
+</body>
+</html>
