@@ -1,5 +1,5 @@
 const firebaseConfig = {
-  apiKey: "AIzaBhs-MEQ7McQhs6pNZTa1AWqWwUYp8yvbU",
+  apiKey: "AIzaSyBhs-MEQ7McQhs6pNZTa1AWqWwUYp8yvbU",
   authDomain: "app-de-cargas-865db.firebaseapp.com",
   projectId: "app-de-cargas-865db",
   storageBucket: "app-de-cargas-865db.firebasestorage.app",
@@ -9,15 +9,16 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
 const password = "jmjm0808";
+const STORAGE_KEY = "akc_cargas_data_v2";
 
 let modoEdicion = false;
-let guardando = false;
-let cambiosPendientes = false;
-let remoteDataMientrasEdita = null;
-let cambiosRealizados = {};
+let guardadoPendiente = false;
+let guardadoTimer = null;
+let tipoActual = "obligatorios";
 
-let data = {
+const defaults = {
   obligatorios: {
     "Cantidad de rutinas": "",
     "Rep elementos corrección": "",
@@ -53,157 +54,235 @@ let data = {
   }
 };
 
-function clonar(obj){ return JSON.parse(JSON.stringify(obj)); }
+let data = clone(defaults);
+
+function clone(obj){
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function mergeData(source){
+  const merged = clone(defaults);
+  if(source && typeof source === "object"){
+    for(const tipo of Object.keys(merged)){
+      if(source[tipo] && typeof source[tipo] === "object"){
+        for(const key of Object.keys(merged[tipo])){
+          if(source[tipo][key] !== undefined && source[tipo][key] !== null){
+            merged[tipo][key] = String(source[tipo][key]);
+          }
+        }
+      }
+    }
+  }
+  return merged;
+}
+
+function saveLocal(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({data, pending: guardadoPendiente}));
+  }catch(e){
+    console.warn("No se pudo guardar localmente", e);
+  }
+}
+
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.data){
+      data = mergeData(parsed.data);
+      guardadoPendiente = !!parsed.pending;
+      return true;
+    }
+  }catch(e){
+    console.warn("No se pudo leer el respaldo local", e);
+  }
+  return false;
+}
+
+function setEstado(text, ok=false){
+  const el = document.getElementById("saveStatus");
+  if(el){
+    el.textContent = text;
+    el.className = ok ? "save-status ok" : "save-status";
+  }
+}
 
 function fila(t, v){
-  return `<div class="item"><div class="label">${t}</div><div class="valor">${v ? v : "Sin asignar"}</div></div>`;
+  return `<div class="item">
+    <div class="label">${escapeHtml(t)}</div>
+    <div class="valor">${v ? escapeHtml(v) : "Sin asignar"}</div>
+  </div>`;
+}
+
+function escapeHtml(v){
+  return String(v ?? "").replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
 
 function mostrar(tipo){
+  tipoActual = tipo;
   let html = "";
-  if(tipo==="obligatorios"){
-    html+=`<div class="card"><h3>Día 1 - Rutinas</h3>
-    ${fila("Cantidad de rutinas", data.obligatorios["Cantidad de rutinas"])}
-    ${fila("Repetición elementos corrección", data.obligatorios["Rep elementos corrección"])}
-    ${fila("Repetición elementos proyección", data.obligatorios["Rep elementos proyección"])}
+
+  if(tipo === "obligatorios"){
+    html += `<div class="card"><h3>Día 1 - Rutinas</h3>
+      ${fila("Cantidad de rutinas", data.obligatorios["Cantidad de rutinas"])}
+      ${fila("Repetición elementos corrección", data.obligatorios["Rep elementos corrección"])}
+      ${fila("Repetición elementos proyección", data.obligatorios["Rep elementos proyección"])}
     </div>`;
-    html+=`<div class="card"><h3>Día 2 - Corrección y proyección</h3>
-    ${fila("Elementos corrección", data.obligatorios["D2 elementos corrección"])}
-    ${fila("Elementos proyección", data.obligatorios["D2 elementos proyección"])}
+
+    html += `<div class="card"><h3>Día 2 - Corrección y proyección</h3>
+      ${fila("Elementos corrección", data.obligatorios["D2 elementos corrección"])}
+      ${fila("Elementos proyección", data.obligatorios["D2 elementos proyección"])}
     </div>`;
-    html+=`<div class="card"><h3>Día 3 - Rutinas a presentar</h3>
-    ${fila("Rutinas sin penalidad grave", data.obligatorios["Rutinas sin penalidad grave"])}
-    ${fila("Intentos máximo de rutina", data.obligatorios["Intentos máximo de rutinas"])}
+
+    html += `<div class="card"><h3>Día 3 - Rutinas a presentar</h3>
+      ${fila("Rutinas sin penalidad grave", data.obligatorios["Rutinas sin penalidad grave"])}
+      ${fila("Intentos máximo de rutina", data.obligatorios["Intentos máximo de rutinas"])}
     </div>`;
-  } else if(tipo==="semanal"){
-    html += `<div class="card"><h3>Básicos</h3>${fila("Secuencias básicas", data.semanal["Secuencias básicas"])}</div>`;
-    html += `<div class="card"><h3>Elementos</h3>${fila("Elementos a corregir", data.semanal["Elementos a corregir"])}${fila("Elementos nuevos a trabajar", data.semanal["Elementos nuevos a trabajar"])}${fila("Número de repeticiones", data.semanal["Número de repeticiones"])}</div>`;
-    html += `<div class="card"><h3>Martes y Miércoles</h3>${fila("Rutinas completas", data.semanal["Rutinas completas"])}${fila("Repeticion de correcciones", data.semanal["Repeticion de correcciones"])}${fila("Repetición de elementos nuevos", data.semanal["Repetición de elementos nuevos"])}</div>`;
-    html += `<div class="card"><h3>Viernes</h3>${fila("Enlaces de rutina", data.semanal["Enlaces de rutina"])}${fila("Elementos por enlace", data.semanal["Elementos por enlace"])}</div>`;
-  } else if(tipo==="sistemas"){
-    for(let k in data.sistemas) html+=`<div class="card">${fila(k, data.sistemas[k])}</div>`;
   }
-  document.getElementById("contenido").innerHTML=html;
-}
+  else if(tipo === "semanal"){
+    html += `<div class="card"><h3>Básicos</h3>
+      ${fila("Secuencias básicas", data.semanal["Secuencias básicas"])}
+    </div>`;
 
-function actualizarIndicador(){
-  const btn=document.getElementById("btnGuardarCambios");
-  const estado=document.getElementById("estadoGuardado");
-  if(!btn || !estado) return;
-  btn.disabled=guardando || !cambiosPendientes;
-  btn.textContent=guardando ? "Guardando…" : "Guardar cambios";
-  estado.textContent=guardando ? "Guardando en la nube…" : (cambiosPendientes ? "Cambios sin guardar" : "Todos los cambios están guardados");
-  estado.className=guardando ? "guardando" : (cambiosPendientes ? "pendiente" : "guardado");
-}
+    html += `<div class="card"><h3>Elementos</h3>
+      ${fila("Elementos a corregir", data.semanal["Elementos a corregir"])}
+      ${fila("Elementos nuevos a trabajar", data.semanal["Elementos nuevos a trabajar"])}
+      ${fila("Número de repeticiones", data.semanal["Número de repeticiones"])}
+    </div>`;
 
-async function guardarCambios(){
-  if(!modoEdicion || !cambiosPendientes || guardando) return;
-  guardando=true;
-  actualizarIndicador();
-  try{
-    const base=remoteDataMientrasEdita ? clonar(remoteDataMientrasEdita) : clonar(data);
-    for(const tipo in data){
-      if(!base[tipo]) base[tipo]={};
-      for(const key in data[tipo]){
-        if(cambiosRealizados[tipo] && Object.prototype.hasOwnProperty.call(cambiosRealizados[tipo],key)) base[tipo][key]=data[tipo][key];
-      }
-    }
-    base.updatedAt=firebase.firestore.FieldValue.serverTimestamp();
-    await db.collection("gym").doc("data").set(base);
-    data=clonar(base);
-    remoteDataMientrasEdita=clonar(base);
-    cambiosPendientes=false;
-    cambiosRealizados={};
-    mostrarEditor();
-  }catch(error){
-    console.error("Error al guardar en Firebase:",error);
-    const estado=document.getElementById("estadoGuardado");
-    if(estado){
-      estado.textContent="No se pudo guardar en la nube. Los cambios siguen en pantalla.";
-      estado.className="error";
-    }
-  }finally{
-    guardando=false;
-    actualizarIndicador();
+    html += `<div class="card"><h3>Martes y Miércoles</h3>
+      ${fila("Rutinas completas", data.semanal["Rutinas completas"])}
+      ${fila("Repetición de correcciones", data.semanal["Repeticion de correcciones"])}
+      ${fila("Repetición de elementos nuevos", data.semanal["Repetición de elementos nuevos"])}
+    </div>`;
+
+    html += `<div class="card"><h3>Viernes</h3>
+      ${fila("Enlaces de rutina", data.semanal["Enlaces de rutina"])}
+      ${fila("Elementos por enlace", data.semanal["Elementos por enlace"])}
+    </div>`;
   }
+  else if(tipo === "sistemas"){
+    for(const k in data.sistemas){
+      html += `<div class="card">${fila(k, data.sistemas[k])}</div>`;
+    }
+  }
+
+  document.getElementById("contenido").innerHTML = html;
+  marcarBotonActivo(tipo);
 }
 
-function cargar(){
-  db.collection("gym").doc("data").onSnapshot(async doc=>{
-    if(doc.exists){
-      const firebaseData=doc.data();
-      let actualizado=false;
-      for(let tipo in data){
-        if(!firebaseData[tipo]){firebaseData[tipo]={};actualizado=true;}
-        for(let key in data[tipo]){
-          if(firebaseData[tipo][key]===undefined){firebaseData[tipo][key]="";actualizado=true;}
-        }
-      }
-      if(modoEdicion){
-        remoteDataMientrasEdita=clonar(firebaseData);
-      }else{
-        data=firebaseData;
-        if(actualizado){
-          try{await db.collection("gym").doc("data").set(data);}catch(e){console.error("Error al completar estructura:",e);}
-        }
-        mostrar("obligatorios");
-      }
-    }else{
-      try{await db.collection("gym").doc("data").set(data);}catch(e){console.error("Error al crear documento:",e);}
-      if(!modoEdicion) mostrar("obligatorios");
-    }
-  },error=>{
-    console.error("Error de sincronización:",error);
-    const estado=document.getElementById("estadoGuardado");
-    if(estado){estado.textContent="Sin conexión con la nube";estado.className="error";}
+function marcarBotonActivo(tipo){
+  document.querySelectorAll(".botones > button[data-tipo]").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.tipo === tipo);
   });
 }
 
-cargar();
+function guardarAhora(){
+  saveLocal();
+  setEstado("Guardando en la nube…");
+
+  return db.collection("gym").doc("data").set(data)
+    .then(()=>{
+      guardadoPendiente = false;
+      saveLocal();
+      setEstado("Cambios guardados", true);
+      return true;
+    })
+    .catch(err=>{
+      guardadoPendiente = true;
+      saveLocal();
+      console.error("Error guardando en Firestore:", err);
+      setEstado("Sin conexión: cambios guardados en este dispositivo");
+      return false;
+    });
+}
+
+function programarGuardado(){
+  guardadoPendiente = true;
+  saveLocal();
+  setEstado("Guardando…");
+  clearTimeout(guardadoTimer);
+  guardadoTimer = setTimeout(()=>guardarAhora(), 700);
+}
+
+function cargar(){
+  const teniaLocal = loadLocal();
+  if(teniaLocal){
+    // El respaldo local es inmediato y permite que los tres botones vean
+    // las modificaciones aunque Firebase tarde o no esté disponible.
+    if(!modoEdicion) mostrar(tipoActual);
+  }
+
+  db.collection("gym").doc("data").onSnapshot(doc=>{
+    if(doc.exists){
+      // Si existen cambios locales pendientes, no los pisamos con una copia
+      // antigua de la nube. Después del guardado exitoso se sincronizan.
+      if(!guardadoPendiente){
+        data = mergeData(doc.data());
+        saveLocal();
+        if(!modoEdicion) mostrar(tipoActual);
+      }
+    } else if(!guardadoPendiente){
+      guardarAhora();
+    }
+  }, err=>{
+    console.error("Error de sincronización:", err);
+    setEstado("Sin conexión: usando cambios guardados en este dispositivo");
+  });
+}
 
 function login(){
-  const pass=prompt("Contraseña:");
-  if(pass===password) editar();
+  const pass = prompt("Contraseña:");
+  if(pass === password) editar();
 }
 
 function editar(){
-  modoEdicion=true;
-  cambiosPendientes=false;
-  cambiosRealizados={};
-  remoteDataMientrasEdita=clonar(data);
-  mostrarEditor();
-}
+  modoEdicion = true;
+  let html = `<div class="coach-editor">
+    <div class="editor-head">
+      <div><h2>Modo Entrenador</h2><p>Los cambios se reflejan inmediatamente en los 3 módulos.</p></div>
+      <div id="saveStatus" class="save-status">Listo para editar</div>
+    </div>
+    <div class="editor-actions">
+      <button onclick="guardarAhora()">GUARDAR CAMBIOS</button>
+      <button onclick="salirEdicion()">⬅ Salir</button>
+    </div>`;
 
-function mostrarEditor(){
-  let html=`<div class="editor-head"><div><h2>Modo Entrenador</h2><div id="estadoGuardado" class="guardado">Todos los cambios están guardados</div></div><div class="editor-actions"><button id="btnGuardarCambios" class="guardar-btn" onclick="guardarCambios()">Guardar cambios</button><button class="salir-btn" onclick="salirEdicion()">Salir</button></div></div>`;
-  for(let tipo in data){
-    html+=`<h3>${tipo}</h3>`;
-    for(let k in data[tipo]){
-      const valor=data[tipo][k] ?? "";
-      html+=`<div class="card"><label>${k}</label><textarea data-tipo="${encodeURIComponent(tipo)}" data-key="${encodeURIComponent(k)}">${valor}</textarea></div>`;
+  for(const tipo of Object.keys(data)){
+    html += `<h3>${tipo}</h3>`;
+    for(const k of Object.keys(data[tipo])){
+      html += `<div class="card">
+        <label>${escapeHtml(k)}</label>
+        <textarea data-edit-tipo="${escapeHtml(tipo)}" data-edit-key="${escapeHtml(k)}">${escapeHtml(data[tipo][k])}</textarea>
+      </div>`;
     }
   }
-  document.getElementById("contenido").innerHTML=html;
-  document.querySelectorAll("textarea[data-tipo]").forEach(area=>area.addEventListener("input",function(){
-    actualizar(decodeURIComponent(this.dataset.tipo),decodeURIComponent(this.dataset.key),this.value);
-  }));
-  actualizarIndicador();
+  html += `</div>`;
+
+  document.getElementById("contenido").innerHTML = html;
+
+  document.querySelectorAll("textarea[data-edit-tipo]").forEach(textarea=>{
+    textarea.addEventListener("input", e=>{
+      const tipo = e.currentTarget.dataset.editTipo;
+      const key = e.currentTarget.dataset.editKey;
+      data[tipo][key] = e.currentTarget.value;
+      programarGuardado();
+    });
+  });
 }
 
-async function salirEdicion(){
-  if(cambiosPendientes){
-    const guardar=confirm("Tienes cambios sin guardar. ¿Quieres guardarlos antes de salir?");
-    if(guardar){await guardarCambios();if(cambiosPendientes)return;}
-    else if(remoteDataMientrasEdita) data=clonar(remoteDataMientrasEdita);
+function salirEdicion(){
+  if(guardadoPendiente){
+    guardarAhora().finally(()=>{
+      modoEdicion = false;
+      mostrar(tipoActual);
+    });
+    return;
   }
-  modoEdicion=false;cambiosPendientes=false;cambiosRealizados={};remoteDataMientrasEdita=null;mostrar("obligatorios");
+  modoEdicion = false;
+  mostrar(tipoActual);
 }
 
-function actualizar(tipo,key,val){
-  if(!data[tipo]) data[tipo]={};
-  data[tipo][key]=val;
-  if(!cambiosRealizados[tipo]) cambiosRealizados[tipo]={};
-  cambiosRealizados[tipo][key]=true;
-  cambiosPendientes=true;
-  actualizarIndicador();
-}
+loadLocal();
+cargar();

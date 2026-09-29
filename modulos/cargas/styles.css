@@ -17,3 +17,11 @@ button{font:inherit}footer{display:flex;justify-content:center;gap:14px;color:#6
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){.app-shell{padding:14px 12px}.hero{padding:16px;border-radius:20px;gap:13px}.brand-mark{width:62px;height:62px;flex-basis:62px;border-radius:16px}.brand-copy h1{font-size:34px}.eyebrow{font-size:8px;letter-spacing:1.5px}.brand-copy p{font-size:11px}.status{display:none}.menu-panel{padding:15px;border-radius:20px}.botones{grid-template-columns:1fr}.botones button{min-height:72px}.eagle-bg{background-size:cover,min(600px,105vw);background-position:center,center 16%}}
 @media(max-width:420px){.brand-mark{width:56px;height:56px;flex-basis:56px}.brand-copy h1{font-size:29px}.brand-copy p{font-size:10px}.panel-heading{align-items:flex-start;flex-direction:column;gap:4px}.botones button{grid-template-columns:34px 1fr 20px;padding:12px}.botones button b{font-size:12px}footer{flex-direction:column;align-items:center;gap:5px}}
+
+/* Estado de guardado y edición: mantiene la estética existente. */
+.save-status{font-size:.85rem;opacity:.8;margin-top:6px}
+.save-status.ok{opacity:1}
+.editor-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.editor-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
+.editor-actions button{flex:1;min-width:180px}
+.botones > button.active{outline:2px solid rgba(255,255,255,.18)}
