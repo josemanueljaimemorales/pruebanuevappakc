@@ -78,59 +78,83 @@ function buildMonths(){
 
 function classify(d){
   const t=upper(d.description);
-  if(d.unit==='D' || /DESCANS|VACACION/.test(t)) return 'descansos';
+  // Los domingos son descanso natural y NO aparecen en el listado de descansos.
+  const isSunday=upper(d.dow).startsWith('DOM');
+  if(!isSunday && (d.unit==='D' || /DESCANS|VACACION|PUENTE/.test(t))) return 'descansos';
   if(d.unit==='C' || /COPA|COMPETENCIA|CAMPEONATO|OLIMPIADA|ESTATAL|TORNEO/.test(t)) return 'competencia';
   if(/CONTROL|EVENTO|PRUEBA|CEREMONIA/.test(t)) return 'eventos';
   return null;
 }
 
+function eventTitleKey(text){
+  // Quita fechas y números de día para que, por ejemplo,
+  // "Copa AGPAC 14 de noviembre" y "Copa AGPAC 15 de noviembre"
+  // se consideren el mismo evento.
+  return upper(text)
+    .replace(/\b\d{1,2}\s*(?:AL|A|[-/] )?\s*\d{1,2}\b/g,'')
+    .replace(/\b\d{1,2}\s+DE\s+(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\b/g,'')
+    .replace(/\b\d{1,2}[-/]\d{1,2}(?:[-/]\d{2,4})?\b/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+
+function nextDay(a,b){
+  return (new Date(b.year,b.month-1,b.day)-new Date(a.year,a.month-1,a.day))===86400000;
+}
+
 function buildSpecialEvents(){
   const result={competencia:[],eventos:[],descansos:[]};
-  const consumed=new Set();
   const sorted=days.slice().sort((a,b)=>a.key.localeCompare(b.key));
 
-  // Descriptions are the anchor for named events. The event end includes following
-  // consecutive competition days (unit C), which matches the calendar workbook.
-  for(let i=0;i<sorted.length;i++){
-    const start=sorted[i];
-    const type=classify(start);
-    if(!type || !start.description) continue;
-    let end=start;
-    if(type==='competencia'){
-      // Some competitions have a setup/start description a day or two before
-      // the C (competition) block. Include that block in the displayed range.
-      let firstC=-1;
-      for(let j=i+1;j<Math.min(sorted.length,i+8);j++){
-        const next=sorted[j];
-        const gap=(new Date(next.year,next.month-1,next.day)-new Date(start.year,start.month-1,start.day))/86400000;
-        if(gap>4) break;
-        if(next.unit==='C'){ firstC=j; break; }
-      }
-      if(firstC>=0){
-        end=sorted[firstC];
-        for(let j=firstC+1;j<sorted.length;j++){
-          const next=sorted[j];
-          const consecutive=(new Date(next.year,next.month-1,next.day)-new Date(end.year,end.month-1,end.day))===86400000;
-          if(consecutive && next.unit==='C') end=next; else break;
-        }
-      }
-    }
-    const event={id:`${type}-${start.key}`,type,title:start.description,start,end,days:sorted.filter(x=>x.key>=start.key&&x.key<=end.key)};
-    result[type].push(event);
-    event.days.forEach(x=>consumed.add(`${type}|${x.key}`));
-  }
-
-  // Any unlabeled C day(s) form a chronological competition block.
+  // COMPETENCIAS: se agrupan únicamente días consecutivos que pertenecen
+  // al mismo nombre de competencia. El nombre se toma del Excel, quitando
+  // solamente las fechas que cambian de un día al siguiente.
   let i=0;
   while(i<sorted.length){
     const d=sorted[i];
-    if(d.unit!=='C' || result.competencia.some(e=>e.days.some(x=>x.key===d.key))){i++;continue;}
+    if(classify(d)!=='competencia' || !d.description){i++;continue;}
+    const key=eventTitleKey(d.description);
     let end=d, j=i+1;
     while(j<sorted.length){
       const n=sorted[j];
-      if(n.unit==='C' && (new Date(n.year,n.month-1,n.day)-new Date(end.year,end.month-1,end.day))===86400000){end=n;j++;}else break;
+      if(classify(n)==='competencia' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){
+        end=n; j++;
+      } else break;
     }
-    result.competencia.push({id:`competencia-${d.key}`,type:'competencia',title:'Competencia',start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
+    result.competencia.push({id:`competencia-${d.key}`,type:'competencia',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
+    i=j;
+  }
+
+  // EVENTOS: aparecen solamente cuando realmente existe un evento en el Excel.
+  // No se generan automáticamente por domingos ni por días ordinarios.
+  i=0;
+  while(i<sorted.length){
+    const d=sorted[i];
+    if(classify(d)!=='eventos' || !d.description){i++;continue;}
+    const key=eventTitleKey(d.description);
+    let end=d,j=i+1;
+    while(j<sorted.length){
+      const n=sorted[j];
+      if(classify(n)==='eventos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
+      else break;
+    }
+    result.eventos.push({id:`eventos-${d.key}`,type:'eventos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
+    i=j;
+  }
+
+  // DESCANSOS: solo descansos explícitos del Excel (D/descanso/vacaciones/puente),
+  // excluyendo TODOS los domingos porque son descanso natural.
+  i=0;
+  while(i<sorted.length){
+    const d=sorted[i];
+    if(classify(d)!=='descansos' || !d.description){i++;continue;}
+    const key=eventTitleKey(d.description);
+    let end=d,j=i+1;
+    while(j<sorted.length){
+      const n=sorted[j];
+      if(classify(n)==='descansos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
+      else break;
+    }
+    result.descansos.push({id:`descansos-${d.key}`,type:'descansos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
     i=j;
   }
 
