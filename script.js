@@ -1,4 +1,5 @@
 const urls = {
+  planAnual: "modulos/plan-anual/index.html",
   cargas: "modulos/cargas/index.html",
   SISTEMAS: "modulos/sistemas/index.html",
   fuerza: "modulos/fuerza/index.html",
