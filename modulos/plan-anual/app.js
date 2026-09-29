@@ -155,7 +155,13 @@ function specialLabel(r){
 }
 
 function dayCard(r, index=-1){
-  const details=[
+  const special=isSpecialEvent(r);
+  const details=special ? [
+    ['Periodo',r.Periodo],
+    ['Semana',r.SEMANA],
+    ['Nivel técnico',r['NIVEL DE DESEMPEÑO TÉCNICO'] || r['NIVEL DE DESEMPEÑO TECNICO']],
+    ['Carga de fuerza',r['CARGA DE FUERZA']]
+  ].filter(x=>!isBlank(x[1])) : [
     ['Periodo',r.Periodo],
     ['Etapa',r.Etapa],
     ['Mesociclo',r.Mesociclo],
@@ -165,7 +171,6 @@ function dayCard(r, index=-1){
     ['Nivel técnico',r['NIVEL DE DESEMPEÑO TÉCNICO'] || r['NIVEL DE DESEMPEÑO TECNICO']],
     ['Carga de fuerza',r['CARGA DE FUERZA']]
   ].filter(x=>!isBlank(x[1]));
-  const special=isSpecialEvent(r);
   const label=special ? specialLabel(r) : '';
   return `<article class="day-card ${special ? 'special-event' : ''}" ${special && index>=0 ? `data-event-index="${index}"` : ''}>
     <div class="day-top"><strong>${esc(r.day)}</strong><span>${esc(r.dow)}</span></div>
@@ -184,12 +189,7 @@ function showEventDetail(index){
     ['Fecha', `${currentMonth.name} ${r.day}`],
     ['Día', r.dow],
     ['Periodo', r.Periodo],
-    ['Etapa', r.Etapa],
-    ['Mesociclo', r.Mesociclo],
     ['Semana', r.SEMANA],
-    ['Microciclo', r.Microciclo],
-    ['Unidad de entrenamiento', r['UNIDAD DE ENTRENAMIENTO'] || r['Uni de entre']],
-    ['Descripción', r.Descripción || r.DESCRIPCION],
     ['Nivel de desempeño técnico', r['NIVEL DE DESEMPEÑO TÉCNICO'] || r['NIVEL DE DESEMPEÑO TECNICO']],
     ['Carga de fuerza', r['CARGA DE FUERZA']]
   ].filter(x=>!isBlank(x[1]));
