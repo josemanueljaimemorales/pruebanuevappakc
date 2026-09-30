@@ -1,24 +1,22 @@
-# AKC Resultados — Prototipo
+# AKC RESULTADOS
 
-Módulo independiente para visualizar resultados de competencias a partir de archivos Excel.
+Módulo independiente para consultar resultados de competencias de gimnasia artística varonil de Águilas Kids Center.
+
+## Cambios de esta versión
+- Lee las hojas buscando automáticamente la estructura de resultados, en vez de depender de filas fijas.
+- Recorre todos los atletas detectados del Excel.
+- Lee la hoja de notas de partida deseadas cuando existe.
+- Cada Excel nuevo se agrega al historial y no borra competencias anteriores.
+- El historial se conserva en el navegador mediante localStorage.
+- La pantalla principal tiene únicamente un botón discreto `＋ Subir Excel`.
+- Los atletas se seleccionan desde un menú desplegable.
+- El reporte usa colores por aparato y tarjetas de indicadores.
+- NF = 0 se muestra como `NO PRESENTÓ` y no entra en el cálculo de efectividad.
+- La efectividad general promedia únicamente los aparatos presentados.
+- El ranking AKC se calcula entre los atletas del club presentes en ese archivo y con AA > 0.
+- El lugar oficial del Excel se conserva como referencia separada y no modifica el ranking AKC.
 
 ## Uso
+Abre `index.html` en un navegador moderno. El módulo inicia con `NACIONAL 2026` como ejemplo usando el Excel entregado para esta prueba.
 
-1. Abre `index.html` en un navegador.
-2. El prototipo inicia con los datos de `NACIONAL 2026`.
-3. Usa **Subir Excel de resultados** para cargar otro archivo compatible.
-4. El evento se detecta desde la esquina superior izquierda de la hoja principal.
-
-## Reglas principales
-
-- Muestra Objetivo AA, All Around, Diferencia y efectividad general.
-- Muestra NP deseada cuando existe en la segunda hoja.
-- Muestra NP real, NF, DED y porcentaje por aparato.
-- Si NF es 0, el aparato se muestra como **NO PRESENTÓ** y no genera DED ni porcentaje.
-- El ranking es interno de AKC: solo considera atletas presentes en el archivo y con AA mayor que 0.
-- El ranking no representa el lugar oficial obtenido frente a todos los competidores del evento.
-
-## Estructura esperada del Excel
-
-- `Hoja3`: resultados principales.
-- `Hoja2`: resultados/base y, cuando exista, sección `NOTAS DE PARTIDA DESEADAS`.
+Para agregar otra competencia, usa `＋ Subir Excel`. La nueva competencia aparecerá como una tarjeta y las anteriores permanecerán.
