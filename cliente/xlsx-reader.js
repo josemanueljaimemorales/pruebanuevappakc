@@ -1,4 +1,4 @@
-/* AKC - lector XLSX local, sin librerías externas. */
+/* ESGILA - lector XLSX local, sin librerías externas. */
 (function(){
   "use strict";
   const U8 = Uint8Array, DV = DataView;
@@ -101,5 +101,5 @@
     const path=sheetPath(files,wb,sheetName);
     return worksheet(files,path,ss);
   }
-  window.AKC_XLSX={read};
+  window.ESGILA_XLSX={read};
 })();

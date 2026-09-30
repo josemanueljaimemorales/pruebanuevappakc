@@ -13,9 +13,18 @@
 .mainhead{padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.mainhead h2{margin:0;font-size:20px}.mainhead p{margin:4px 0 0;color:var(--muted);font-size:11px}.actions{display:flex;gap:7px;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:9px 12px;font-weight:800;font-size:11px}.btn.primary{background:var(--blue);color:#fff}.btn.dark{background:var(--navy);color:#fff}.btn.light{background:#eef2f6;color:#263242}.btn.gold{background:var(--gold);color:#fff}.btn.red{background:#a91515;color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}.filters{padding:13px 16px;background:#fafbfc;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px}.bulk{margin:13px 16px;padding:11px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.tablewrap{margin:0 16px 16px;border:1px solid var(--line);border-radius:11px;overflow:auto;max-height:66vh}table{width:100%;border-collapse:separate;border-spacing:0;min-width:720px}th{position:sticky;top:0;background:#f4f7fa;color:#596579;font-size:10px;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px;border-bottom:1px solid var(--line);z-index:2}td{padding:9px 10px;border-bottom:1px solid #edf0f3;font-size:12px}tr:last-child td{border-bottom:0}.group td{background:#edf2f7;color:#344054;font-weight:850;font-size:10px;text-transform:uppercase;letter-spacing:.04em}.status{font-weight:800;min-width:175px}.row-c td:first-child{border-left:3px solid var(--green)}.row-ep td:first-child{border-left:3px solid var(--yellow)}.row-p td:first-child{border-left:3px solid var(--purple)}.row-na td:first-child{border-left:3px solid var(--red)}.notice{margin-top:12px;color:#667085;font-size:10px;line-height:1.45}.toast{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;padding:11px 14px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:100;font-size:12px;font-weight:800}.empty{padding:28px;text-align:center;color:#7b8796;font-size:12px}.modal{position:fixed;inset:0;background:rgba(7,17,31,.58);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}.modal.show{display:flex}.modalbox{width:min(520px,100%);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:20px}.modalbox h3{margin:0 0 5px}.modalbox p{font-size:12px;color:#667085;margin:0 0 15px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modalactions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.dangerbox{border:1px solid #f2c4c4;background:#fff5f5;border-radius:10px;padding:12px;margin-top:10px}.dangerbox strong{color:#a91515}.adminrow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.tablewrap{max-height:none}.filters{grid-template-columns:1fr 1fr}}@media(max-width:560px){.wrap{padding:10px}.topin{padding:9px 12px}.brand h1{font-size:14px}.logo{width:54px;height:54px}.sync span{display:none}.topactions{display:none}.filters{grid-template-columns:1fr}.bulk{grid-template-columns:1fr}.mainhead{align-items:flex-start;flex-direction:column}.appnav{grid-template-columns:1fr 1fr}.tablewrap{margin:0 10px 10px}.bulk{margin:10px}.formgrid{grid-template-columns:1fr}}
 @media print{body{background:#fff}.top{position:static;box-shadow:none}.topactions,.filters,.bulk,.actions,.appnav,.notice,.sync{display:none!important}.grid{display:block}.panel{box-shadow:none;border:0}.mainhead{border-bottom:2px solid #111}.tablewrap{max-height:none;overflow:visible;margin:0}th{position:static}}
+
+/* ESGILA visual theme — appearance only */
+:root{--navy:#080d1b;--navy2:#101a31;--blue:#1598bc;--blue2:#d51f83;--gold:#9a63c7;--purple:#70429c;--green:#198b68;--ink:#17202b}
+body{background:linear-gradient(145deg,#eef3f7,#f8f4f8 58%,#eef7fa)}
+.top{background:linear-gradient(135deg,#080d1b,#18203d 58%,#4b235f)}
+.logo{background:rgba(255,255,255,.04);border-color:rgba(213,31,131,.30)}
+.topactions button{background:linear-gradient(135deg,rgba(213,31,131,.20),rgba(21,152,188,.14));border-color:rgba(255,255,255,.18)}
+.panel{border-color:rgba(112,66,156,.14);box-shadow:0 10px 30px rgba(31,20,50,.09)}
+.appnav button.active{background:linear-gradient(135deg,#1598bc,#70429c);border-color:#70429c}
+.btn.primary{background:linear-gradient(90deg,#1598bc,#70429c)}
+
 </style>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="../../cliente/config.js"></script>
 <script src="../../cliente/theme.js"></script>
@@ -55,16 +64,94 @@
 <div id="adminModal" class="modal"><div class="modalbox"><h3>Administración</h3><p>Funciones de mantenimiento del repositorio.</p><div class="adminrow"><button class="btn primary" onclick="closeModal('adminModal');openAdd()">＋ Agregar atleta</button><button class="btn red" onclick="closeModal('adminModal');openDelete()">🗑 Eliminar atleta</button></div><div class="adminrow"><button class="btn light" onclick="downloadJSON()">Descargar respaldo JSON</button><button class="btn light" onclick="document.getElementById('jsonFile').click();closeModal('adminModal')">Restaurar JSON</button></div><div class="notice">Restaurar un JSON reemplaza los datos locales de este módulo después de confirmación.</div><div class="modalactions"><button class="btn light" onclick="closeModal('adminModal')">Cerrar</button></div></div></div>
 <script>
 
-const firebaseConfig={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
-firebase.initializeApp(firebaseConfig);const cloudDb=firebase.firestore();const COLLECTION="normativosAKC",DOC="estado";
 const APPS=["PISO","ARZON","ANILLOS","SALTO DE CABALLO","BARRAS PARALELAS","BARRA FIJA"],appLabels={"PISO":"Piso","ARZON":"Arzón","ANILLOS":"Anillos","SALTO DE CABALLO":"Salto","BARRAS PARALELAS":"Paralelas","BARRA FIJA":"Barra fija"};
-let db=null,currentApp="PISO",unsubscribe=null,cloudReady=false;
-const normName=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toLowerCase();
-async function init(){setupLogo();setupIdentity();setSync("busy","Actualizando atletas…");try{const source=window.CLIENTE?.repositorios?.normativosExcel||"NORMATIVOS_AKC.xlsx";const rows=await AKC_XLSX.read(source,"NORMATIVOS");const base=buildDbFromRows(rows);const ref=cloudDb.collection(COLLECTION).doc(DOC);const snap=await ref.get();if(!snap.exists){db=base;await ref.set({...db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}else{db=mergeExcelWithCloud(base,snap.data());await ref.set({...db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}cloudReady=true;setSync("ok","Sincronizado");unsubscribe=ref.onSnapshot(s=>{if(s.exists){db=s.data();renderAll();setSync("ok","Sincronizado")}},e=>{console.error(e);setSync("","Error de sincronización")});renderAll()}catch(e){console.error(e);try{const dbUrl=window.CLIENTE?.repositorios?.normativosDatabase||"database.json";const base=await fetch(dbUrl,{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("No se encontró respaldo");return r.json()});db=base;cloudReady=true;setSync("ok","Respaldo local");renderAll()}catch(e2){setSync("","Error de carga");alert("No se pudo sincronizar Normativos AKC: "+e.message)}}}
-function mergeExcelWithCloud(base,cloud){const oldAth=Array.isArray(cloud?.athletes)?cloud.athletes:[],byName=new Map(oldAth.map(a=>[normName(a.name),a])),byColumn=new Map(oldAth.filter(a=>Number.isFinite(a.column)).map(a=>[a.column,a]));const athletes=base.athletes.map(a=>{const old=byName.get(normName(a.name))||byColumn.get(a.column)||{};return {...old,name:a.name,column:a.column}});const oldItems=Array.isArray(cloud?.items)?cloud.items:[],oldById=new Map(oldItems.map(x=>[x.id,x])),oldByRow=new Map(oldItems.map(x=>[String(x.row||"")+"|"+x.apparatus+"|"+normName(x.element),x]));const items=base.items.map(x=>{const old=oldById.get(x.id)||oldByRow.get(String(x.row)+"|"+x.apparatus+"|"+normName(x.element));const status={};athletes.forEach(a=>{const prior=old?.status||{},oldA=oldAth.find(o=>Number(o.column)===Number(a.column));status[a.name]=prior[a.name]||(oldA?prior[oldA.name]:null)||x.status[a.name]||"NA"});return {...x,status}});return {...base,athletes,items,version:3};}
-function buildDbFromRows(rows){if(!rows.length)throw Error("El Excel está vacío.");const names=[];for(let c=2;c<(rows[0]||[]).length;c++){const name=String(rows[0][c]??"").trim();if(name)names.push({name,column:c})}if(!names.length)throw Error("No se encontraron atletas en la fila 1 del Excel.");const appSet=new Set(APPS),items=[];let currentApp="",classification="";const mapStatus=v=>({"Consolidado":"C","En proceso":"EP","Proyección":"P","N/A":"NA"}[String(v??"").trim()]||"NA");for(let r=1;r<rows.length;r++){const a=String(rows[r]?.[0]??"").trim(),b=String(rows[r]?.[1]??"").trim();if(appSet.has(a)){currentApp=a;classification="";continue}if(!currentApp)continue;if(a)classification=a;if(!b)continue;const status={};names.forEach(n=>status[n.name]=mapStatus(rows[r]?.[n.column]));items.push({id:`${currentApp}|${r+1}`,row:r+1,apparatus:currentApp,classification,element:b,status})}return{version:3,sourceWorkbook:"NORMATIVOS_AKC.xlsx",athletes:names,apparatus:APPS,items,statusLabels:{C:"Consolidado",EP:"En proceso",P:"Proyección",NA:"No adquirido"}};}
-function sourceFingerprint(){return "AKC-CLOUD"}
-function applyLocalOverridesIfCurrent(){}
+let db=null,currentApp="PISO",cloudReady=false;
+async function init(){
+  setupLogo();
+  setupIdentity();
+  setSync("busy","Leyendo Excel…");
+  try{
+    const rows=await ESGILA_XLSX.read("NORMATIVOS_ESGILA.xlsx","NORMATIVOS");
+    db=buildDbFromRows(rows);
+    applyLocalOverridesIfCurrent();
+    cloudReady=true;
+    setSync("ok","Excel ESGILA");
+    renderAll();
+  }catch(e){
+    console.error(e);
+    try{
+      const base=await fetch("database.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("No se encontró respaldo");return r.json()});
+      db=base;
+      cloudReady=true;
+      setSync("ok","Respaldo local");
+      renderAll();
+    }catch(e2){
+      console.error(e2);
+      setSync("","Error de carga");
+      alert("No se pudo leer NORMATIVOS_ESGILA.xlsx. Revisa que el Excel esté dentro de este módulo.");
+    }
+  }
+}
+function buildDbFromRows(rows){
+  if(!rows.length) throw Error("El Excel está vacío.");
+  const names=[];
+  for(let c=2;c<(rows[0]||[]).length;c++){
+    const name=String(rows[0][c]??"").trim();
+    if(name) names.push({name,column:c});
+  }
+  if(!names.length) throw Error("No se encontraron atletas en la fila 1 del Excel.");
+  const appSet=new Set(APPS);
+  const items=[];
+  let currentApp="",classification="";
+  const mapStatus=v=>({"Consolidado":"C","En proceso":"EP","Proyección":"P","N/A":"NA"}[String(v??"").trim()]||"NA");
+  for(let r=1;r<rows.length;r++){
+    const a=String(rows[r]?.[0]??"").trim();
+    const b=String(rows[r]?.[1]??"").trim();
+    if(appSet.has(a)){currentApp=a;classification="";continue}
+    if(!currentApp) continue;
+    if(a) classification=a;
+    if(!b) continue;
+    const status={};
+    names.forEach(n=>status[n.name]=mapStatus(rows[r]?.[n.column]));
+    items.push({
+      id:`${currentApp}-${r+1}`,
+      apparatus:currentApp,
+      classification,
+      element:b,
+      status
+    });
+  }
+  return {
+    version:"2.0",
+    sourceWorkbook:"NORMATIVOS_ESGILA.xlsx",
+    athletes:names.map(x=>({name:x.name,column:x.column})),
+    apparatus:APPS,
+    items,
+    statusLabels:{C:"Consolidado",EP:"En proceso",P:"Proyección",NA:"No adquirido"}
+  };
+}
+function sourceFingerprint(){
+  const base={
+    athletes:db.athletes.map(a=>a.name),
+    items:db.items.map(x=>[x.id,x.apparatus,x.classification,x.element,Object.values(x.status||{})])
+  };
+  let str=JSON.stringify(base),h=2166136261;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}
+  return (h>>>0).toString(16);
+}
+function applyLocalOverridesIfCurrent(){
+  try{
+    const raw=localStorage.getItem("ESGILA_NORMATIVOS_OVERRIDES");
+    if(!raw)return;
+    const saved=JSON.parse(raw);
+    if(saved.fingerprint!==sourceFingerprint())return;
+    Object.entries(saved.overrides||{}).forEach(([key,val])=>{
+      const [id,athlete]=key.split("|||");
+      const item=db.items.find(x=>x.id===id);
+      if(item&&item.status) item.status[athlete]=val;
+    });
+  }catch(e){console.warn("No se pudieron aplicar cambios locales",e)}
+}
 function setupLogo(){const box=document.getElementById("logoBox"),img=new Image();img.onload=()=>{box.innerHTML="";box.appendChild(img);img.className="logo";img.style.cssText="width:100%;height:100%;object-fit:contain;padding:0;border:0;background:transparent"};img.src="../../cliente/logo.png"}
 function setupIdentity(){if(window.CLIENTE){document.title="Normativos · "+(CLIENTE.nombre||"Gimnasio");document.querySelectorAll("[data-cliente-name]").forEach(e=>e.textContent=CLIENTE.nombre||"GIMNASIO");document.querySelectorAll("[data-cliente-subtitle]").forEach(e=>e.textContent=CLIENTE.subtitulo||"GIMNASIA ARTÍSTICA");}}
 function setSync(c,t){document.getElementById("syncDot").className="dot "+c;document.getElementById("syncText").textContent=t}
@@ -90,7 +177,7 @@ async function saveCloud(){
         overrides[item.id+"|||"+athlete]=val;
       });
     });
-    localStorage.setItem("AKC_NORMATIVOS_OVERRIDES",JSON.stringify({
+    localStorage.setItem("ESGILA_NORMATIVOS_OVERRIDES",JSON.stringify({
       fingerprint:sourceFingerprint(),
       overrides
     }));
@@ -106,17 +193,16 @@ async function downloadExcel(){
   try{
     if(!db || !window.JSZip) throw new Error("No se pudo preparar el archivo Excel.");
 
-    // Usamos el Excel AKC original como plantilla. Así se conservan
+    // Usamos el Excel ESGILA original como plantilla. Así se conservan
     // colores, estilos, fórmulas, anchos, validaciones y formatos.
-    const response=await fetch((window.CLIENTE?.repositorios?.normativosExcel)||"NORMATIVOS_AKC.xlsx",{cache:"no-store"});
-    if(!response.ok) throw new Error("No se encontró NORMATIVOS_AKC.xlsx");
+    const response=await fetch("NORMATIVOS_ESGILA.xlsx",{cache:"no-store"});
+    if(!response.ok) throw new Error("No se encontró NORMATIVOS_ESGILA.xlsx");
     const workbookZip=await JSZip.loadAsync(await response.arrayBuffer());
 
     const parser=new DOMParser(), serializer=new XMLSerializer();
     const NS="http://schemas.openxmlformats.org/spreadsheetml/2006/main";
     const ssFile=workbookZip.file("xl/sharedStrings.xml");
     const sheetFile=workbookZip.file("xl/worksheets/sheet1.xml");
-    const fichaFile=workbookZip.file("xl/worksheets/sheet2.xml");
     if(!ssFile||!sheetFile) throw new Error("El Excel no tiene la estructura XLSX esperada.");
 
     const ssDoc=parser.parseFromString(await ssFile.async("text"),"application/xml");
@@ -156,37 +242,26 @@ async function downloadExcel(){
       v.textContent=String(sharedIndex(value));
     }
 
-    async function updateFicha(){
-      if(!fichaFile) return null;
-      const doc=parser.parseFromString(await fichaFile.async("text"),"application/xml");
-      const c=[...doc.getElementsByTagNameNS(NS,"c")].find(x=>x.getAttribute("r")==="B3");
-      if(c){c.setAttribute("t","s");let v=c.getElementsByTagNameNS(NS,"v")[0];if(!v){v=doc.createElementNS(NS,"v");c.appendChild(v)}v.textContent=String(sharedIndex(document.getElementById("athlete").value||db.athletes[0]?.name||""));}
-      return doc;
-    }
-
     function colName(n){
       let out="";
       while(n){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}
       return out;
     }
 
-    // Nombres actuales de AKC.
+    // Nombres actuales de ESGILA.
     db.athletes.forEach(a=>setSharedCell(colName(a.column+1)+"1",a.name));
 
     // Estados actuales del módulo, sobre las mismas filas del Excel original.
     const statusText={C:"Consolidado",EP:"En proceso",P:"Proyección",NA:"N/A"};
     db.items.forEach(item=>{
-      const row=Number(item.row || String(item.id).split("|").pop());
+      const dash=item.id.lastIndexOf("-");
+      const row=Number(item.id.slice(dash+1));
       if(!row) return;
       db.athletes.forEach(a=>{
         const status=item.status?.[a.name]||"NA";
         setSharedCell(colName(a.column+1)+row,statusText[status]||"N/A");
       });
     });
-
-    // Mantener la ficha individual sincronizada con el atleta seleccionado.
-    const fichaDoc=await updateFicha();
-    if(fichaDoc) workbookZip.file("xl/worksheets/sheet2.xml",serializer.serializeToString(fichaDoc));
 
     // Mantener fórmulas del libro y pedir a Excel que recalcule al abrir.
     const wbFile=workbookZip.file("xl/workbook.xml");
@@ -210,12 +285,12 @@ async function downloadExcel(){
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
-    a.download="NORMATIVOS_AKC.xlsx";
+    a.download="NORMATIVOS_ESGILA.xlsx";
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
-    toast("Excel AKC descargado con formato original");
+    toast("Excel ESGILA descargado con formato original");
   }catch(e){
     console.error(e);
     alert("No se pudo descargar el Excel: "+e.message);

@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="style.css">
 <script src="../../cliente/config.js"></script>
 <script src="../../cliente/theme.js"></script>
-<script src="../../cliente/athletes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -30,9 +29,7 @@
   <section class="athlete-panel" aria-label="Selección de atleta">
     <div class="section-label">ATLETA</div>
     <div class="atletas">
-      <select id="atletaSelect" class="athlete-select" aria-label="Elige atleta">
-        <option value="">Elige atleta</option>
-      </select>
+      <div class="loading-athletes">Cargando atletas ESGILA…</div>
     </div>
   </section>
 
@@ -53,6 +50,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+function seleccionarAtleta(nombre){
+ localStorage.setItem("atleta", nombre);
+ alert("Atleta seleccionado: " + nombre);
+}
 </script>
 
 </body>

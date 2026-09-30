@@ -376,3 +376,9 @@ h2{
     font-size:27px;
   }
 }
+
+
+/* ESGILA visual theme */
+:root{--blue:#1598bc;--blue2:#d51f83;--line:rgba(177,212,225,.19);--panel:rgba(10,20,34,.80);}
+body{background:radial-gradient(circle at 18% -10%,rgba(213,31,131,.14),transparent 38%),radial-gradient(circle at 88% 30%,rgba(21,152,188,.14),transparent 34%),linear-gradient(145deg,#050914,#0a1222 55%,#070b17);color:var(--text)}
+

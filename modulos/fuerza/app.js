@@ -30,41 +30,39 @@ home(true);
 }
 
 async function loadClubAthletes(){
-  try{
-    const list=await AKC_ATHLETES.load();
-    clubAthletes=list.map(x=>x.name).filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'));
-  }catch(e){
-    clubAthletes=[...new Set(data.map(r=>String(r.ATLETA||r.Atleta||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  const names=new Map();
+  const urls=[
+    '../gav-training/trabajo_gav.xlsx',
+    '../normativos/NORMATIVOS_ESGILA.xlsx'
+  ];
+  for(const url of urls){
+    try{
+      const r=await fetch(url+'?'+Date.now());
+      if(!r.ok) continue;
+      const b=await r.arrayBuffer();
+      const w=XLSX.read(b,{type:'array'});
+      if(url.includes('trabajo_gav')){
+        const sh=w.Sheets[w.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(sh,{header:1,defval:''});
+        const h=(rows[0]||[]).map(v=>String(v).trim().toUpperCase());
+        const idx=h.indexOf('NOMBRE');
+        if(idx>=0) rows.slice(1).forEach(row=>{const n=String(row[idx]||'').trim(); if(n && !names.has(n.toUpperCase())) names.set(n.toUpperCase(),n);});
+      }else{
+        const sh=w.Sheets['NORMATIVOS'];
+        const rows=XLSX.utils.sheet_to_json(sh,{header:1,defval:''});
+        (rows[0]||[]).slice(2).forEach(v=>{const n=String(v||'').trim(); if(n) names.add(n);});
+      }
+    }catch(e){ console.warn('No se pudo leer lista de atletas ESGILA',url,e); }
   }
+  clubAthletes=[...names.values()].sort((a,b)=>a.localeCompare(b,'es'));
 }
-
 
 function renderAthletes(){
-  const select=document.getElementById('atletaSelect');
-  if(!select) return;
-
-  const actual=localStorage.getItem('atleta') || '';
-  select.innerHTML = '<option value="">Elige atleta</option>' +
-    clubAthletes.map(n=>{
-      const value=String(n).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-      return `<option value="${value}">${value}</option>`;
-    }).join('');
-
-  if(actual && clubAthletes.includes(actual)) select.value=actual;
-
-  select.onchange=function(){
-    if(this.value){
-      localStorage.setItem('atleta', this.value);
-    }else{
-      localStorage.removeItem('atleta');
-    }
-  };
-}
-
-function seleccionarAtleta(nombre){
-  const select=document.getElementById('atletaSelect');
-  if(select) select.value=nombre;
-  if(nombre) localStorage.setItem('atleta', nombre);
+  const box=document.querySelector('.atletas');
+  if(!box) return;
+  box.innerHTML=clubAthletes.length
+    ? clubAthletes.map(n=>`<button onclick="seleccionarAtleta('${String(n).replace(/\\/g,'\\\\').replace(/'/g,"\\'") }')">${n}</button>`).join('')
+    : '<div class="empty-athletes">No se encontraron atletas ESGILA.</div>';
 }
 
 function home(first=false){

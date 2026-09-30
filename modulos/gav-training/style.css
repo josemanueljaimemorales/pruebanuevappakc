@@ -234,3 +234,9 @@ input[type="checkbox"]{
   .app-shell{padding-top:34px}
   button{min-height:70px}
 }
+
+
+/* ESGILA visual theme */
+:root{--blue:#1598bc;--blue2:#d51f83;--line:rgba(177,212,225,.18);--panel:rgba(10,25,43,.76);--panel-strong:rgba(20,29,52,.92)}
+body{background:radial-gradient(circle at 18% -10%,rgba(213,31,131,.13),transparent 35%),radial-gradient(circle at 84% 24%,rgba(21,152,188,.15),transparent 35%),linear-gradient(145deg,#050914,#0a1222 52%,#070b17)}
+

@@ -94,9 +94,9 @@ font-size:20px;
   height:420px;
   right:-280px;
   top:-115px;
-  background:url("aguila-rutinas-fondo.png") center/contain no-repeat;
+  background:url("../../cliente/logo.png") center/contain no-repeat;
   opacity:.055;
-  filter:invert(1);
+  filter:none;
   pointer-events:none;
   z-index:0;
 }
@@ -278,3 +278,34 @@ font-size:20px;
   .cardText strong{font-size:18px}
   .cardText small{font-size:10px}
 }
+
+.dataNotice{
+  max-width:760px;
+  margin:20px auto;
+  padding:16px 18px;
+  border:1px solid rgba(255,180,70,.35);
+  border-radius:16px;
+  background:rgba(80,45,10,.28);
+  color:#ffdca3;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.dataNotice{
+  max-width:760px;
+  margin:20px auto;
+  padding:16px 18px;
+  border:1px solid rgba(255,180,70,.35);
+  border-radius:16px;
+  background:rgba(80,45,10,.28);
+  color:#ffdca3;
+  font-size:14px;
+  line-height:1.5;
+}
+
+/* ESGILA visual theme */
+body{background:radial-gradient(circle at 16% -10%,rgba(213,31,131,.16),transparent 36%),radial-gradient(circle at 86% 18%,rgba(21,152,188,.16),transparent 34%),linear-gradient(145deg,#050914,#0a1222 52%,#070b17);color:#f5f7fb}
+.button{background:linear-gradient(145deg,rgba(112,66,156,.30),rgba(21,152,188,.18));border:1px solid rgba(177,212,225,.18)}
+.button:hover{box-shadow:0 0 18px rgba(213,31,131,.28)}
+.table th{background:linear-gradient(90deg,#1598bc,#70429c);color:#fff}
+.np{color:#d51f83;text-shadow:0 0 7px rgba(213,31,131,.35)}

@@ -2,7 +2,7 @@ let dataApp=[];
 let progress=JSON.parse(localStorage.getItem("progress")||"{}");
 
 async function loadWorkbook(){
-  const rows=await AKC_XLSX.read("trabajo_gav.xlsx");
+  const rows=await ESGILA_XLSX.read("trabajo_gav.xlsx");
   if(!rows.length) throw new Error("El Excel de GAV Training está vacío.");
   const headers=rows[0].map(v=>String(v??"").trim().toUpperCase());
   const col={};
