@@ -1,64 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <meta name="theme-color" content="#061426">
-  <title>Estadísticas de competencias · AKC</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#03080f;color:#f4f8fc}body{padding:16px;background:radial-gradient(circle at 15% 0%,rgba(43,157,255,.16),transparent 32%),linear-gradient(145deg,#03070d,#0b1420 55%,#04080f)}
-    .wrap{width:min(1100px,100%);margin:auto}.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}.back{border:1px solid rgba(190,207,224,.2);background:#0a1420;color:#fff;border-radius:10px;padding:9px 13px;cursor:pointer}.title{flex:1}.eyebrow{font-size:9px;letter-spacing:.2em;color:#8fa5ba}.title h1{margin:2px 0 0;font-size:22px;letter-spacing:.06em}.actions{display:flex;gap:8px}.action{border:1px solid rgba(190,207,224,.2);background:#0b1725;color:#dce8f2;border-radius:10px;padding:9px 12px;cursor:pointer}.action:hover{border-color:rgba(201,170,98,.5)}
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.metric{padding:14px;border:1px solid rgba(190,207,224,.18);border-radius:15px;background:linear-gradient(145deg,rgba(18,32,48,.9),rgba(5,12,20,.9))}.metric small{display:block;color:#8299ae;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.metric strong{display:block;margin-top:6px;font-size:24px}.panel{border:1px solid rgba(190,207,224,.18);border-radius:16px;overflow:hidden;background:rgba(5,12,20,.82);box-shadow:0 14px 34px rgba(0,0,0,.22)}.panel-head{padding:14px 16px;border-bottom:1px solid rgba(190,207,224,.13);display:flex;align-items:center;gap:10px}.panel-head b{letter-spacing:.06em}.panel-head span{margin-left:auto;color:#7f95aa;font-size:11px}.filters{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(190,207,224,.1)}select,input{width:100%;max-width:300px;padding:10px;border-radius:9px;border:1px solid #304459;background:#07111d;color:#fff;outline:none}table{width:100%;border-collapse:collapse}th,td{padding:11px 13px;border-bottom:1px solid rgba(190,207,224,.08);text-align:left;font-size:12px}th{color:#8fa5ba;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.025)}td.numcell{text-align:center;font-weight:700;color:#dce8f2}tr:hover td{background:rgba(43,157,255,.045)}.empty{padding:35px;text-align:center;color:#71869a}.note{margin-top:10px;color:#687e93;font-size:10px;line-height:1.5}
-    @media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr)}.actions{display:none}th,td{padding:9px 8px;font-size:11px}.hide-mobile{display:none}.title h1{font-size:18px}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#071a2d">
+<title>Estadísticas del atleta · AKC</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#06101c;color:#f5f8fb}body{padding:14px;background:radial-gradient(circle at 10% 0%,rgba(40,150,255,.18),transparent 30%),linear-gradient(145deg,#03070d,#0b1726 58%,#040910)}
+button,select{font:inherit}.wrap{width:min(1120px,100%);margin:auto}.top{display:flex;align-items:center;gap:11px;margin-bottom:14px}.back{border:1px solid #294057;background:#0b1928;color:#fff;border-radius:10px;padding:9px 13px;cursor:pointer}.title{flex:1}.eyebrow{font-size:9px;letter-spacing:.2em;color:#8da4ba}.title h1{margin:3px 0 0;font-size:21px;letter-spacing:.05em}.top small{color:#7890a5;font-size:10px}
+.selector{padding:16px;border:1px solid rgba(190,210,230,.18);border-radius:17px;background:linear-gradient(135deg,rgba(16,34,52,.95),rgba(5,13,22,.95));box-shadow:0 15px 38px rgba(0,0,0,.22);margin-bottom:14px}.selector label{display:block;color:#8da4ba;font-size:10px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px}.selector select{width:100%;padding:12px;border:1px solid #34516b;border-radius:10px;background:#071522;color:#fff;font-size:15px;outline:none}.hint{margin-top:7px;color:#667f95;font-size:10px}
+.hidden{display:none!important}.athleteHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 10px}.athleteName{font-size:23px;font-weight:800}.athleteMeta{color:#849bb0;font-size:11px}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:14px}.stat{padding:13px;border:1px solid rgba(190,210,230,.16);border-radius:14px;background:rgba(8,18,29,.88)}.stat small{display:block;color:#7890a6;font-size:9px;text-transform:uppercase;letter-spacing:.09em}.stat strong{display:block;margin-top:5px;font-size:20px}.stat em{font-style:normal;color:#8fa6bb;font-size:10px}
+.panel{border:1px solid rgba(190,210,230,.17);border-radius:16px;overflow:hidden;background:rgba(5,13,22,.9);margin-bottom:14px}.panelHead{padding:13px 15px;border-bottom:1px solid rgba(190,210,230,.11);display:flex;align-items:center;gap:10px}.panelHead b{font-size:13px;letter-spacing:.05em}.panelHead span{margin-left:auto;color:#70889d;font-size:10px}.history{padding:10px}.comp{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:12px;padding:13px 12px;border:1px solid rgba(190,210,230,.11);border-radius:12px;background:#091522;margin-bottom:8px;cursor:pointer;transition:.15s}.comp:hover{transform:translateY(-1px);border-color:rgba(201,170,98,.55);background:#0b1b2c}.comp:last-child{margin-bottom:0}.compName{font-weight:700;font-size:13px}.compSub{margin-top:4px;color:#748ca1;font-size:10px}.pill{display:inline-flex;padding:4px 7px;border-radius:7px;background:#12283c;color:#a9bfd2;font-size:10px}.score{text-align:right}.score b{font-size:16px}.score small{display:block;color:#71899d;font-size:9px}.place{text-align:center;min-width:62px}.place b{font-size:16px}.place small{display:block;color:#71899d;font-size:9px}.chev{font-size:22px;color:#72899d}
+.detail{padding:15px}.detailBack{border:1px solid #294057;background:#0b1928;color:#dce8f2;border-radius:9px;padding:8px 11px;cursor:pointer;margin-bottom:13px}.detailTitle{font-size:22px;font-weight:800}.detailSub{color:#8399ad;font-size:11px;margin:4px 0 14px}.detailGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:13px}.big{padding:12px;border-radius:12px;background:#0a1826;border:1px solid rgba(190,210,230,.13)}.big small{display:block;color:#758ca0;font-size:9px;text-transform:uppercase}.big strong{display:block;font-size:20px;margin-top:4px}.scores{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.scoreBox{padding:12px 8px;text-align:center;border-radius:11px;background:#0a1724;border:1px solid rgba(190,210,230,.12)}.scoreBox span{display:block;color:#7990a5;font-size:9px;text-transform:uppercase}.scoreBox b{display:block;margin-top:4px;font-size:17px}.compare{padding:15px}.compareIntro{color:#8096aa;font-size:11px;margin-bottom:12px}.compareGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:15px}.compareCard{padding:13px;border-radius:13px;border:1px solid rgba(190,210,230,.13);background:#091522}.compareCard small{display:block;color:#738a9e;font-size:9px;text-transform:uppercase;line-height:1.3}.compareCard strong{display:block;font-size:18px;margin-top:5px}.compareCard span{display:block;color:#849bb0;font-size:10px;margin-top:3px}.chartWrap{padding:13px;border:1px solid rgba(190,210,230,.13);border-radius:13px;background:#08131f}.chartTitle{font-size:11px;font-weight:700;margin-bottom:8px}.chart{width:100%;height:260px;display:block}.legend{color:#6f879c;font-size:9px;margin-top:6px}.empty{padding:28px;text-align:center;color:#71879b}.error{padding:18px;border:1px solid #5a3030;background:#211214;border-radius:12px;color:#e7b5b5;font-size:12px}
+@media(max-width:760px){body{padding:10px}.stats{grid-template-columns:repeat(2,1fr)}.comp{grid-template-columns:1fr auto auto}.comp .pill{display:none}.detailGrid,.compareGrid{grid-template-columns:repeat(2,1fr)}.scores{grid-template-columns:repeat(3,1fr)}.athleteName{font-size:19px}.chart{height:220px}.top small{display:none}}
+</style>
 </head>
 <body>
 <main class="wrap">
-  <header class="head">
-    <button class="back" onclick="history.length>1?history.back():location.href='../index.html'">←</button>
-    <div class="title"><div class="eyebrow">ÁGUILAS KC · REPORTES</div><h1>ESTADÍSTICAS DE COMPETENCIAS</h1></div>
-    <div class="actions"><button class="action" id="reload">Actualizar</button></div>
-  </header>
-  <section class="grid">
-    <div class="metric"><small>Competencias</small><strong id="mEvents">—</strong></div>
-    <div class="metric"><small>Atletas registrados</small><strong id="mAthletes">—</strong></div>
-    <div class="metric"><small>Registros</small><strong id="mRows">—</strong></div>
-    <div class="metric"><small>Promedio atletas / evento</small><strong id="mAvg">—</strong></div>
-  </section>
-  <section class="panel">
-    <div class="panel-head"><b>Participantes en cada evento</b><span>Conteo de atletas únicos por competencia</span></div>
-    <div class="filters"><input id="search" placeholder="Buscar competencia…"><select id="year"><option value="">Todos los años</option></select></div>
-    <div id="tableWrap" class="empty">Cargando estadísticas…</div>
-  </section>
-  <div class="note">La cantidad de “participantes en ese evento” se calcula contando atletas con registro en cada competencia. No utiliza la columna PART del Excel, porque esa columna corresponde a otro dato del historial.</div>
+<header class="top"><button class="back" onclick="location.href='../index.html'">←</button><div class="title"><div class="eyebrow">ÁGUILAS KC · REPORTES</div><h1>ESTADÍSTICAS DEL ATLETA</h1></div><small>Historial de competencias</small></header>
+<section class="selector"><label for="athlete">Selecciona al atleta</label><select id="athlete"><option value="">Selecciona un atleta…</option></select><div class="hint">El papá puede elegir a su hijo y consultar únicamente sus competencias y resultados.</div></section>
+<section id="app" class="hidden">
+<div class="athleteHead"><div><div class="athleteName" id="athleteName"></div><div class="athleteMeta" id="athleteMeta"></div></div></div>
+<div class="stats" id="stats"></div>
+<section id="historyView">
+<div class="panel"><div class="panelHead"><b>HISTORIAL DE COMPETENCIAS</b><span>Selecciona una competencia para ver sus notas</span></div><div class="history" id="history"></div></div>
+<div class="panel"><div class="panelHead"><b>COMPARACIÓN Y EVOLUCIÓN</b><span>Todo el historial del atleta</span></div><div class="compare" id="compare"></div></div>
+</section>
+<section id="detailView" class="panel hidden"><div class="detail" id="detail"></div></section>
+</section>
+<div id="loading" class="empty">Cargando estadísticas…</div>
 </main>
 <script>
-let allRows=[];
+let records=[];let athletes=[];let selectedAthlete='';
 const $=id=>document.getElementById(id);
-function normalize(v){return v==null?'':String(v).trim()}
-function load(){
-  $('tableWrap').textContent='Cargando estadísticas…';
-  fetch('Estadistica%20de%20competencias%20totales.xlsx?'+Date.now()).then(r=>{if(!r.ok)throw new Error('No se pudo cargar el archivo');return r.arrayBuffer()}).then(buf=>{
-    const wb=XLSX.read(buf,{type:'array'}), ws=wb.Sheets[wb.SheetNames[0]], data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-    let athlete=''; allRows=[];
-    const header=data[0]||[]; const gi=header.indexOf('GIMNASTA'), ci=header.indexOf('COPA');
-    data.slice(1).forEach(r=>{if(normalize(r[gi])) athlete=normalize(r[gi]); const event=normalize(r[ci]); if(event&&athlete) allRows.push({athlete,event});});
-    render();
-  }).catch(e=>{$('tableWrap').innerHTML='<div class="empty">No se pudo cargar la base de estadísticas.<br>'+e.message+'</div>';});
+const names=['PISO','ARZON','ANILLO','SALTO','PARALELA','FIJA'];
+function txt(v){return v===null||v===undefined||v===''?'—':String(v)}
+function num(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function fmt(v){const n=num(v);return n===null?'—':n.toFixed(3).replace(/\.000$/,'').replace(/(\.\d*[1-9])0+$/,'$1')}
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+async function load(){
+ try{const r=await fetch('Estadistica%20de%20competencias%20totales.xlsx?'+Date.now());if(!r.ok)throw Error('No se pudo cargar el archivo de estadísticas.');const buf=await r.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+ const h=(data[0]||[]).map(x=>String(x??'').trim());const idx=Object.fromEntries(h.map((x,i)=>[x,i]));let athlete='';records=[];
+ data.slice(1).forEach((r,i)=>{if(txt(r[idx.GIMNASTA])!=='—')athlete=String(r[idx.GIMNASTA]).trim();const event=txt(r[idx.COPA]);if(event!=='—'&&athlete){records.push({row:i+2,athlete,event,level:txt(r[idx.NIVEL]),cat:txt(r[idx.CAT]),scores:names.map(n=>r[idx[n]]),aa:r[idx.AA],place:r[idx.LUGAR],part:r[idx.PART]});}});
+ athletes=[...new Set(records.map(r=>r.athlete))].sort((a,b)=>a.localeCompare(b,'es'));$('athlete').innerHTML='<option value="">Selecciona un atleta…</option>'+athletes.map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join('');$('loading').classList.add('hidden');
+ }catch(e){$('loading').innerHTML='<div class="error">'+esc(e.message)+'</div>'}
 }
-function render(){
-  const search=normalize($('search').value).toLowerCase(), year=$('year').value;
-  const years=[...new Set(allRows.map(x=>(x.event.match(/(?:^|\s)(20\d{2}|\d{2})\s*$/)||[])[1]).filter(Boolean))].sort();
-  const selected=$('year').value; $('year').innerHTML='<option value="">Todos los años</option>'+years.map(y=>`<option value="${y}">${y.length===2?'20'+y:y}</option>`).join(''); $('year').value=selected;
-  const filtered=allRows.filter(x=>{const m=x.event.match(/(?:^|\s)(20\d{2}|\d{2})\s*$/);const y=m?m[1]:'';return x.event.toLowerCase().includes(search)&&(!year||y===year)});
-  const map=new Map(); filtered.forEach(x=>{if(!map.has(x.event))map.set(x.event,new Set());map.get(x.event).add(x.athlete)});
-  const events=[...map.entries()].map(([event,set])=>({event,count:set.size})).sort((a,b)=>a.event.localeCompare(b.event,'es'));
-  const athletes=new Set(allRows.map(x=>x.athlete)); $('mEvents').textContent=new Set(allRows.map(x=>x.event)).size; $('mAthletes').textContent=athletes.size; $('mRows').textContent=allRows.length; $('mAvg').textContent=(allRows.length/new Set(allRows.map(x=>x.event)).size||0).toFixed(1);
-  if(!events.length){$('tableWrap').innerHTML='<div class="empty">Sin resultados para el filtro seleccionado.</div>';return}
-  $('tableWrap').innerHTML='<table><thead><tr><th>#</th><th>Competencia / evento</th><th>Participantes</th></tr></thead><tbody>'+events.map((x,i)=>`<tr><td class="numcell">${i+1}</td><td>${x.event}</td><td class="numcell">${x.count}</td></tr>`).join('')+'</tbody></table>';
-}
-$('search').addEventListener('input',render); $('year').addEventListener('change',render); $('reload').addEventListener('click',load); load();
+function athleteRows(){return records.filter(r=>r.athlete===selectedAthlete)}
+function selectAthlete(){selectedAthlete=$('athlete').value;$('detailView').classList.add('hidden');$('historyView').classList.remove('hidden');if(!selectedAthlete){$('app').classList.add('hidden');return}$('app').classList.remove('hidden');renderAthlete()}
+function renderAthlete(){const rows=athleteRows();$('athleteName').textContent=selectedAthlete;const levels=[...new Set(rows.map(r=>r.level))].join(' · ');$('athleteMeta').textContent=`${rows.length} competencias · Niveles: ${levels||'—'}`;
+ const aas=rows.map(r=>num(r.aa)).filter(v=>v!==null), places=rows.map(r=>num(r.place)).filter(v=>v!==null);const bestAA=aas.length?Math.max(...aas):null,bestPlace=places.length?Math.min(...places):null;$('stats').innerHTML=[['Competencias',rows.length,'registradas'],['Mejor AA',fmt(bestAA),'máximo'],['AA más bajo',fmt(Math.min(...aas)),'mínimo'],['Mejor lugar',bestPlace?`#${bestPlace}`:'—','posición más alta'],['Promedio AA',fmt(aas.reduce((a,b)=>a+b,0)/aas.length),'histórico']].map(x=>`<div class="stat"><small>${x[0]}</small><strong>${x[1]}</strong><em>${x[2]}</em></div>`).join('');
+ $('history').innerHTML=rows.map((r,i)=>`<div class="comp" data-i="${i}"><div><div class="compName">${esc(r.event)}</div><div class="compSub">Nivel ${esc(r.level)} · Categoría ${esc(r.cat)}</div></div><span class="pill">${esc(txt(r.part))} participantes</span><div class="score"><b>${fmt(r.aa)}</b><small>AA</small></div><div class="place"><b>${txt(r.place)==='—'?'—':'#'+esc(r.place)}</b><small>lugar</small></div><div class="chev">›</div></div>`).join('');document.querySelectorAll('.comp').forEach(el=>el.addEventListener('click',()=>showDetail(rows[Number(el.dataset.i)])));renderCompare(rows)}
+function showDetail(r){$('historyView').classList.add('hidden');$('detailView').classList.remove('hidden');const scores=names.map((n,i)=>`<div class="scoreBox"><span>${n}</span><b>${fmt(r.scores[i])}</b></div>`).join('');$('detail').innerHTML=`<button class="detailBack" id="backDetail">← Volver al historial</button><div class="detailTitle">${esc(r.event)}</div><div class="detailSub">${esc(selectedAthlete)} · Nivel ${esc(r.level)} · Categoría ${esc(r.cat)}</div><div class="detailGrid"><div class="big"><small>All Around</small><strong>${fmt(r.aa)}</strong></div><div class="big"><small>Lugar</small><strong>${txt(r.place)==='—'?'—':'#'+esc(r.place)}</strong></div><div class="big"><small>Participantes</small><strong>${esc(txt(r.part))}</strong></div><div class="big"><small>Nivel / categoría</small><strong>${esc(r.level)} · ${esc(r.cat)}</strong></div></div><div class="scores">${scores}</div>`;$('backDetail').onclick=()=>{$('detailView').classList.add('hidden');$('historyView').classList.remove('hidden')};window.scrollTo({top:0,behavior:'smooth'})}
+function renderCompare(rows){const aas=rows.map(r=>num(r.aa)).filter(v=>v!==null),places=rows.map(r=>num(r.place)).filter(v=>v!==null);const maxAA=Math.max(...aas),minAA=Math.min(...aas),bestP=Math.min(...places),worstP=Math.max(...places);const maxR=rows.find(r=>num(r.aa)===maxAA),minR=rows.find(r=>num(r.aa)===minAA),bestR=rows.find(r=>num(r.place)===bestP),worstR=rows.find(r=>num(r.place)===worstP);$('compare').innerHTML=`<div class="compareIntro">Comparación automática de todas las competencias registradas para ${esc(selectedAthlete)}.</div><div class="compareGrid"><div class="compareCard"><small>AA más alto</small><strong>${fmt(maxAA)}</strong><span>${esc(maxR.event)}</span></div><div class="compareCard"><small>AA más bajo</small><strong>${fmt(minAA)}</strong><span>${esc(minR.event)}</span></div><div class="compareCard"><small>Mejor lugar</small><strong>#${bestP}</strong><span>${esc(bestR.event)} · ${esc(txt(bestR.part))} participantes</span></div><div class="compareCard"><small>Peor lugar</small><strong>#${worstP}</strong><span>${esc(worstR.event)} · ${esc(txt(worstR.part))} participantes</span></div></div><div class="chartWrap"><div class="chartTitle">EVOLUCIÓN DEL ALL AROUND</div><canvas id="chart" class="chart"></canvas><div class="legend">La línea sigue el orden de las competencias tal como aparecen en el historial del Excel.</div></div>`;drawChart(rows)}
+function drawChart(rows){const c=$('chart');if(!c)return;const dpr=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);const vals=rows.map(r=>num(r.aa));const valid=vals.filter(v=>v!==null);if(!valid.length)return;const min=Math.min(...valid),max=Math.max(...valid),pad=(max-min||1)*.15,ymin=min-pad,ymax=max+pad;const left=42,right=12,top=18,bottom=38,gw=w-left-right,gh=h-top-bottom;x.strokeStyle='rgba(150,175,200,.18)';x.fillStyle='#7890a5';x.font='10px Segoe UI,Arial';for(let i=0;i<4;i++){const yy=top+gh*i/3;x.beginPath();x.moveTo(left,yy);x.lineTo(w-right,yy);x.stroke();const v=ymax-(ymax-ymin)*i/3;x.fillText(v.toFixed(1),5,yy+3)}x.strokeStyle='#d0a85b';x.lineWidth=2;x.beginPath();let started=false;rows.forEach((r,i)=>{const v=vals[i];if(v===null){started=false;return}const px=left+(rows.length===1?gw/2:gw*i/(rows.length-1)),py=top+(ymax-v)/(ymax-ymin)*gh;if(!started){x.moveTo(px,py);started=true}else x.lineTo(px,py)});x.stroke();rows.forEach((r,i)=>{const v=vals[i];if(v===null)return;const px=left+(rows.length===1?gw/2:gw*i/(rows.length-1)),py=top+(ymax-v)/(ymax-ymin)*gh;x.fillStyle='#f5f8fb';x.beginPath();x.arc(px,py,3.5,0,Math.PI*2);x.fill();x.fillStyle='#71899d';x.save();x.translate(px,h-9);x.rotate(-Math.PI/4);x.textAlign='right';x.fillText(r.event,0,0);x.restore()})}
+$('athlete').addEventListener('change',selectAthlete);window.addEventListener('resize',()=>{if(selectedAthlete)drawChart(athleteRows())});load();
 </script>
 </body>
 </html>
