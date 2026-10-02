@@ -8,7 +8,7 @@ const urls = {
   trabajo: "modulos/gav-training/index.html",
   basicos: "modulos/basicos/index.html",
   normativos: "modulos/normativos/index.html",
-  reportes: "modulos/reportes/estadisticas/index.html"
+  reportes: "modulos/reportes/index.html"
 };
 
 const NORMATIVOS_PASSWORD = "Akcgav";
