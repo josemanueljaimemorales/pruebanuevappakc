@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="theme-color" content="#061426">
+  <title>Estadísticas de competencias · AKC</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"Segoe UI",Arial,sans-serif;background:#03080f;color:#f4f8fc}body{padding:16px;background:radial-gradient(circle at 15% 0%,rgba(43,157,255,.16),transparent 32%),linear-gradient(145deg,#03070d,#0b1420 55%,#04080f)}
+    .wrap{width:min(1100px,100%);margin:auto}.head{display:flex;align-items:center;gap:12px;margin-bottom:16px}.back{border:1px solid rgba(190,207,224,.2);background:#0a1420;color:#fff;border-radius:10px;padding:9px 13px;cursor:pointer}.title{flex:1}.eyebrow{font-size:9px;letter-spacing:.2em;color:#8fa5ba}.title h1{margin:2px 0 0;font-size:22px;letter-spacing:.06em}.actions{display:flex;gap:8px}.action{border:1px solid rgba(190,207,224,.2);background:#0b1725;color:#dce8f2;border-radius:10px;padding:9px 12px;cursor:pointer}.action:hover{border-color:rgba(201,170,98,.5)}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.metric{padding:14px;border:1px solid rgba(190,207,224,.18);border-radius:15px;background:linear-gradient(145deg,rgba(18,32,48,.9),rgba(5,12,20,.9))}.metric small{display:block;color:#8299ae;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.metric strong{display:block;margin-top:6px;font-size:24px}.panel{border:1px solid rgba(190,207,224,.18);border-radius:16px;overflow:hidden;background:rgba(5,12,20,.82);box-shadow:0 14px 34px rgba(0,0,0,.22)}.panel-head{padding:14px 16px;border-bottom:1px solid rgba(190,207,224,.13);display:flex;align-items:center;gap:10px}.panel-head b{letter-spacing:.06em}.panel-head span{margin-left:auto;color:#7f95aa;font-size:11px}.filters{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid rgba(190,207,224,.1)}select,input{width:100%;max-width:300px;padding:10px;border-radius:9px;border:1px solid #304459;background:#07111d;color:#fff;outline:none}table{width:100%;border-collapse:collapse}th,td{padding:11px 13px;border-bottom:1px solid rgba(190,207,224,.08);text-align:left;font-size:12px}th{color:#8fa5ba;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.025)}td.numcell{text-align:center;font-weight:700;color:#dce8f2}tr:hover td{background:rgba(43,157,255,.045)}.empty{padding:35px;text-align:center;color:#71869a}.note{margin-top:10px;color:#687e93;font-size:10px;line-height:1.5}
+    @media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr)}.actions{display:none}th,td{padding:9px 8px;font-size:11px}.hide-mobile{display:none}.title h1{font-size:18px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <button class="back" onclick="history.length>1?history.back():location.href='../index.html'">←</button>
+    <div class="title"><div class="eyebrow">ÁGUILAS KC · REPORTES</div><h1>ESTADÍSTICAS DE COMPETENCIAS</h1></div>
+    <div class="actions"><button class="action" id="reload">Actualizar</button></div>
+  </header>
+  <section class="grid">
+    <div class="metric"><small>Competencias</small><strong id="mEvents">—</strong></div>
+    <div class="metric"><small>Atletas registrados</small><strong id="mAthletes">—</strong></div>
+    <div class="metric"><small>Registros</small><strong id="mRows">—</strong></div>
+    <div class="metric"><small>Promedio atletas / evento</small><strong id="mAvg">—</strong></div>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><b>Participantes en cada evento</b><span>Conteo de atletas únicos por competencia</span></div>
+    <div class="filters"><input id="search" placeholder="Buscar competencia…"><select id="year"><option value="">Todos los años</option></select></div>
+    <div id="tableWrap" class="empty">Cargando estadísticas…</div>
+  </section>
+  <div class="note">La cantidad de “participantes en ese evento” se calcula contando atletas con registro en cada competencia. No utiliza la columna PART del Excel, porque esa columna corresponde a otro dato del historial.</div>
+</main>
+<script>
+let allRows=[];
+const $=id=>document.getElementById(id);
+function normalize(v){return v==null?'':String(v).trim()}
+function load(){
+  $('tableWrap').textContent='Cargando estadísticas…';
+  fetch('Estadistica%20de%20competencias%20totales.xlsx?'+Date.now()).then(r=>{if(!r.ok)throw new Error('No se pudo cargar el archivo');return r.arrayBuffer()}).then(buf=>{
+    const wb=XLSX.read(buf,{type:'array'}), ws=wb.Sheets[wb.SheetNames[0]], data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+    let athlete=''; allRows=[];
+    const header=data[0]||[]; const gi=header.indexOf('GIMNASTA'), ci=header.indexOf('COPA');
+    data.slice(1).forEach(r=>{if(normalize(r[gi])) athlete=normalize(r[gi]); const event=normalize(r[ci]); if(event&&athlete) allRows.push({athlete,event});});
+    render();
+  }).catch(e=>{$('tableWrap').innerHTML='<div class="empty">No se pudo cargar la base de estadísticas.<br>'+e.message+'</div>';});
+}
+function render(){
+  const search=normalize($('search').value).toLowerCase(), year=$('year').value;
+  const years=[...new Set(allRows.map(x=>(x.event.match(/(?:^|\s)(20\d{2}|\d{2})\s*$/)||[])[1]).filter(Boolean))].sort();
+  const selected=$('year').value; $('year').innerHTML='<option value="">Todos los años</option>'+years.map(y=>`<option value="${y}">${y.length===2?'20'+y:y}</option>`).join(''); $('year').value=selected;
+  const filtered=allRows.filter(x=>{const m=x.event.match(/(?:^|\s)(20\d{2}|\d{2})\s*$/);const y=m?m[1]:'';return x.event.toLowerCase().includes(search)&&(!year||y===year)});
+  const map=new Map(); filtered.forEach(x=>{if(!map.has(x.event))map.set(x.event,new Set());map.get(x.event).add(x.athlete)});
+  const events=[...map.entries()].map(([event,set])=>({event,count:set.size})).sort((a,b)=>a.event.localeCompare(b.event,'es'));
+  const athletes=new Set(allRows.map(x=>x.athlete)); $('mEvents').textContent=new Set(allRows.map(x=>x.event)).size; $('mAthletes').textContent=athletes.size; $('mRows').textContent=allRows.length; $('mAvg').textContent=(allRows.length/new Set(allRows.map(x=>x.event)).size||0).toFixed(1);
+  if(!events.length){$('tableWrap').innerHTML='<div class="empty">Sin resultados para el filtro seleccionado.</div>';return}
+  $('tableWrap').innerHTML='<table><thead><tr><th>#</th><th>Competencia / evento</th><th>Participantes</th></tr></thead><tbody>'+events.map((x,i)=>`<tr><td class="numcell">${i+1}</td><td>${x.event}</td><td class="numcell">${x.count}</td></tr>`).join('')+'</tbody></table>';
+}
+$('search').addEventListener('input',render); $('year').addEventListener('change',render); $('reload').addEventListener('click',load); load();
+</script>
+</body>
+</html>
