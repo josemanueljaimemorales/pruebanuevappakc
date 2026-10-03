@@ -173,6 +173,48 @@ function readCalendar(wb){
     let last='';
     return row.map(v=>{if(!['',null,undefined].includes(v)) last=clean(v); return last;});
   };
+
+  // SheetJS conserva los rangos combinados de Excel en ws['!merges'].
+  // Para NIVEL DE DESEMPEÑO TECNICO y CARGA DE FUERZA, el valor no está
+  // en una sola fila: está distribuido verticalmente (ALTO/MEDIO/BAJO y
+  // 60-80%/45-60%) y cada bloque está combinado horizontalmente.
+  // Si usamos fillRow sobre una sola fila, se termina repitiendo un valor
+  // incorrecto para muchos días. Aquí resolvemos el valor real de cada
+  // columna respetando las celdas combinadas del Excel.
+  const mergedValueAt = (row1,col1) => {
+    const r=row1-1, c=col1-1;
+    const direct=ws[XLSX.utils.encode_cell({r,c})];
+    if(direct && clean(direct.v)!=='') return clean(direct.v);
+    const merges=ws['!merges']||[];
+    for(const m of merges){
+      if(r>=m.s.r && r<=m.e.r && c>=m.s.c && c<=m.e.c){
+        const top=ws[XLSX.utils.encode_cell({r:m.s.r,c:m.s.c})];
+        return top ? clean(top.v) : '';
+      }
+    }
+    return '';
+  };
+
+  const technicalForColumn = col => {
+    // Prioridad por fila: ALTO, MEDIO, BAJO; solo una de las tres
+    // corresponde a cada bloque del calendario.
+    for(const row of [11,12,13]){
+      const value=mergedValueAt(row,col);
+      if(value) return value;
+    }
+    return '';
+  };
+
+  const forceForColumn = col => {
+    // Las cargas están en las filas 15 y 16 y también están combinadas
+    // horizontalmente por bloques.
+    for(const row of [15,16]){
+      const value=mergedValueAt(row,col);
+      if(value) return value;
+    }
+    return '';
+  };
+
   const monthRow = fillRow(matrix[0]||[]);
   const dayRow = matrix[1]||[];
   const dowRow = matrix[2]||[];
@@ -181,8 +223,6 @@ function readCalendar(wb){
   const weekRow = fillRow(matrix[6]||[]);
   const unitRow = fillRow(matrix[8]||[]);
   const descRow = fillRow(matrix[9]||[]);
-  const techRow = fillRow(matrix[10]||[]);
-  const forceRow = fillRow(matrix[14]||[]);
 
   let year=2026, previousMonth=0;
   const out=[];
@@ -193,7 +233,13 @@ function readCalendar(wb){
     if(!month || !Number.isFinite(dayNum) || dayNum<1 || dayNum>31) continue;
     if(previousMonth && month < previousMonth) year++;
     previousMonth=month;
-    const d = {year,month,monthName,day:dayNum,dow:clean(dowRow[c]),period:clean(periodRow[c]),stage:clean(stageRow[c]),week:clean(weekRow[c]),unit:clean(unitRow[c]),description:clean(descRow[c]),technical:clean(techRow[c]),force:clean(forceRow[c])};
+    const d = {
+      year,month,monthName,day:dayNum,dow:clean(dowRow[c]),
+      period:clean(periodRow[c]),stage:clean(stageRow[c]),week:clean(weekRow[c]),
+      unit:clean(unitRow[c]),description:clean(descRow[c]),
+      technical:technicalForColumn(c+1),
+      force:forceForColumn(c+1)
+    };
     d.key=dateKey(d);
     out.push(d);
   }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MVP · Águilas KC</title>
+<link rel="stylesheet" href="style.css?v=1">
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <button class="back" onclick="goBack()">← Volver</button>
+    <div class="title-wrap">
+      <div class="kicker">ÁGUILAS KC</div>
+      <h1>MVP</h1>
+      <div class="subtitle">MOST VOLUME PLAYER</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-grid">
+      <article class="mvp-card">
+        <div class="card-title">🏆 MVP BLOQUE 1</div>
+        <div class="card-subtitle">GAV 4 + GAV 5</div>
+        <div class="photo-frame"><img id="photo1" alt="MVP Bloque 1"><div class="placeholder" id="placeholder1">MVP DE LA SEMANA</div></div>
+      </article>
+      <article class="mvp-card">
+        <div class="card-title">🏆 MVP BLOQUE 2</div>
+        <div class="card-subtitle">GAV 6 + GAV 9 + GAV FIG</div>
+        <div class="photo-frame"><img id="photo2" alt="MVP Bloque 2"><div class="placeholder" id="placeholder2">MVP DE LA SEMANA</div></div>
+      </article>
+    </section>
+
+    <section class="public-actions">
+      <button class="action primary" onclick="showScores()">📊 VER PUNTAJES</button>
+      <button class="action admin" onclick="askPassword('records')">🔒 REGISTROS DE MVP</button>
+      <button class="action admin" onclick="askPassword('upload')">🔒 SUBIR FOTOS MVP</button>
+    </section>
+
+    <section id="scores" class="panel hidden">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">SEMANA ACTUAL</div>
+          <h2>📊 Puntajes MVP</h2>
+        </div>
+        <button class="close-panel" onclick="hideScores()">Cerrar</button>
+      </div>
+      <div id="scoreContent"></div>
+    </section>
+
+    <section id="records" class="panel hidden">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">ADMINISTRACIÓN</div>
+          <h2>Registros de MVP</h2>
+          <p>Cada clic suma 1 selección y se guarda inmediatamente.</p>
+        </div>
+        <button class="close-panel" onclick="hidePanel('records')">Cerrar</button>
+      </div>
+      <div class="week-note">Semana: <strong id="weekLabel"></strong></div>
+      <div id="recordContent"></div>
+      <div class="reset-zone">
+        <button class="reset-btn" onclick="confirmReset()">🔒 REINICIAR CONTEO</button>
+      </div>
+    </section>
+
+    <section id="upload" class="panel hidden">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">ADMINISTRACIÓN</div>
+          <h2>Subir fotos MVP</h2>
+          <p>Las fotos aparecen automáticamente en la portada.</p>
+        </div>
+        <button class="close-panel" onclick="hidePanel('upload')">Cerrar</button>
+      </div>
+      <div class="upload-grid">
+        <div class="upload-box">
+          <h3>🏆 Bloque 1</h3><p>GAV 4 + GAV 5</p>
+          <label class="file-btn">Seleccionar foto<input type="file" accept="image/*" onchange="uploadPhoto(1,this)"></label>
+          <span id="uploadStatus1"></span>
+        </div>
+        <div class="upload-box">
+          <h3>🏆 Bloque 2</h3><p>GAV 6 + GAV 9 + GAV FIG</p>
+          <label class="file-btn">Seleccionar foto<input type="file" accept="image/*" onchange="uploadPhoto(2,this)"></label>
+          <span id="uploadStatus2"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="passwordModal" class="overlay hidden">
+  <div class="password-box">
+    <div class="lock">🔒</div>
+    <h2>Acceso protegido</h2>
+    <p>Ingresa la contraseña para continuar.</p>
+    <input id="passwordInput" type="password" autocomplete="off" placeholder="Contraseña">
+    <div id="passwordError"></div>
+    <div class="password-actions">
+      <button onclick="closePassword()">Cancelar</button>
+      <button class="enter" onclick="checkPassword()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js?v=1"></script>
+</body>
+</html>
