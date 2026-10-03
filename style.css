@@ -51,6 +51,7 @@ h1{font-size:clamp(25px,4vw,48px);letter-spacing:.08em;line-height:.95;margin:0;
 .calendar-btn{--accent:#34e875;--glow:rgba(40,225,100,.14)}
 .drive{--accent:#ffc52e;--glow:rgba(255,195,30,.14)}
 .reportes{--accent:#c9aa62;--glow:rgba(201,170,98,.16)}
+.mvp{--accent:#ffd86b;--glow:rgba(255,205,80,.20)}
 .footer{position:relative;z-index:2;width:100%;max-width:var(--content-width);padding:4px 0 8px;text-align:center;color:#53687d;font-size:9px;letter-spacing:.25em}.footer span{color:#1f91e8;margin:0 6px}
 .viewer-screen{padding-top:max(54px,calc(env(safe-area-inset-top) + 48px));padding-bottom:max(8px,env(safe-area-inset-bottom))}
 .viewer-wrap{width:100%;height:calc(100% - 4px);min-width:0;min-height:0;overflow:hidden;border-radius:14px;background:white;box-shadow:0 4px 30px rgba(0,0,0,.35);flex:1 1 auto}
