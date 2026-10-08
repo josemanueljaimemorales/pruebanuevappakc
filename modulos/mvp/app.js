@@ -3,10 +3,10 @@ const FIREBASE_CONFIG={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDoma
 const COLLECTION="mvpAKC", DOC="estado";
 const DAYS=["L","M","X","J","V","S"];
 const GROUPS=[
- {block:"Bloque 1", title:"GAV 4", athletes:["Leonardo García Lázaro","Isaac Rangel","Joán"]},
+ {block:"Bloque 1", title:"GAV 4", athletes:["Leonardo García Lázaro","Isaac Rangel"]},
  {block:"Bloque 1", title:"GAV 5", athletes:["Leonardo Camacho","Santiago Camacho","Nicolás Flores","Charlie Aznar","David Rangel","Diego Cuevas","Emiliano González"]},
- {block:"Bloque 2", title:"GAV 6", athletes:["Alfredo Jacobo","Brittan Akim","Bruno Báez","Eric López","Chema Robles","Mauro Regan"]},
- {block:"Bloque 2", title:"GAV 9", athletes:["Bruno Jacobo","Diego Chávez","Fer Talavera","Santi Sigler","Mario Bisteni","Nico Capitanachi","Yerik Guerra"]},
+ {block:"Bloque 2", title:"GAV 6", athletes:["Alfredo Jacobo","Brittan Akim","Bruno Báez","Eric López","Chema Robles","Mauro Regand"]},
+ {block:"Bloque 2", title:"GAV 9", athletes:["Bruno Jacobo","Diego Chávez","Fer Talavera","Santi Sigler","Mario Bisteni","Max Diaz","Nico Capitanachi","Yerik Guerra"]},
  {block:"Bloque 2", title:"GAV FIG", athletes:["Isaac Martínez","Alonso Ahedo","Diego Vela","Diego Champi Rodríguez","Mikel Larrinua","Richie Jiménez","Diego Jaime"]}
 ];
 const ATHLETES=[...new Map(GROUPS.flatMap(g=>g.athletes).map(name=>[name,{name,block:gBlock(name)}])).values()];

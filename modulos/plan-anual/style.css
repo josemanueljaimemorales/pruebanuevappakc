@@ -39,3 +39,7 @@ button{border-color:var(--akc-line) !important;}
 .competition-venue small{font-size:9px;letter-spacing:.16em;color:#c9aa62;font-weight:900}
 .competition-venue strong{font-size:16px;color:#eef3f7}
 @media(max-width:720px){.topbar::after{display:none}}
+
+
+/* Acción de impresión del concentrado familiar */
+.print-action{display:flex;align-items:center;gap:12px;margin:14px 0 18px;flex-wrap:wrap}.print-calendar-btn{border:0;border-radius:12px;padding:13px 18px;font-weight:800;letter-spacing:.04em;cursor:pointer;background:#111;color:#fff}.print-calendar-btn:disabled{opacity:.6;cursor:wait}.print-action small{color:#777;max-width:520px}

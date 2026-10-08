@@ -17,20 +17,198 @@ const clean = v => String(v ?? '').trim();
 const upper = v => clean(v).toUpperCase();
 const dateKey = d => `${d.year}-${String(d.month).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
 
-function init(){
-  Promise.all([
+
+function cycleLabel(){
+  if(!months.length) return 'CICLO';
+  const first=months[0], last=months[months.length-1];
+  return `${first.year}–${last.year}`;
+}
+
+// Descansos obligatorios oficiales en México (Art. 74 LFT).
+// Se calculan por el año real de cada fecha del MACRO, nunca por un año fijo.
+function officialHoliday(year, month, day){
+  const fixed = {
+    '1-1':'Año Nuevo',
+    '5-1':'Día del Trabajo',
+    '9-16':'Independencia de México',
+    '12-25':'Navidad'
+  };
+  const key=`${month}-${day}`;
+  if(fixed[key]) return fixed[key];
+  const d=new Date(Date.UTC(year,month-1,day));
+  const dow=d.getUTCDay();
+  // Primer lunes de febrero: Constitución.
+  if(month===2 && dow===1 && day>=1 && day<=7) return 'Día de la Constitución';
+  // Tercer lunes de marzo: Natalicio de Benito Juárez.
+  if(month===3 && dow===1 && day>=15 && day<=21) return 'Natalicio de Benito Juárez';
+  // Tercer lunes de noviembre: Revolución Mexicana.
+  if(month===11 && dow===1 && day>=15 && day<=21) return 'Revolución Mexicana';
+  return '';
+}
+
+function nationalDateLabel(year,month,day){
+  // Fechas nacionales/conmemorativas; NO son descansos obligatorios.
+  const fixed={
+    '2-24':'Día de la Bandera',
+    '5-5':'Batalla de Puebla',
+    '9-13':'Niños Héroes',
+    '10-12':'Día de la Nación Pluricultural',
+    '11-2':'Día de Muertos',
+    '11-20':'Aniversario de la Revolución Mexicana'
+  };
+  return fixed[`${month}-${day}`] || '';
+}
+
+function dateEventLabels(d){
+  const labels=[];
+  const official=officialHoliday(d.year,d.month,d.day);
+  if(official) labels.push({type:'F',title:official});
+  const national=nationalDateLabel(d.year,d.month,d.day);
+  if(national && !official) labels.push({type:'N',title:national});
+  return labels;
+}
+
+async function reloadPlanData(){
+  const [macroBuf,assignmentBuf]=await Promise.all([
     fetch('./MACRO_26_27.xlsx',{cache:'no-store'}).then(r=>{if(!r.ok) throw Error('No se encontró MACRO_26_27.xlsx'); return r.arrayBuffer();}),
     fetch('./ASIGNACION DE COMPETENCIAS.xlsx',{cache:'no-store'}).then(r=>{if(!r.ok) throw Error('No se encontró ASIGNACION DE COMPETENCIAS.xlsx'); return r.arrayBuffer();})
-  ])
-    .then(([macroBuf,assignmentBuf])=>{
-      const macroWb = XLSX.read(macroBuf,{type:'array',cellDates:true});
-      const assignmentWb = XLSX.read(assignmentBuf,{type:'array',cellDates:true});
-      days = readCalendar(macroWb);
-      assignmentData = readAssignments(assignmentWb);
-      buildMonths();
-      buildSpecialEvents();
-      renderHome();
-    })
+  ]);
+  const macroWb=XLSX.read(macroBuf,{type:'array',cellDates:true});
+  const assignmentWb=XLSX.read(assignmentBuf,{type:'array',cellDates:true});
+  days=readCalendar(macroWb);
+  assignmentData=readAssignments(assignmentWb);
+  buildMonths();
+  buildSpecialEvents();
+}
+
+function printCalendar(){
+  const btn=document.getElementById('printCalendarBtn');
+  if(btn) { btn.disabled=true; btn.textContent='ACTUALIZANDO…'; }
+  reloadPlanData().then(async ()=>{
+    const html=buildPrintableCalendar();
+    const w=window.open('','_blank');
+    if(!w) throw Error('El navegador bloqueó la ventana de impresión. Permite ventanas emergentes para este sitio.');
+    w.document.open(); w.document.write(html); w.document.close();
+  }).catch(err=>alert(err.message)).finally(()=>{
+    const b=document.getElementById('printCalendarBtn');
+    if(b){b.disabled=false;b.textContent='IMPRIMIR / GUARDAR PDF';}
+  });
+}
+
+function printableItemsForMonth(m){
+  const rows=new Map();
+  const add=(key,item)=>{
+    if(!rows.has(key)) rows.set(key,[]);
+    rows.get(key).push(item);
+  };
+
+  const monthDays=new Set(m.days.map(d=>d.key));
+  for(const type of ['competencia','eventos','descansos']){
+    for(const e of specialEvents[type]){
+      const matchingDays=e.days.filter(d=>monthDays.has(d.key));
+      for(const d of matchingDays){
+        const venues=type==='competencia' ? venuesForEvent(e) : [];
+        add(d.key,{type,title:e.title,venues});
+      }
+    }
+  }
+
+  for(const d of m.days){
+    for(const h of dateEventLabels(d)) add(d.key,{type:h.type,title:h.title,venues:[]});
+  }
+
+  return [...rows.entries()]
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([key,items])=>({date:m.days.find(d=>d.key===key),items}));
+}
+
+function printableTypeLabel(type){
+  return type==='competencia'?'Competencia':type==='eventos'?'Evento':type==='descansos'?'Descanso':type==='F'?'Festivo oficial':'Fecha nacional';
+}
+
+function printableEventText(item){
+  const venue=item.venues?.length ? ` · Sede: ${item.venues.join(' / ')}` : '';
+  return `<div class="p-event p-${esc(item.type)}"><b>${esc(printableTypeLabel(item.type))}:</b> ${esc(item.title)}${esc(venue)}</div>`;
+}
+
+function buildPrintableCalendar(){
+  const first=months[0], last=months[months.length-1];
+  const cycle=`${first?.name || ''} ${first?.year || ''} – ${last?.name || ''} ${last?.year || ''}`;
+  const logoUrl=new URL('../../logo.png',location.href).href;
+
+  const monthsHtml=months.map(m=>{
+    const rows=printableItemsForMonth(m);
+    if(!rows.length) return '';
+    return `<section class="p-month"><h2>${esc(monthLabel(m))}</h2>${rows.map(row=>`
+      <div class="p-row"><div class="p-date">${esc(row.date.day)} ${esc(row.date.monthName.toLowerCase())}</div><div class="p-items">${row.items.map(printableEventText).join('')}</div></div>`).join('')}</section>`;
+  }).join('');
+
+  const athleteRows=assignmentData.athletes.map(a=>{
+    const assigned=orderedAssignmentCompetitions().filter(c=>a.assignments[c.key]);
+    const list=assigned.length
+      ? assigned.map(c=>`<div class="a-event"><span>✓</span>${esc(c.title)}</div>`).join('')
+      : '<div class="a-none">Sin competencias asignadas</div>';
+    return `<tr><td class="a-name">${esc(a.name)}</td><td class="a-level">${esc(a.level)}</td><td class="a-events">${list}</td></tr>`;
+  }).join('');
+
+  const legend=`<div class="p-legend">
+    <span><b class="legend-c">C</b> Competencia</span>
+    <span><b class="legend-e">E</b> Evento</span>
+    <span><b class="legend-d">D</b> Descanso / puente / vacaciones</span>
+    <span><b class="legend-f">F</b> Festivo oficial</span>
+    <span><b class="legend-n">N</b> Fecha nacional</span>
+  </div>`;
+
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Plan Anual ${esc(cycle)}</title><style>
+  @page{size:A4 portrait;margin:11mm 12mm 12mm}
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;color:#152238;background:#fff;margin:0;font-size:10px;line-height:1.35}
+  .p-head{display:flex;align-items:center;gap:12px;border-bottom:3px solid #19b8f2;padding:0 0 8px;margin-bottom:12px}
+  .p-logo{width:70px;height:70px;object-fit:contain;flex:none}
+  .p-brand h1{margin:0;color:#0b2342;font-size:19px;letter-spacing:.4px}
+  .p-brand .sub{margin-top:2px;color:#42536b;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+  .p-brand .cycle{margin-top:5px;color:#0b2342;font-size:10px;font-weight:800}
+  .p-title{margin-left:auto;text-align:right;color:#0b2342}
+  .p-title strong{display:block;font-size:11px;letter-spacing:.7px}
+  .p-title span{font-size:8px;color:#64748b}
+  .p-month{break-inside:avoid;margin:0 0 13px}
+  .p-month h2{margin:0 0 5px;padding:5px 8px;background:#0b2342;color:#fff;border-left:5px solid #19b8f2;font-size:12px;letter-spacing:.7px;text-transform:uppercase}
+  .p-row{display:grid;grid-template-columns:76px 1fr;border-bottom:1px solid #d7dee8;break-inside:avoid;min-height:28px}
+  .p-date{padding:6px 7px;font-weight:800;color:#0b2342;background:#f3f7fb;text-transform:uppercase;font-size:9px}
+  .p-items{padding:4px 7px}
+  .p-event{padding:2px 0 2px 8px;border-left:4px solid #94a3b8;margin:1px 0;color:#26364d}
+  .p-event b{font-size:8.5px}
+  .p-competencia{border-left-color:#0b67b2}.p-eventos{border-left-color:#7b5bb5}.p-descansos{border-left-color:#6b7280}.p-F{border-left-color:#d28a00}.p-N{border-left-color:#18a36b}
+  .p-event b{color:#0b2342}
+  .p-legend{display:flex;flex-wrap:wrap;gap:7px 13px;border-top:2px solid #0b2342;padding:7px 0 10px;margin-top:2px;font-size:8px;color:#42536b;break-inside:avoid}
+  .p-legend b{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;color:#fff;font-size:8px;margin-right:3px}
+  .legend-c{background:#0b67b2}.legend-e{background:#7b5bb5}.legend-d{background:#6b7280}.legend-f{background:#d28a00}.legend-n{background:#18a36b}
+  .assign{break-before:page;margin-top:2px}
+  .assign-head{display:flex;align-items:center;gap:10px;border-bottom:3px solid #19b8f2;padding-bottom:7px;margin-bottom:10px}
+  .assign-logo{width:48px;height:48px;object-fit:contain}
+  .assign h2{margin:0;color:#0b2342;font-size:14px;text-transform:uppercase;letter-spacing:.4px}
+  .assign .sub{margin:2px 0 0;color:#64748b;font-size:8px}
+  table{border-collapse:collapse;width:100%;font-size:8.5px;table-layout:fixed}
+  th,td{border:1px solid #cbd5e1;vertical-align:top}
+  th{background:#0b2342;color:#fff;padding:5px 4px;text-align:left;font-size:8px}
+  td{padding:4px;background:#fff}
+  tr:nth-child(even) td{background:#f7f9fc}
+  .a-name{width:31%;font-weight:700;color:#172b46}.a-level{width:10%;text-align:center;font-weight:800;color:#0b2342}.a-events{width:59%}
+  .a-event{padding:2px 0;border-bottom:1px solid #e5e7eb;line-height:1.2}.a-event:last-child{border-bottom:0}.a-event span{color:#0b67b2;font-weight:900;margin-right:5px}.a-none{color:#94a3b8;font-style:italic}
+  .note{margin-top:7px;color:#64748b;font-size:7.5px;line-height:1.3}
+  .footer{margin-top:12px;padding-top:5px;border-top:1px solid #cbd5e1;text-align:center;color:#64748b;font-size:7px}
+  @media print{button{display:none}}
+</style></head><body>
+<header class="p-head"><img class="p-logo" src="${esc(logoUrl)}" alt="Águilas KC"><div class="p-brand"><h1>ÁGUILAS DE KIDS CENTER</h1><div class="sub">Gimnasia Artística Varonil · Águilas KC</div><div class="cycle">PLAN ANUAL · ${esc(cycle)}</div></div><div class="p-title"><strong>CALENDARIO PARA FAMILIAS</strong><span>Concentrado de fechas relevantes del ciclo</span></div></header>
+${monthsHtml || '<p>No hay competencias, eventos, descansos ni fechas nacionales registradas en el ciclo.</p>'}
+${legend}
+<section class="assign"><div class="assign-head"><img class="assign-logo" src="${esc(logoUrl)}" alt="Águilas KC"><div><h2>Atletas y asignación a competencias</h2><div class="sub">Concentrado generado directamente de ASIGNACIÓN DE COMPETENCIAS al momento de imprimir.</div></div></div><table><thead><tr><th class="a-name">ATLETA</th><th class="a-level">NIVEL</th><th class="a-events">COMPETENCIAS ASIGNADAS</th></tr></thead><tbody>${athleteRows || '<tr><td colspan="3">Sin atletas registrados.</td></tr>'}</tbody></table><div class="note">F = festivo oficial en México. N = fecha nacional/conmemorativa. Los domingos no se consideran automáticamente descansos.</div><div class="footer">ÁGUILAS DE KIDS CENTER · PLAN ANUAL · ${esc(cycle)}</div></section>
+<script>window.onload=()=>setTimeout(()=>window.print(),300);</script></body></html>`;
+}
+
+function init(){
+  reloadPlanData()
+    .then(renderHome)
     .catch(err=>{
       content.innerHTML = `<div class="error"><h2>No se pudo cargar el Plan Anual</h2><p>${esc(err.message)}</p></div>`;
     });
@@ -159,8 +337,21 @@ function eventForAssignment(comp){
   return scored.length ? scored[0].event : null;
 }
 
+function competitionOrderKey(comp){
+  const event=eventForAssignment(comp);
+  return event?.start?.key || '9999-99-99';
+}
+
+function orderedAssignmentCompetitions(){
+  return assignmentData.competitions.slice().sort((a,b)=>{
+    const ka=competitionOrderKey(a), kb=competitionOrderKey(b);
+    if(ka!==kb) return ka.localeCompare(kb);
+    return normalizeName(a.title).localeCompare(normalizeName(b.title),'es');
+  });
+}
+
 function competitionsForAthlete(athlete){
-  return assignmentData.competitions
+  return orderedAssignmentCompetitions()
     .filter(c=>athlete.assignments[c.key])
     .map(c=>({assignment:c,event:eventForAssignment(c)}));
 }
@@ -361,17 +552,18 @@ function formatRange(e){
 function monthLabel(m){return `${m.name[0]+m.name.slice(1).toLowerCase()} ${m.year}`;}
 
 function shell(title,subtitle=''){
-  content.innerHTML=`<section class="hero"><div class="eyebrow">PLAN ANUAL 2026–2027</div><h2>${esc(title)}</h2>${subtitle?`<p>${esc(subtitle)}</p>`:''}</section>`;
+  content.innerHTML=`<section class="hero"><div class="eyebrow">PLAN ANUAL ${cycleLabel()}</div><h2>${esc(title)}</h2>${subtitle?`<p>${esc(subtitle)}</p>`:''}</section>`;
 }
 
 function renderHome(){
   backBtn.style.visibility='hidden';
   content.innerHTML=`
     <section class="hero">
-      <div class="eyebrow">PLAN ANUAL 2026–2027</div>
+      <div class="eyebrow">PLAN ANUAL ${cycleLabel()}</div>
       <h2>Calendario de entrenamiento</h2>
       <p>Consulta cada mes por día y accede directamente a competencias, eventos y descansos.</p>
     </section>
+    <section class="print-action"><button class="print-calendar-btn" id="printCalendarBtn">IMPRIMIR / GUARDAR PDF</button><small>Genera el concentrado actualizado y abre la impresión. En el diálogo elige <b>Guardar como PDF</b> para obtener el archivo PDF.</small></section>
     <section class="quick-actions">
       <button class="quick competition" data-list="competencia"><strong>COMPETENCIAS</strong><span>${specialEvents.competencia.length} registradas · asignaciones</span><b>›</b></button>
       <button class="quick athletes" data-athletes><strong>ATLETAS</strong><span>${assignmentData.athletes.length} atletas asignados</span><b>›</b></button>
@@ -385,6 +577,7 @@ function renderHome(){
   document.querySelectorAll('[data-month-key]').forEach(b=>b.onclick=()=>showMonth(b.dataset.monthKey));
   document.querySelectorAll('[data-list]').forEach(b=>b.onclick=()=>showSpecialList(b.dataset.list));
   document.querySelector('[data-athletes]')?.addEventListener('click',showAthletesList);
+  document.getElementById('printCalendarBtn')?.addEventListener('click',printCalendar);
 }
 
 function showMonth(key){
