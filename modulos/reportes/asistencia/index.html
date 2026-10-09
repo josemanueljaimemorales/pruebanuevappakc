@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reportes de asistencia · AKC</title>
+<script src="../../../cliente/config.js"></script>
+<script src="../../../cliente/xlsx-reader.js"></script>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--line:#20344d;--text:#eef5ff;--muted:#9eb0c6;--blue:#54a7ff;--gold:#c5a45a;--green:#dceedd;--yellow:#fff1c7;--red:#f6dada;--greenText:#24652e;--redText:#8d3030}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1180px;margin:auto;padding:20px 18px 55px}.top{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:18px}.back{color:#cfe3fa;text-decoration:none}.eyebrow{font-size:11px;letter-spacing:.16em;font-weight:800;color:#68b4ff}.title h1{margin:5px 0;font-size:30px}.title p{margin:0;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:900;font-size:11px;cursor:pointer}.btn.print{background:var(--gold);color:#07111f}.btn.backbtn{background:#102238;color:#dcecff;border:1px solid var(--line)}.selector{background:linear-gradient(135deg,#10243a,#0b1828);border:1px solid var(--line);padding:18px;border-radius:17px}.selector label{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}.selector select{width:100%;background:#071321;color:var(--text);border:1px solid #31506f;border-radius:10px;padding:12px;font-size:16px;outline:none}.period{margin-top:10px;color:#cbd9e8;font-size:12px}.period b{color:#fff}.hidden{display:none!important}.report{margin-top:16px}.printReport{display:none}.hero{background:#f8fafc;color:#17243b;border-radius:18px;padding:18px;border:1px solid #dfe5ec}.heroHead{display:flex;justify-content:space-between;gap:15px;align-items:center;border-bottom:2px solid var(--gold);padding-bottom:10px}.heroLogo{width:125px;height:67px;object-fit:contain}.heroTitle{font-size:21px;font-weight:900}.heroSub{font-size:10px;color:#687386;margin-top:3px}.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0}.metric{border:1px solid #dfe5ec;border-radius:11px;padding:10px;background:#fff}.metric small{display:block;color:#667085;font-size:9px;text-transform:uppercase;font-weight:800}.metric strong{display:block;font-size:20px;margin-top:4px}.groupBox,.tableBox,.noteBox{margin-top:12px;border:1px solid #dfe5ec;border-radius:12px;background:#fff;overflow:hidden}.boxTitle{padding:10px 12px;font-weight:900;font-size:13px;background:#f4f7fa}.groupTable,.individual{width:100%;border-collapse:collapse}.groupTable th,.individual th{background:#17243b;color:#fff;padding:8px 7px;font-size:9px;text-align:center}.groupTable td,.individual td{padding:6px 6px;border-top:1px solid #edf0f3;font-size:9px}.groupTable td:not(:first-child),.individual td:not(:nth-child(2)):not(:nth-child(3)){text-align:center}.individual{table-layout:fixed}.individual th:nth-child(1){width:4%}.individual th:nth-child(2){width:23%}.individual th:nth-child(3){width:14%}.individual th:nth-child(4),.individual th:nth-child(5){width:9%}.individual th:nth-child(6),.individual th:nth-child(7){width:7%}.individual th:nth-child(8),.individual th:nth-child(9){width:9%}.individual th:nth-child(10){width:9%}.individual td:nth-child(2),.individual td:nth-child(3){text-align:left}.row-green{background:var(--green)}.row-yellow{background:var(--yellow)}.row-red{background:var(--red)}.pct{font-weight:900}.days{padding:11px 12px;font-size:9.5px;line-height:1.5}.noteBox{padding:11px 12px;background:#f4ebd3;border-color:#d8bf77;font-size:9.5px;line-height:1.5}.doubleText{padding:10px 12px;font-size:9px;line-height:1.5}.loading,.error{padding:40px;text-align:center;color:#667085}.statusLine{margin-top:9px;color:#9eb0c6;font-size:11px}@media(max-width:900px){.metrics{grid-template-columns:repeat(3,1fr)}.hero{overflow:auto}.individual{min-width:820px}.groupTable{min-width:560px}.groupBox,.tableBox{overflow:auto}}@media print{body{background:#fff!important;color:#111!important}.screenReport{display:none!important}.printReport{display:block!important}.wrap{max-width:none;padding:0}.top,.selector,.statusLine{display:none!important}.report{margin:0}.hero{border:0;border-radius:0;padding:0}.heroHead{padding-bottom:8px}.metrics{grid-template-columns:repeat(4,1fr)}.selectedMetric{display:none!important}.metric{padding:7px}.metric strong{font-size:16px}.groupBox,.noteBox{break-inside:avoid;overflow:visible}.tableBox{break-before:page;overflow:visible}.individual{min-width:0}.individual th,.individual td{font-size:7.2px;padding:4px 3px}.groupTable th,.groupTable td{font-size:7.5px;padding:4px}.boxTitle{font-size:10px;padding:6px}.days,.noteBox,.doubleText{font-size:7.5px}.heroLogo{width:105px;height:56px}.report:after{content:""} }
+@page{size:A4 portrait;margin:8mm}@media print{.printReport{display:block!important}.screenReport{display:none!important}.individual{width:100%;min-width:0;table-layout:fixed}.individual tr{break-inside:avoid}.heroLogo{object-fit:contain}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top"><div><div class="eyebrow">AKC · ÁGUILAS DE KIDS CENTER</div><div class="title"><h1>Reportes de asistencia</h1><p>Consulta individual de asistencia y participación.</p></div></div><div class="actions"><button class="btn backbtn" onclick="location.href='../index.html'">← Reportes</button><button class="btn print" id="printBtn" disabled>IMPRIMIR REPORTE</button></div></div>
+ <section class="selector"><label for="athlete">Selecciona a tu atleta</label><select id="athlete"><option value="">Cargando atletas...</option></select><div class="period" id="period">Periodo del reporte: <b>cargando...</b></div></section>
+ <div id="status" class="statusLine">Cargando reporte de asistencia...</div>
+ <main id="report" class="report screenReport hidden"></main><main id="printReport" class="report printReport"></main>
+</div>
+<script>
+const SCHEDULE={
+ 'GAV 3':[2,4],'GAV3':[2,4],
+ 'GAV4':[1,2,3,4,5],'GAV 4':[1,2,3,4,5],
+ 'GAV5':[1,2,3,4,5,6],'GAV 5':[1,2,3,4,5,6],
+ 'GAV6':[1,2,3,4,6],'GAV 6':[1,2,3,4,6],
+ 'GAV9':[1,2,3,4,5,6],'GAV 9':[1,2,3,4,5,6],
+ 'GAVFIG':[1,2,3,4,5,6],'GAV FIG':[1,2,3,4,5,6],
+ 'GAVFIGELITE':[1,2,3,4,5,6],'GAV ELITE':[1,2,3,4,5,6]
+};
+const groupNorm=s=>String(s||'').replace(/\s+/g,'').toUpperCase();
+const cleanGroup=s=>{const n=groupNorm(s);if(n==='GAV3')return'GAV 3';if(n==='GAV4')return'GAV4';if(n==='GAV5')return'GAV5';if(n==='GAV6')return'GAV6';if(n==='GAV9')return'GAV9';if(n==='GAVFIGELITE'||n==='GAVELITE')return'GAVFIG Elite';if(n==='GAVFIG')return'GAVFIG';return String(s||'').trim()};
+const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+const $=id=>document.getElementById(id);
+let records=[],summary=[],currentFile='',minDate=null,maxDate=null;
+function parseDate(v){if(v instanceof Date)return v;if(typeof v==='number'&&Number.isFinite(v)){const d=new Date(Date.UTC(1899,11,30)+Math.round(v)*86400000);return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())}const s=String(v??'').trim();let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);return null}
+function fmtDate(d){return d?d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}):'—'}
+function fmtShort(d){return d?String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear():''}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
+function datesBetween(a,b,days){let c=0;for(let d=new Date(a);d<=b;d=addDays(d,1))if(days.includes(d.getDay()))c++;return c}
+function groupOfEvent(e){const x=String(e||'').toUpperCase();if(x.includes('GAV 3'))return'GAV 3';if(x.includes('GAV 4'))return'GAV4';if(x.includes('GAV 5'))return'GAV5';if(x.includes('GAV 6'))return'GAV6';if(x.includes('GAV 9'))return'GAV9';if(x.includes('GAV ELITE'))return'GAVFIG Elite';if(x.includes('GAV FIG'))return'GAVFIG';return null}
+function isDouble(e){return String(e||'').toUpperCase().startsWith('DOBLE SESION')}
+function statusPresent(s){return String(s||'').toLowerCase().startsWith('present')}
+function statusTardy(s){return String(s||'').toLowerCase().includes('tardy')}
+function statusEarly(s){return String(s||'').toLowerCase().includes('left early')}
+function parseRows(rows){
+ const head=rows.findIndex(r=>String(r?.[0]||'').trim()==='Student');if(head<0)throw Error('No se encontró la fila Student en el Excel.');
+ const out=[];for(let i=head+1;i<rows.length;i++){const r=rows[i]||[];const name=String(r[0]??'').trim(),date=parseDate(r[1]),event=String(r[3]??'').trim(),status=String(r[4]??'').trim();if(!name||!date||!event)continue;out.push({name,date,event,status,group:groupOfEvent(event),double:isDouble(event)});}return out;
+}
+function athleteGroups(arr){
+ const by=new Map();arr.filter(x=>x.group&&!x.double).sort((a,b)=>a.date-b.date).forEach(x=>{if(!by.has(x.name))by.set(x.name,[]);const a=by.get(x.name);if(!a.length||a[a.length-1].group!==x.group)a.push({group:x.group,start:x.date,end:x.date});else a[a.length-1].end=x.date;});return by;
+}
+// Correcciones explícitas de trayectoria indicadas por el entrenador para el reporte actual.
+const CURRENT_OVERRIDES={
+ 'Maximiliano Diaz Ayala':['GAV6','GAV9'],'Nicolas Capitanachi Vicenttin':['GAV6','GAV9'],'Luis Santiago Sigler Perez':['GAV6','GAV9'],
+ 'Mario Bisteni Marín':['GAV6','GAV9'],'Alfredo Jacobo Pimentel':['GAV6','GAV9'],'Bruno Jacobo Pimentel':['GAV6','GAV9'],
+ 'Alonso Ahedo Carvallo':['GAV9','GAVFIG'],'Brittan Akim Robles Ceballos':['GAV6'],'Ricardo Antonio Jiménez Santos':['GAVFIG']
+};
+function pathFor(name,groups){if(CURRENT_OVERRIDES[name])return CURRENT_OVERRIDES[name];return groups.get(name)?.map(x=>x.group)||[]}
+function compute(name,arr,groups){
+ const mine=arr.filter(x=>x.name===name);if(!mine.length)return null;
+ const normal=mine.filter(x=>!x.double&&x.group).sort((a,b)=>a.date-b.date);
+ const first=normal[0]?.date||mine[0].date,last=normal[normal.length-1]?.date||mine[mine.length-1].date;
+ let segments=groups.get(name)||[];
+ if(CURRENT_OVERRIDES[name]){
+  const path=CURRENT_OVERRIDES[name];
+  if(path.length===1)segments=[{group:path[0],start:first,end:last}];
+  else {
+   const switchAt=new Date(first.getTime()+Math.floor((last-first)/2));
+   segments=path.map((g,i)=>({group:g,start:i===0?first:switchAt,end:i===path.length-1?last:new Date(switchAt.getTime()-86400000)}));
+  }
+ }
+ let expected=0;segments.forEach(s=>{expected+=datesBetween(s.start,s.end,SCHEDULE[s.group]||[])});
+ const attendedNormal=normal.filter(x=>statusPresent(x.status)).length;
+ const tardy=normal.filter(x=>statusTardy(x.status)).length;
+ const early=normal.filter(x=>statusEarly(x.status)).length;
+ const doubles=mine.filter(x=>x.double);
+ const doubleAtt=doubles.filter(x=>statusPresent(x.status)).length;
+ expected+=doubles.length;
+ const attended=attendedNormal+doubleAtt;
+ const absences=Math.max(0,expected-attended);
+ return {name,groups:pathFor(name,groups),expected,attended,absences,attendance:expected>0?(attended/expected)*100:0,tardy,early,doubles:doubles.length,doubleAtt};
+}
+function groupSummary(list){
+ const out=new Map();
+ for(const r of list){const g=r.groups[r.groups.length-1]||'—';if(!out.has(g))out.set(g,{g,n:0,e:0,a:0});const x=out.get(g);x.n++;x.e+=r.expected;x.a+=r.attended;}
+ return [...out.values()].map(x=>({...x,p:x.e>0?x.a/x.e*100:0}));
+}
+function semClass(p){return p>85?'row-green':p>=70?'row-yellow':'row-red'}
+function pct(v){return Number.isFinite(v)?v.toFixed(1)+'%':'—'}
+function buildPrintReport(){
+ const totalExpected=summary.reduce((a,x)=>a+x.expected,0),totalAtt=summary.reduce((a,x)=>a+x.attended,0);
+ const global=totalExpected>0?totalAtt/totalExpected*100:0,gsum=groupSummary(summary);
+ const groupRows=gsum.map(x=>`<tr><td>${esc(x.g)}</td><td>${x.n}</td><td>${x.e.toLocaleString('es-MX')}</td><td class="pct ${semClass(x.p)}">${pct(x.p)}</td></tr>`).join('');
+ const individual=summary.slice().sort((a,b)=>a.name.localeCompare(b.name,'es')).map((x,i)=>`<tr class="${semClass(x.attendance)}"><td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.groups.join(' → '))}</td><td>${x.expected}</td><td>${x.attended}</td><td>${x.tardy}</td><td>${x.early}</td><td>${x.doubles||'—'}</td><td>${x.doubleAtt||'—'}</td><td class="pct">${pct(x.attendance)}</td></tr>`).join('');
+ const allD=summary.filter(x=>x.doubles>0).map(x=>`${esc(x.name)} (${x.doubleAtt}/${x.doubles})`).join(' · ');
+ $('printReport').innerHTML=`<div class="hero"><div class="heroHead"><div><div class="heroTitle">REPORTE DE ASISTENCIA</div><div class="heroSub">AKC · ÁGUILAS DE KIDS CENTER · GIMNASIA · ${esc(fmtDate(minDate))} al ${esc(fmtDate(maxDate))}</div></div><img class="heroLogo" src="../../../cliente/logo.png"></div><div class="metrics"><div class="metric"><small>Atletas</small><strong>${summary.length}</strong></div><div class="metric"><small>Asistencia general</small><strong>${pct(global)}</strong></div><div class="metric"><small>Sesiones esperadas</small><strong>${totalExpected.toLocaleString('es-MX')}</strong></div><div class="metric"><small>Sesiones asistidas</small><strong>${totalAtt.toLocaleString('es-MX')}</strong></div><div class="metric"><small>Dobles registradas</small><strong>${summary.reduce((a,x)=>a+x.doubles,0)}</strong></div></div><div class="groupBox"><div class="boxTitle">Resumen por grupo</div><table class="groupTable"><thead><tr><th>Grupo</th><th>Atletas</th><th>Sesiones programadas</th><th>% asistencia</th></tr></thead><tbody>${groupRows}</tbody></table></div><div class="groupBox"><div class="boxTitle">Días de entrenamiento considerados</div><div class="days">GAV3: martes y jueves · GAV4: lunes a viernes · GAV5: lunes a sábado · GAV6: lunes a jueves y sábado · GAV9: lunes a sábado · GAVFIG: lunes a sábado · GAVFIG Elite: lunes a sábado.</div></div><div class="noteBox"><b>Semáforo:</b> VERDE · más de 85% · AMARILLO · 70% a 84.9% · ROJO · menos de 69.9%.<br><b>Lesiones:</b> si el atleta asiste con entrenamiento modificado por lesión, cuenta como presente. Si no asiste, la sesión se registra como falta aunque la causa sea una lesión.<br><b>Importante:</b> retardos y salidas antes son informativos y no modifican el porcentaje.</div><div class="tableBox"><div class="boxTitle">Asistencia individual · todos los atletas</div><table class="individual"><thead><tr><th>#</th><th>Atleta</th><th>Grupo</th><th>Esperadas</th><th>Asistidas</th><th>Retardos</th><th>Salidas</th><th>Dobles incluidas</th><th>Dobles asistidas</th><th>Asistencia</th></tr></thead><tbody>${individual}</tbody></table></div><div class="groupBox"><div class="boxTitle">Dobles asistidas (asistidas/registradas)</div><div class="doubleText">${allD||'No hay dobles registradas.'}</div></div></div>`;
+}
+function render(){
+ const name=$('athlete').value;
+ if(!name){$('report').classList.add('hidden');$('printBtn').disabled=true;return;}
+ const groups=athleteGroups(records),r=compute(name,records,groups);if(!r)return;
+ const current=r.groups[r.groups.length-1]||'—';
+ $('report').innerHTML=`<div class="hero"><div class="heroHead"><div><div class="heroTitle">REPORTE INDIVIDUAL DE ASISTENCIA</div><div class="heroSub">AKC · ÁGUILAS DE KIDS CENTER · ${esc(fmtDate(minDate))} al ${esc(fmtDate(maxDate))}</div></div><img class="heroLogo" src="../../../cliente/logo.png"></div><div class="metrics"><div class="metric"><small>Asistencia</small><strong>${pct(r.attendance)}</strong></div><div class="metric"><small>Sesiones esperadas</small><strong>${r.expected}</strong></div><div class="metric"><small>Sesiones asistidas</small><strong>${r.attended}</strong></div><div class="metric"><small>Faltas</small><strong>${r.absences}</strong></div><div class="metric"><small>Retardos</small><strong>${r.tardy}</strong></div><div class="metric"><small>Salidas antes</small><strong>${r.early}</strong></div><div class="metric"><small>Dobles incluidas</small><strong>${r.doubles||'—'}</strong></div><div class="metric"><small>Dobles asistidas</small><strong>${r.doubleAtt||'—'}</strong></div><div class="metric"><small>Grupo actual</small><strong style="font-size:16px">${esc(current)}</strong></div></div><div class="groupBox"><div class="boxTitle">Trayectoria de grupo</div><div class="days">${esc(r.groups.join(' → ')||'Sin grupo identificado')}</div></div><div class="groupBox"><div class="boxTitle">Días de entrenamiento considerados</div><div class="days">GAV3: martes y jueves · GAV4: lunes a viernes · GAV5: lunes a sábado · GAV6: lunes a jueves y sábado · GAV9: lunes a sábado · GAVFIG: lunes a sábado · GAVFIG Elite: lunes a sábado.</div></div><div class="noteBox"><b>Semáforo:</b> VERDE · más de 85% · AMARILLO · 70% a 84.9% · ROJO · menos de 69.9%.<br><b>Lesiones:</b> si el atleta asiste con entrenamiento modificado por lesión, cuenta como presente. Si no asiste, la sesión se registra como falta aunque la causa sea una lesión.<br><b>Importante:</b> retardos y salidas antes son informativos y no modifican el porcentaje.</div></div>`;
+ $('report').classList.remove('hidden');$('printBtn').disabled=false;
+}
+function parseFilenameDate(name){const m=String(name).match(/Student Attendance Report\s+(\d{2})-(\d{2})-(\d{4})\.xlsx$/i);return m?new Date(+m[3],+m[2]-1,+m[1]):null}
+async function findLatestFile(){
+ // En GitHub Pages, buscamos todos los archivos del directorio del repositorio. En copias locales usamos el archivo conocido como respaldo.
+ const fallback='Student Attendance Report 08-10-2026.xlsx';
+ const candidates=[];
+ try{
+  const path=location.pathname.split('/').filter(Boolean);const host=location.hostname;
+  if(host.endsWith('github.io')){
+   const user=host.split('.')[0];
+   const first=path[0]||'';
+   const repo=(first && first!=='modulos' && first!=='index.html')?first:`${user}.github.io`;
+   const api=`https://api.github.com/repos/${encodeURIComponent(user)}/${encodeURIComponent(repo)}/contents/modulos/reportes/asistencia`;
+   const res=await fetch(api,{cache:'no-store'});
+   if(res.ok){const list=await res.json();list.filter(x=>x.type==='file').forEach(x=>{const d=parseFilenameDate(x.name);if(d)candidates.push({name:x.name,date:d,url:x.download_url})});}
+  }
+ }catch(e){console.warn('No se pudo consultar el listado remoto de asistencia:',e)}
+ if(!candidates.length){const d=parseFilenameDate(fallback);return {name:fallback,date:d,url:fallback}}
+ candidates.sort((a,b)=>b.date-a.date);return candidates[0];
+}
+async function init(){try{const latest=await findLatestFile();currentFile=latest.name;const rows=await AKC_XLSX.read(latest.url);records=parseRows(rows);if(!records.length)throw Error('El Excel no contiene registros de asistencia.');minDate=records.reduce((m,x)=>!m||x.date<m?x.date:m,null);maxDate=records.reduce((m,x)=>!m||x.date>m?x.date:m,null);const groups=athleteGroups(records);summary=[...new Set(records.map(x=>x.name))].sort((a,b)=>a.localeCompare(b,'es')).map(n=>compute(n,records,groups)).filter(Boolean);$('athlete').innerHTML='<option value="">Selecciona un atleta...</option>'+summary.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');$('period').innerHTML=`Periodo del reporte: <b>${esc(fmtDate(minDate))} al ${esc(fmtDate(maxDate))}</b>`;$('status').textContent=`Archivo activo: ${currentFile}`;$('athlete').onchange=render;buildPrintReport();$('printBtn').onclick=()=>window.print();}catch(e){console.error(e);$('status').textContent='No se pudo cargar el reporte de asistencia: '+e.message}}
+init();
+</script>
+</body></html>

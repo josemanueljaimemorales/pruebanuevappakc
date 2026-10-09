@@ -89,12 +89,20 @@ function showRutina(name, apparatus){
   const rutina = data.filter(d=>norm(d.ATLETA)===norm(name) && norm(d.APARATO)===norm(apparatus));
   const np = getApparatusValue(NP,name,apparatus);
   const dificultad = getApparatusValue(DIFICULTAD,name,apparatus);
+  const formatOneDecimal = value => {
+    const text = norm(value);
+    if(!text) return '';
+    const number = Number(String(text).replace(',', '.'));
+    return Number.isFinite(number) ? number.toFixed(1) : text;
+  };
+  const npDisplay = formatOneDecimal(np);
+  const dificultadDisplay = formatOneDecimal(dificultad);
   const grupos = getApparatusValue(GRUPOS,name,apparatus);
 
   let html = `<div class="back" data-action="apparatusList" data-athlete="${escapeHtml(name)}">⬅️</div>`;
   html += `<h2>${escapeHtml(name)} - ${escapeHtml(apparatus)}</h2>`;
-  html += `<div class="np">Nota de partida: ${escapeHtml(np || '-')}</div>`;
-  html += `<div class="np">Dificultad: ${escapeHtml(dificultad || '-')}</div>`;
+  html += `<div class="np">Nota de partida: ${escapeHtml(npDisplay || '-')}</div>`;
+  html += `<div class="np">Dificultad: ${escapeHtml(dificultadDisplay || '-')}</div>`;
   html += `<div class="np">Grupos: ${escapeHtml(grupos || '-')}</div>`;
   html += `<table class="table"><tr><th>Elemento</th><th>ID</th><th>Grupo</th><th>Valor</th><th>VD</th></tr>`;
   rutina.forEach(r=>{
