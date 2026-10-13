@@ -93,7 +93,7 @@
     return rows;
   }
   async function read(url,sheetName){
-    const response=await fetch(url,{cache:"no-store"});
+    const response=await fetch(url,{cache:"no-cache"});
     if(!response.ok) throw new Error("No se pudo cargar "+url);
     const files=await unzip(await response.arrayBuffer());
     const wb=xml(files,"xl/workbook.xml");
