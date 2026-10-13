@@ -13,7 +13,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 
 async function init(){
   try{
-    const res = await fetch('./AKC_FuerzaFIG.xlsx',{cache:'no-store'});
+    const res = await fetch('./AKC_FuerzaFIG.xlsx',{cache:'no-cache'});
     if(!res.ok) throw new Error(`No se pudo cargar AKC_FuerzaFIG.xlsx (HTTP ${res.status})`);
     const buf = await res.arrayBuffer();
     const wb = XLSX.read(buf);

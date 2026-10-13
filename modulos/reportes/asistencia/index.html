@@ -5,14 +5,71 @@
 <title>Reportes de asistencia · AKC</title>
 <script src="../../../cliente/config.js"></script>
 <script src="../../../cliente/xlsx-reader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
 <style>
 :root{--bg:#07111f;--panel:#0d1b2d;--line:#20344d;--text:#eef5ff;--muted:#9eb0c6;--blue:#54a7ff;--gold:#c5a45a;--green:#dceedd;--yellow:#fff1c7;--red:#f6dada;--greenText:#24652e;--redText:#8d3030}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:1180px;margin:auto;padding:20px 18px 55px}.top{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:18px}.back{color:#cfe3fa;text-decoration:none}.eyebrow{font-size:11px;letter-spacing:.16em;font-weight:800;color:#68b4ff}.title h1{margin:5px 0;font-size:30px}.title p{margin:0;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:900;font-size:11px;cursor:pointer}.btn.print{background:var(--gold);color:#07111f}.btn.backbtn{background:#102238;color:#dcecff;border:1px solid var(--line)}.selector{background:linear-gradient(135deg,#10243a,#0b1828);border:1px solid var(--line);padding:18px;border-radius:17px}.selector label{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}.selector select{width:100%;background:#071321;color:var(--text);border:1px solid #31506f;border-radius:10px;padding:12px;font-size:16px;outline:none}.period{margin-top:10px;color:#cbd9e8;font-size:12px}.period b{color:#fff}.hidden{display:none!important}.report{margin-top:16px}.printReport{display:none}.hero{background:#f8fafc;color:#17243b;border-radius:18px;padding:18px;border:1px solid #dfe5ec}.heroHead{display:flex;justify-content:space-between;gap:15px;align-items:center;border-bottom:2px solid var(--gold);padding-bottom:10px}.heroLogo{width:125px;height:67px;object-fit:contain}.heroTitle{font-size:21px;font-weight:900}.heroSub{font-size:10px;color:#687386;margin-top:3px}.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0}.metric{border:1px solid #dfe5ec;border-radius:11px;padding:10px;background:#fff}.metric small{display:block;color:#667085;font-size:9px;text-transform:uppercase;font-weight:800}.metric strong{display:block;font-size:20px;margin-top:4px}.groupBox,.tableBox,.noteBox{margin-top:12px;border:1px solid #dfe5ec;border-radius:12px;background:#fff;overflow:hidden}.boxTitle{padding:10px 12px;font-weight:900;font-size:13px;background:#f4f7fa}.groupTable,.individual{width:100%;border-collapse:collapse}.groupTable th,.individual th{background:#17243b;color:#fff;padding:8px 7px;font-size:9px;text-align:center}.groupTable td,.individual td{padding:6px 6px;border-top:1px solid #edf0f3;font-size:9px}.groupTable td:not(:first-child),.individual td:not(:nth-child(2)):not(:nth-child(3)){text-align:center}.individual{table-layout:fixed}.individual th:nth-child(1){width:4%}.individual th:nth-child(2){width:23%}.individual th:nth-child(3){width:14%}.individual th:nth-child(4),.individual th:nth-child(5){width:9%}.individual th:nth-child(6),.individual th:nth-child(7){width:7%}.individual th:nth-child(8),.individual th:nth-child(9){width:9%}.individual th:nth-child(10){width:9%}.individual td:nth-child(2),.individual td:nth-child(3){text-align:left}.row-green{background:var(--green)}.row-yellow{background:var(--yellow)}.row-red{background:var(--red)}.pct{font-weight:900}.days{padding:11px 12px;font-size:9.5px;line-height:1.5}.noteBox{padding:11px 12px;background:#f4ebd3;border-color:#d8bf77;font-size:9.5px;line-height:1.5}.doubleText{padding:10px 12px;font-size:9px;line-height:1.5}.loading,.error{padding:40px;text-align:center;color:#667085}.statusLine{margin-top:9px;color:#9eb0c6;font-size:11px}@media(max-width:900px){.metrics{grid-template-columns:repeat(3,1fr)}.hero{overflow:auto}.individual{min-width:820px}.groupTable{min-width:560px}.groupBox,.tableBox{overflow:auto}}@media print{body{background:#fff!important;color:#111!important}.screenReport{display:none!important}.printReport{display:block!important}.wrap{max-width:none;padding:0}.top,.selector,.statusLine{display:none!important}.report{margin:0}.hero{border:0;border-radius:0;padding:0}.heroHead{padding-bottom:8px}.metrics{grid-template-columns:repeat(4,1fr)}.selectedMetric{display:none!important}.metric{padding:7px}.metric strong{font-size:16px}.groupBox,.noteBox{break-inside:avoid;overflow:visible}.tableBox{break-before:page;overflow:visible}.individual{min-width:0}.individual th,.individual td{font-size:7.2px;padding:4px 3px}.groupTable th,.groupTable td{font-size:7.5px;padding:4px}.boxTitle{font-size:10px;padding:6px}.days,.noteBox,.doubleText{font-size:7.5px}.heroLogo{width:105px;height:56px}.report:after{content:""} }
-@page{size:A4 portrait;margin:8mm}@media print{.printReport{display:block!important}.screenReport{display:none!important}.individual{width:100%;min-width:0;table-layout:fixed}.individual tr{break-inside:avoid}.heroLogo{object-fit:contain}}
+@page{size:A4 portrait;margin:8mm}@media print{html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;background:#fff!important}.printReport{display:block!important}.screenReport{display:none!important}.individual{width:100%;min-width:0;table-layout:fixed}.individual tr{break-inside:avoid}.individual tr.row-green td{background:#dceedd!important}.individual tr.row-yellow td{background:#fff1c7!important}.individual tr.row-red td{background:#f6dada!important}.groupTable td.row-green,.groupTable td.row-yellow,.groupTable td.row-red{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}.heroLogo{object-fit:contain}}
+
+/* Impresión: forzar una salida clara y conservar el semáforo incluso en navegadores con modo oscuro. */
+@media print {
+  :root { color-scheme: light !important; }
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #17243b !important;
+    color-scheme: light !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    forced-color-adjust: none !important;
+    filter: none !important;
+  }
+  .printReport, .printReport .hero, .printReport .groupBox,
+  .printReport .tableBox, .printReport .metric {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #17243b !important;
+    filter: none !important;
+    forced-color-adjust: none !important;
+  }
+  .printReport .boxTitle { background: #f4f7fa !important; color: #17243b !important; }
+  .printReport .heroTitle, .printReport .metric strong,
+  .printReport .metric small, .printReport .days,
+  .printReport .doubleText { color: #17243b !important; }
+  .printReport .heroSub { color: #687386 !important; }
+  .printReport .groupTable th, .printReport .individual th {
+    background: #17243b !important;
+    background-color: #17243b !important;
+    color: #ffffff !important;
+  }
+  .printReport .individual tr.row-green,
+  .printReport .individual tr.row-green td {
+    background: #dceedd !important; background-color: #dceedd !important; color: #17243b !important;
+  }
+  .printReport .individual tr.row-yellow,
+  .printReport .individual tr.row-yellow td {
+    background: #fff1c7 !important; background-color: #fff1c7 !important; color: #17243b !important;
+  }
+  .printReport .individual tr.row-red,
+  .printReport .individual tr.row-red td {
+    background: #f6dada !important; background-color: #f6dada !important; color: #17243b !important;
+  }
+  .printReport .groupTable td.row-green { background: #dceedd !important; color: #17243b !important; }
+  .printReport .groupTable td.row-yellow { background: #fff1c7 !important; color: #17243b !important; }
+  .printReport .groupTable td.row-red { background: #f6dada !important; color: #17243b !important; }
+  .printReport .noteBox {
+    background: #f4ebd3 !important; background-color: #f4ebd3 !important;
+    border-color: #d8bf77 !important; color: #17243b !important;
+  }
+  .printReport .heroHead { border-bottom-color: #c5a45a !important; }
+  .printReport .individual { width: 100% !important; min-width: 0 !important; }
+  .printReport .individual tr { break-inside: avoid !important; }
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
- <div class="top"><div><div class="eyebrow">AKC · ÁGUILAS DE KIDS CENTER</div><div class="title"><h1>Reportes de asistencia</h1><p>Consulta individual de asistencia y participación.</p></div></div><div class="actions"><button class="btn backbtn" onclick="location.href='../index.html'">← Reportes</button><button class="btn print" id="printBtn" disabled>IMPRIMIR REPORTE</button></div></div>
+ <div class="top"><div><div class="eyebrow">AKC · ÁGUILAS DE KIDS CENTER</div><div class="title"><h1>Reportes de asistencia</h1><p>Consulta individual de asistencia y participación.</p></div></div><div class="actions"><a class="btn backbtn" href="../index.html" style="display:inline-flex;align-items:center;text-decoration:none">REPORTES</a><button class="btn print" id="printBtn" disabled>DESCARGAR PDF</button></div></div>
  <section class="selector"><label for="athlete">Selecciona a tu atleta</label><select id="athlete"><option value="">Cargando atletas...</option></select><div class="period" id="period">Periodo del reporte: <b>cargando...</b></div></section>
  <div id="status" class="statusLine">Cargando reporte de asistencia...</div>
  <main id="report" class="report screenReport hidden"></main><main id="printReport" class="report printReport"></main>
@@ -28,6 +85,7 @@ const SCHEDULE={
  'GAVFIGELITE':[1,2,3,4,5,6],'GAV ELITE':[1,2,3,4,5,6]
 };
 const groupNorm=s=>String(s||'').replace(/\s+/g,'').toUpperCase();
+const scheduleForGroup=g=>{const n=groupNorm(g);if(n==='GAVELITE'||n==='GAVFIGELITE')return SCHEDULE.GAVFIGELITE;if(n==='GAV3')return SCHEDULE.GAV3;if(n==='GAV4')return SCHEDULE.GAV4;if(n==='GAV5')return SCHEDULE.GAV5;if(n==='GAV6')return SCHEDULE.GAV6;if(n==='GAV9')return SCHEDULE.GAV9;if(n==='GAVFIG')return SCHEDULE.GAVFIG;return [];};
 const cleanGroup=s=>{const n=groupNorm(s);if(n==='GAV3')return'GAV 3';if(n==='GAV4')return'GAV4';if(n==='GAV5')return'GAV5';if(n==='GAV6')return'GAV6';if(n==='GAV9')return'GAV9';if(n==='GAVFIGELITE'||n==='GAVELITE')return'GAVFIG Elite';if(n==='GAVFIG')return'GAVFIG';return String(s||'').trim()};
 const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
 const $=id=>document.getElementById(id);
@@ -52,7 +110,7 @@ function athleteGroups(arr){
 // Correcciones explícitas de trayectoria indicadas por el entrenador para el reporte actual.
 const CURRENT_OVERRIDES={
  'Maximiliano Diaz Ayala':['GAV6','GAV9'],'Nicolas Capitanachi Vicenttin':['GAV6','GAV9'],'Luis Santiago Sigler Perez':['GAV6','GAV9'],
- 'Mario Bisteni Marín':['GAV6','GAV9'],'Alfredo Jacobo Pimentel':['GAV6','GAV9'],'Bruno Jacobo Pimentel':['GAV6','GAV9'],
+ 'Mario Bisteni Marín':['GAV6','GAV9'],'Alfredo Jacobo Pimentel':['GAV6'],'Bruno Jacobo Pimentel':['GAV6','GAV9'],
  'Alonso Ahedo Carvallo':['GAV9','GAVFIG'],'Brittan Akim Robles Ceballos':['GAV6'],'Ricardo Antonio Jiménez Santos':['GAVFIG']
 };
 function pathFor(name,groups){if(CURRENT_OVERRIDES[name])return CURRENT_OVERRIDES[name];return groups.get(name)?.map(x=>x.group)||[]}
@@ -69,7 +127,7 @@ function compute(name,arr,groups){
    segments=path.map((g,i)=>({group:g,start:i===0?first:switchAt,end:i===path.length-1?last:new Date(switchAt.getTime()-86400000)}));
   }
  }
- let expected=0;segments.forEach(s=>{expected+=datesBetween(s.start,s.end,SCHEDULE[s.group]||[])});
+ let expected=0;segments.forEach(s=>{expected+=datesBetween(s.start,s.end,scheduleForGroup(s.group))});
  const attendedNormal=normal.filter(x=>statusPresent(x.status)).length;
  const tardy=normal.filter(x=>statusTardy(x.status)).length;
  const early=normal.filter(x=>statusEarly(x.status)).length;
@@ -91,7 +149,7 @@ function buildPrintReport(){
  const totalExpected=summary.reduce((a,x)=>a+x.expected,0),totalAtt=summary.reduce((a,x)=>a+x.attended,0);
  const global=totalExpected>0?totalAtt/totalExpected*100:0,gsum=groupSummary(summary);
  const groupRows=gsum.map(x=>`<tr><td>${esc(x.g)}</td><td>${x.n}</td><td>${x.e.toLocaleString('es-MX')}</td><td class="pct ${semClass(x.p)}">${pct(x.p)}</td></tr>`).join('');
- const individual=summary.slice().sort((a,b)=>a.name.localeCompare(b.name,'es')).map((x,i)=>`<tr class="${semClass(x.attendance)}"><td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.groups.join(' → '))}</td><td>${x.expected}</td><td>${x.attended}</td><td>${x.tardy}</td><td>${x.early}</td><td>${x.doubles||'—'}</td><td>${x.doubleAtt||'—'}</td><td class="pct">${pct(x.attendance)}</td></tr>`).join('');
+ const individual=summary.slice().sort((a,b)=>(b.attendance-a.attendance)||a.name.localeCompare(b.name,'es')).map((x,i)=>`<tr class="${semClass(x.attendance)}"><td>${i+1}</td><td>${esc(x.name)}</td><td>${esc(x.groups.join(' → '))}</td><td>${x.expected}</td><td>${x.attended}</td><td>${x.tardy}</td><td>${x.early}</td><td>${x.doubles||'—'}</td><td>${x.doubleAtt||'—'}</td><td class="pct">${pct(x.attendance)}</td></tr>`).join('');
  const allD=summary.filter(x=>x.doubles>0).map(x=>`${esc(x.name)} (${x.doubleAtt}/${x.doubles})`).join(' · ');
  $('printReport').innerHTML=`<div class="hero"><div class="heroHead"><div><div class="heroTitle">REPORTE DE ASISTENCIA</div><div class="heroSub">AKC · ÁGUILAS DE KIDS CENTER · GIMNASIA · ${esc(fmtDate(minDate))} al ${esc(fmtDate(maxDate))}</div></div><img class="heroLogo" src="../../../cliente/logo.png"></div><div class="metrics"><div class="metric"><small>Atletas</small><strong>${summary.length}</strong></div><div class="metric"><small>Asistencia general</small><strong>${pct(global)}</strong></div><div class="metric"><small>Sesiones esperadas</small><strong>${totalExpected.toLocaleString('es-MX')}</strong></div><div class="metric"><small>Sesiones asistidas</small><strong>${totalAtt.toLocaleString('es-MX')}</strong></div><div class="metric"><small>Dobles registradas</small><strong>${summary.reduce((a,x)=>a+x.doubles,0)}</strong></div></div><div class="groupBox"><div class="boxTitle">Resumen por grupo</div><table class="groupTable"><thead><tr><th>Grupo</th><th>Atletas</th><th>Sesiones programadas</th><th>% asistencia</th></tr></thead><tbody>${groupRows}</tbody></table></div><div class="groupBox"><div class="boxTitle">Días de entrenamiento considerados</div><div class="days">GAV3: martes y jueves · GAV4: lunes a viernes · GAV5: lunes a sábado · GAV6: lunes a jueves y sábado · GAV9: lunes a sábado · GAVFIG: lunes a sábado · GAVFIG Elite: lunes a sábado.</div></div><div class="noteBox"><b>Semáforo:</b> VERDE · más de 85% · AMARILLO · 70% a 84.9% · ROJO · menos de 69.9%.<br><b>Lesiones:</b> si el atleta asiste con entrenamiento modificado por lesión, cuenta como presente. Si no asiste, la sesión se registra como falta aunque la causa sea una lesión.<br><b>Importante:</b> retardos y salidas antes son informativos y no modifican el porcentaje.</div><div class="tableBox"><div class="boxTitle">Asistencia individual · todos los atletas</div><table class="individual"><thead><tr><th>#</th><th>Atleta</th><th>Grupo</th><th>Esperadas</th><th>Asistidas</th><th>Retardos</th><th>Salidas</th><th>Dobles incluidas</th><th>Dobles asistidas</th><th>Asistencia</th></tr></thead><tbody>${individual}</tbody></table></div><div class="groupBox"><div class="boxTitle">Dobles asistidas (asistidas/registradas)</div><div class="doubleText">${allD||'No hay dobles registradas.'}</div></div></div>`;
 }
@@ -115,14 +173,130 @@ async function findLatestFile(){
    const first=path[0]||'';
    const repo=(first && first!=='modulos' && first!=='index.html')?first:`${user}.github.io`;
    const api=`https://api.github.com/repos/${encodeURIComponent(user)}/${encodeURIComponent(repo)}/contents/modulos/reportes/asistencia`;
-   const res=await fetch(api,{cache:'no-store'});
+   const res=await fetch(api,{cache:'no-cache'});
    if(res.ok){const list=await res.json();list.filter(x=>x.type==='file').forEach(x=>{const d=parseFilenameDate(x.name);if(d)candidates.push({name:x.name,date:d,url:x.download_url})});}
   }
  }catch(e){console.warn('No se pudo consultar el listado remoto de asistencia:',e)}
  if(!candidates.length){const d=parseFilenameDate(fallback);return {name:fallback,date:d,url:fallback}}
  candidates.sort((a,b)=>b.date-a.date);return candidates[0];
 }
-async function init(){try{const latest=await findLatestFile();currentFile=latest.name;const rows=await AKC_XLSX.read(latest.url);records=parseRows(rows);if(!records.length)throw Error('El Excel no contiene registros de asistencia.');minDate=records.reduce((m,x)=>!m||x.date<m?x.date:m,null);maxDate=records.reduce((m,x)=>!m||x.date>m?x.date:m,null);const groups=athleteGroups(records);summary=[...new Set(records.map(x=>x.name))].sort((a,b)=>a.localeCompare(b,'es')).map(n=>compute(n,records,groups)).filter(Boolean);$('athlete').innerHTML='<option value="">Selecciona un atleta...</option>'+summary.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');$('period').innerHTML=`Periodo del reporte: <b>${esc(fmtDate(minDate))} al ${esc(fmtDate(maxDate))}</b>`;$('status').textContent=`Archivo activo: ${currentFile}`;$('athlete').onchange=render;buildPrintReport();$('printBtn').onclick=()=>window.print();}catch(e){console.error(e);$('status').textContent='No se pudo cargar el reporte de asistencia: '+e.message}}
+async function init(){try{const latest=await findLatestFile();currentFile=latest.name;const rows=await AKC_XLSX.read(latest.url);records=parseRows(rows);if(!records.length)throw Error('El Excel no contiene registros de asistencia.');minDate=records.reduce((m,x)=>!m||x.date<m?x.date:m,null);maxDate=records.reduce((m,x)=>!m||x.date>m?x.date:m,null);const groups=athleteGroups(records);summary=[...new Set(records.map(x=>x.name))].sort((a,b)=>a.localeCompare(b,'es')).map(n=>compute(n,records,groups)).filter(Boolean);$('athlete').innerHTML='<option value="">Selecciona un atleta...</option>'+summary.map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');$('period').innerHTML=`Periodo del reporte: <b>${esc(fmtDate(minDate))} al ${esc(fmtDate(maxDate))}</b>`;$('status').textContent=`Archivo activo: ${currentFile}`;$('athlete').onchange=render;buildPrintReport();$('printBtn').onclick=printReportToPdf;}catch(e){console.error(e);$('status').textContent='No se pudo cargar el reporte de asistencia: '+e.message}}
+
+
+
+
+async function printReportToPdf(){
+  const source=$('printReport');
+  if(!source||!source.innerHTML.trim()){
+    alert('El resumen general todavía no está listo. Espera a que termine de cargar.');
+    return;
+  }
+  if(typeof html2pdf!=='function'){
+    alert('No se pudo cargar el generador de PDF. Comprueba tu conexión e inténtalo de nuevo.');
+    return;
+  }
+  const button=$('printBtn');
+  const oldLabel=button.textContent;
+  button.disabled=true;
+  button.textContent='GENERANDO PDF…';
+
+  const stage=document.createElement('div');
+  stage.style.cssText='position:fixed;left:-15000px;top:0;width:194mm;background:#fff;color:#17243b;z-index:-1;overflow:visible;';
+  const clone=source.cloneNode(true);
+  clone.style.cssText='display:block!important;visibility:visible!important;width:194mm!important;max-width:194mm!important;margin:0!important;padding:0!important;background:#fff!important;color:#17243b!important;font-family:Arial,Helvetica,sans-serif!important;overflow:visible!important;box-sizing:border-box!important;';
+
+  // Cambios exclusivos del PDF: quitar sesiones programadas del resumen grupal.
+  const groupTable=clone.querySelector('.groupTable');
+  if(groupTable){
+    groupTable.querySelectorAll('tr').forEach(tr=>{
+      if(tr.children.length>=4) tr.removeChild(tr.children[2]);
+    });
+  }
+
+  // Corregir el ancho de la tabla individual y enfatizar porcentajes.
+  const individual=clone.querySelector('.individual');
+  if(individual){
+    individual.style.cssText='width:100%!important;min-width:0!important;max-width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;';
+    const widths=['4%','22%','13%','8%','8%','6%','6%','9%','12%','12%'];
+    individual.querySelectorAll('tr').forEach(tr=>{
+      [...tr.children].forEach((cell,i)=>{
+        cell.style.setProperty('width',widths[i]||'8%','important');
+        cell.style.setProperty('padding','2px 1.5px','important');
+        cell.style.setProperty('font-size','6.8pt','important');
+        cell.style.setProperty('overflow-wrap','anywhere','important');
+        cell.style.setProperty('word-break','normal','important');
+      });
+      if(tr.children.length>=10){
+        const pctCell=tr.children[9];
+        pctCell.style.setProperty('font-weight','900','important');
+      }
+    });
+    individual.querySelectorAll('tbody tr td:last-child').forEach(td=>{
+      td.style.setProperty('font-weight','900','important');
+    });
+  }
+  // Porcentajes grupales en negritas y anchos ajustados después de quitar la tercera columna.
+  if(groupTable){
+    groupTable.style.cssText='width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;';
+    groupTable.querySelectorAll('tr').forEach(tr=>{
+      [...tr.children].forEach((cell,i)=>{
+        cell.style.setProperty('width',['40%','20%','40%'][i]||'','important');
+        cell.style.setProperty('padding','4px 5px','important');
+      });
+      if(tr.children.length===3){
+        tr.lastElementChild.style.setProperty('font-weight','900','important');
+      }
+    });
+  }
+
+  const style=document.createElement('style');
+  style.textContent=`
+    #printReport, #printReport * { box-sizing:border-box !important; }
+    #printReport { background:#fff !important; color:#17243b !important; width:194mm !important; }
+    #printReport .hero, #printReport .heroHead, #printReport .metrics,
+    #printReport .groupBox, #printReport .tableBox, #printReport .noteBox {
+      background:#fff !important; color:#17243b !important;
+    }
+    #printReport .boxTitle { background:#f1f5f9 !important; color:#17243b !important; }
+    #printReport table { max-width:100% !important; }
+    #printReport th, #printReport td { overflow-wrap:anywhere !important; }
+    #printReport .groupTable tbody td:last-child,
+    #printReport .individual tbody td:last-child,
+    #printReport .metric strong { font-weight:900 !important; }
+    #printReport .row-green { background:#dceedd !important; }
+    #printReport .row-yellow { background:#fff1c7 !important; }
+    #printReport .row-red { background:#f6dada !important; }
+    #printReport img { max-width:100% !important; }
+  `;
+  stage.appendChild(style);
+  stage.appendChild(clone);
+  document.body.appendChild(stage);
+
+  try{
+    const images=[...clone.querySelectorAll('img')];
+    await Promise.all(images.map(img=>{
+      if(img.complete) return Promise.resolve();
+      return new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;setTimeout(resolve,2500)});
+    }));
+    const filename='Reporte_Asistencia_AKC_'+(minDate&&maxDate?(fmtShort(minDate).replace(/\//g,'-')+'_'+fmtShort(maxDate).replace(/\//g,'-')):'general')+'.pdf';
+    await html2pdf().set({
+      margin:[7,7,7,7],
+      filename,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',logging:false,scrollX:0,scrollY:0,windowWidth:clone.scrollWidth},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy'],before:'.tableBox',avoid:['.groupBox','.noteBox','tr']}
+    }).from(clone).save();
+  }catch(e){
+    console.error('Error al generar el PDF de asistencia:',e);
+    alert('No se pudo generar el PDF. Inténtalo de nuevo.');
+  }finally{
+    stage.remove();
+    button.disabled=false;
+    button.textContent=oldLabel;
+  }
+}
+
 init();
 </script>
 </body></html>

@@ -7,6 +7,7 @@ const screen = document.getElementById('screen');
 
 const norm = v => String(v ?? '').trim();
 const keyName = v => norm(v).toUpperCase();
+const nameKey = v => keyName(v).replace(/\s+/g, '');
 
 function escapeHtml(v){
   return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,7 +19,7 @@ function unique(values){
 
 async function loadExcel(){
   try{
-    const res = await fetch('./Excel_Solo_Valores.xlsx', {cache:'no-store'});
+    const res = await fetch('./Excel_Solo_Valores.xlsx', {cache:'no-cache'});
     if(!res.ok) throw new Error(`No se pudo cargar Excel_Solo_Valores.xlsx (HTTP ${res.status})`);
     const buffer = await res.arrayBuffer();
     const wb = XLSX.read(buffer, {cellDates:false});
@@ -46,14 +47,14 @@ function indexByFirstColumn(rows){
   const out = {};
   rows.forEach(r=>{
     const keys = Object.keys(r);
-    const name = keyName(r[keys[0]]);
+    const name = nameKey(r[keys[0]]);
     if(name) out[name] = r;
   });
   return out;
 }
 
 function getApparatusValue(index, name, apparatus){
-  const row = index[keyName(name)];
+  const row = index[nameKey(name)];
   if(!row) return '';
   const target = keyName(apparatus);
   const aliases = target === 'PARALELAS' ? ['PARALELA','PARALELAS'] :

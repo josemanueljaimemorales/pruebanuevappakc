@@ -70,8 +70,8 @@ function dateEventLabels(d){
 
 async function reloadPlanData(){
   const [macroBuf,assignmentBuf]=await Promise.all([
-    fetch('./MACRO_26_27.xlsx',{cache:'no-store'}).then(r=>{if(!r.ok) throw Error('No se encontró MACRO_26_27.xlsx'); return r.arrayBuffer();}),
-    fetch('./ASIGNACION DE COMPETENCIAS.xlsx',{cache:'no-store'}).then(r=>{if(!r.ok) throw Error('No se encontró ASIGNACION DE COMPETENCIAS.xlsx'); return r.arrayBuffer();})
+    fetch('./MACRO_26_27.xlsx',{cache:'no-cache'}).then(r=>{if(!r.ok) throw Error('No se encontró MACRO_26_27.xlsx'); return r.arrayBuffer();}),
+    fetch('./ASIGNACION DE COMPETENCIAS.xlsx',{cache:'no-cache'}).then(r=>{if(!r.ok) throw Error('No se encontró ASIGNACION DE COMPETENCIAS.xlsx'); return r.arrayBuffer();})
   ]);
   const macroWb=XLSX.read(macroBuf,{type:'array',cellDates:true});
   const assignmentWb=XLSX.read(assignmentBuf,{type:'array',cellDates:true});
