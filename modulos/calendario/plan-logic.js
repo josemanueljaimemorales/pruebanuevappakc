@@ -1,0 +1,280 @@
+/* Lógica copiada del módulo Plan Anual para leer MACRO y ASIGNACION igual que él */
+const MONTHS={ENERO:1,FEBRERO:2,MARZO:3,ABRIL:4,MAYO:5,JUNIO:6,JULIO:7,AGOSTO:8,SEPTIEMBRE:9,OCTUBRE:10,NOVIEMBRE:11,DICIEMBRE:12};
+let days=[], specialEvents={competencia:[],eventos:[],descansos:[]}, assignmentData={athletes:[],competitions:[]};
+const clean=v=>String(v??'').trim();
+const upper=v=>clean(v).toUpperCase();
+const dateKey=d=>`${d.year}-${String(d.month).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
+function normalizeName(v){
+  return String(v ?? '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+}
+function competitionTokens(v){
+  let t=normalizeName(v)
+    .replace(/\b(?:19|20)\d{2}\b/g,' ')
+    .replace(/\b\d{1,2}\b/g,' ')
+    .replace(/\b(?:DE|DEL|LA|EL|Y|O|PARA|POR|EN)\b/g,' ')
+    .replace(/\b(?:COPA|CAMPEONATO|COMPETENCIA|TORNEO|CONTROL|EVENTO)\b/g,' ')
+    .replace(/\b(?:PROBABLE|FECHA|PRIMER|PRIMERO|SEGUNDO|SEGUNDA|1ER|2DO|2DA)\b/g,' ')
+    .replace(/\bSELECTIVOS?\b/g,'SELECTIVO')
+    .replace(/\bNACIONALES?\b/g,'NACIONAL')
+    .replace(/\bESTATALES?\b/g,'ESTATAL')
+    .replace(/\bINVITATIONALS?\b/g,'INVITATIONAL')
+    .replace(/\bCUPS?\b/g,'CUP')
+    .replace(/\s+/g,' ').trim();
+  return new Set(t ? t.split(' ') : []);
+}
+function competitionMatchScore(a,b){
+  const na=normalizeName(a), nb=normalizeName(b);
+  if(!na || !nb) return 0;
+  if(na===nb) return 100;
+  if(na.includes(nb) || nb.includes(na)) return 92;
+
+  const A=competitionTokens(a), B=competitionTokens(b);
+  if(!A.size || !B.size) return 0;
+  let common=0;
+  A.forEach(x=>{ if(B.has(x)) common++; });
+  const union=new Set([...A,...B]).size;
+  const minSize=Math.min(A.size,B.size);
+  const coverage=common/minSize;
+  const jaccard=common/union;
+
+  // Requerimos una coincidencia fuerte para no mezclar competencias distintas.
+  if(coverage===1) return 80 + jaccard*10;
+  if(coverage>=0.75 && jaccard>=0.50) return 65 + jaccard*10;
+  return jaccard*50;
+}
+function readAssignments(wb){
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  if(!ws) throw Error('No existe la hoja de asignación de competencias');
+  const matrix = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const header = matrix[0] || [];
+  const venueRow = matrix.findIndex((row,i)=>i>0 && row.some(cell=>/^\s*SEDE(?:S| DE COMPETENCIAS)?\s*[:\n]?/i.test(clean(cell))));
+  const competitions = [];
+  for(let c=2;c<header.length;c++){
+    const title = clean(header[c]);
+    if(title && title.toUpperCase()!=='PARTICIPACION'){
+      competitions.push({key:`c${c}`, title, column:c, venue:venueRow>=0 ? clean(matrix[venueRow]?.[c]).replace(/^SEDE\s*[:\n]?\s*/i,'').trim() : ''});
+    }
+  }
+  const athletes = [];
+  for(let r=1;r<matrix.length;r++){
+    if(r===venueRow) continue;
+    const name=clean(matrix[r]?.[0]);
+    if(!name || /^(SEDE|SEDES|SEDE DE COMPETENCIAS)$/i.test(name)) continue;
+    const level=clean(matrix[r]?.[1]);
+    const assignments={};
+    competitions.forEach(comp=>{
+      const value=upper(matrix[r]?.[comp.column]);
+      assignments[comp.key]=value==='SI';
+    });
+    athletes.push({name,level,assignments});
+  }
+  return {athletes,competitions};
+}
+function assignmentColumnsForEvent(event){
+  const title=clean(event?.title || '');
+  if(!title) return [];
+
+  // 1) Coincidencia EXACTA entre la descripción del MACRO y el encabezado
+  // de ASIGNACION. Esta es la vía principal y evita cualquier alias manual.
+  const normalizedTitle=normalizeName(title);
+  const exact=assignmentData.competitions.find(comp =>
+    normalizeName(comp.title) === normalizedTitle
+  );
+  if(exact) return [exact];
+
+  // 2) Si el nombre cambió ligeramente (año, prefijos, etc.), usamos
+  // coincidencia por contenido, pero nunca inventamos una competencia.
+  const scored=assignmentData.competitions
+    .map(comp=>({comp,score:competitionMatchScore(title,comp.title)}))
+    .filter(x=>x.score>=65)
+    .sort((a,b)=>b.score-a.score);
+
+  if(!scored.length) return [];
+
+  const best=scored[0];
+  if(best.score>=92) return [best.comp];
+
+  const threshold=Math.max(65,best.score-8);
+  return scored.filter(x=>x.score>=threshold).map(x=>x.comp);
+}
+function athletesForEvent(event){
+  const cols=assignmentColumnsForEvent(event);
+  if(!cols.length) return [];
+  return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
+}
+function venuesForEvent(event){
+  const cols=assignmentColumnsForEvent(event);
+  return [...new Set(cols.map(c=>clean(c.venue)).filter(Boolean))];
+}
+function readCalendar(wb){
+  const ws = wb.Sheets['macro gral'];
+  if(!ws) throw Error('No existe la hoja "macro gral"');
+  const matrix = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const fillRow = row => {
+    let last='';
+    return row.map(v=>{if(!['',null,undefined].includes(v)) last=clean(v); return last;});
+  };
+
+  // SheetJS conserva los rangos combinados de Excel en ws['!merges'].
+  // Para NIVEL DE DESEMPEÑO TECNICO y CARGA DE FUERZA, el valor no está
+  // en una sola fila: está distribuido verticalmente (ALTO/MEDIO/BAJO y
+  // 60-80%/45-60%) y cada bloque está combinado horizontalmente.
+  // Si usamos fillRow sobre una sola fila, se termina repitiendo un valor
+  // incorrecto para muchos días. Aquí resolvemos el valor real de cada
+  // columna respetando las celdas combinadas del Excel.
+  const mergedValueAt = (row1,col1) => {
+    const r=row1-1, c=col1-1;
+    const direct=ws[XLSX.utils.encode_cell({r,c})];
+    if(direct && clean(direct.v)!=='') return clean(direct.v);
+    const merges=ws['!merges']||[];
+    for(const m of merges){
+      if(r>=m.s.r && r<=m.e.r && c>=m.s.c && c<=m.e.c){
+        const top=ws[XLSX.utils.encode_cell({r:m.s.r,c:m.s.c})];
+        return top ? clean(top.v) : '';
+      }
+    }
+    return '';
+  };
+
+  const technicalForColumn = col => {
+    // Prioridad por fila: ALTO, MEDIO, BAJO; solo una de las tres
+    // corresponde a cada bloque del calendario.
+    for(const row of [11,12,13]){
+      const value=mergedValueAt(row,col);
+      if(value) return value;
+    }
+    return '';
+  };
+
+  const forceForColumn = col => {
+    // Las cargas están en las filas 15 y 16 y también están combinadas
+    // horizontalmente por bloques.
+    for(const row of [15,16]){
+      const value=mergedValueAt(row,col);
+      if(value) return value;
+    }
+    return '';
+  };
+
+  const monthRow = fillRow(matrix[0]||[]);
+  const dayRow = matrix[1]||[];
+  const dowRow = matrix[2]||[];
+  const periodRow = fillRow(matrix[3]||[]);
+  const stageRow = fillRow(matrix[4]||[]);
+  const weekRow = fillRow(matrix[6]||[]);
+  const unitRow = fillRow(matrix[8]||[]);
+  const descRow = fillRow(matrix[9]||[]);
+
+  let year=2026, previousMonth=0;
+  const out=[];
+  for(let c=1;c<monthRow.length;c++){
+    const monthName=upper(monthRow[c]);
+    const month=MONTHS[monthName];
+    const dayNum=Number(dayRow[c]);
+    if(!month || !Number.isFinite(dayNum) || dayNum<1 || dayNum>31) continue;
+    if(previousMonth && month < previousMonth) year++;
+    previousMonth=month;
+    const d = {
+      year,month,monthName,day:dayNum,dow:clean(dowRow[c]),
+      period:clean(periodRow[c]),stage:clean(stageRow[c]),week:clean(weekRow[c]),
+      unit:clean(unitRow[c]),description:clean(descRow[c]),
+      technical:technicalForColumn(c+1),
+      force:forceForColumn(c+1)
+    };
+    d.key=dateKey(d);
+    out.push(d);
+  }
+  return out;
+}
+function classify(d){
+  const t=upper(d.description);
+
+  // IMPORTANTE:
+  // "D" en la fila de unidad NO significa que sea un descanso para este módulo.
+  // Los domingos son descanso natural y nunca se listan.
+  // Un descanso/vacación/puente solo existe cuando está EXPRESAMENTE
+  // indicado en la descripción del Excel.
+  if(/DESCANS|VACACION|PUENTE/.test(t)) return 'descansos';
+
+  // La columna "Unidad de entrenamiento" es la fuente oficial de clasificación:
+  // C = Competencia, E = Evento. No se intenta adivinar por el nombre de la descripción.
+  const unit = upper(d.unit).replace(/\s+/g,'');
+  if(unit==='C') return 'competencia';
+  if(unit==='E') return 'eventos';
+  return null;
+}
+function eventTitleKey(text){
+  // Quita fechas y números de día para que, por ejemplo,
+  // "Copa AGPAC 14 de noviembre" y "Copa AGPAC 15 de noviembre"
+  // se consideren el mismo evento.
+  return upper(text)
+    .replace(/\b\d{1,2}\s*(?:AL|A|[-/] )?\s*\d{1,2}\b/g,'')
+    .replace(/\b\d{1,2}\s+DE\s+(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\b/g,'')
+    .replace(/\b\d{1,2}[-/]\d{1,2}(?:[-/]\d{2,4})?\b/g,'')
+    .replace(/\s+/g,' ').trim();
+}
+function nextDay(a,b){
+  return (new Date(b.year,b.month-1,b.day)-new Date(a.year,a.month-1,a.day))===86400000;
+}
+function buildSpecialEvents(){
+  const result={competencia:[],eventos:[],descansos:[]};
+  const sorted=days.slice().sort((a,b)=>a.key.localeCompare(b.key));
+
+  // COMPETENCIAS: se agrupan únicamente días consecutivos que pertenecen
+  // al mismo nombre de competencia. El nombre se toma del Excel, quitando
+  // solamente las fechas que cambian de un día al siguiente.
+  let i=0;
+  while(i<sorted.length){
+    const d=sorted[i];
+    if(classify(d)!=='competencia' || !d.description){i++;continue;}
+    const key=eventTitleKey(d.description);
+    let end=d, j=i+1;
+    while(j<sorted.length){
+      const n=sorted[j];
+      if(classify(n)==='competencia' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){
+        end=n; j++;
+      } else break;
+    }
+    result.competencia.push({id:`competencia-${d.key}`,type:'competencia',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
+    i=j;
+  }
+
+  // EVENTOS: aparecen solamente cuando realmente existe un evento en el Excel.
+  // No se generan automáticamente por domingos ni por días ordinarios.
+  i=0;
+  while(i<sorted.length){
+    const d=sorted[i];
+    if(classify(d)!=='eventos' || !d.description){i++;continue;}
+    const key=eventTitleKey(d.description);
+    let end=d,j=i+1;
+    while(j<sorted.length){
+      const n=sorted[j];
+      if(classify(n)==='eventos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
+      else break;
+    }
+    result.eventos.push({id:`eventos-${d.key}`,type:'eventos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
+    i=j;
+  }
+
+  // DESCANSOS: solo descansos explícitos del Excel (D/descanso/vacaciones/puente),
+  // excluyendo TODOS los domingos porque son descanso natural.
+  i=0;
+  while(i<sorted.length){
+    const d=sorted[i];
+    if(classify(d)!=='descansos' || !d.description){i++;continue;}
+    const key=eventTitleKey(d.description);
+    let end=d,j=i+1;
+    while(j<sorted.length){
+      const n=sorted[j];
+      if(classify(n)==='descansos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
+      else break;
+    }
+    result.descansos.push({id:`descansos-${d.key}`,type:'descansos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
+    i=j;
+  }
+
+  Object.keys(result).forEach(k=>result[k].sort((a,b)=>a.start.key.localeCompare(b.start.key)));
+  specialEvents=result;
+}

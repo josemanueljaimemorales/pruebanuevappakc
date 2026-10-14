@@ -9,7 +9,8 @@ const urls = {
   trabajo: "modulos/gav-training/index.html",
   basicos: "modulos/basicos/index.html",
   normativos: "modulos/normativos/index.html",
-  reportes: "modulos/reportes/index.html"
+  reportes: "modulos/reportes/index.html",
+  calendario: "modulos/calendario/index.html"
 };
 
 const NORMATIVOS_PASSWORD = "Akcgav";
@@ -21,8 +22,7 @@ function hideScreens(){
 
 function openScreen(type){
   if(type === "calendar"){
-    hideScreens();
-    document.getElementById("calendarScreen").classList.add("active");
+    showViewer(urls.calendario);
     return;
   }
 

@@ -1,13 +1,13 @@
 :root{
-  --bg:#0a0a09;
-  --bg2:#131312;
-  --panel:rgba(23,23,22,.72);
-  --panel-strong:rgba(29,28,27,.9);
-  --line:rgba(229,203,118,.16);
-  --blue:#dab53c;
-  --blue2:#e4c970;
-  --text:#f9f9fa;
-  --muted:#9fa3ac;
+  --bg:#030914;
+  --bg2:#071525;
+  --panel:rgba(10,25,43,.72);
+  --panel-strong:rgba(12,31,53,.9);
+  --line:rgba(104,181,255,.16);
+  --blue:#178cff;
+  --blue2:#55b5ff;
+  --text:#f4f9ff;
+  --muted:#8ea7bd;
   --shadow:0 20px 55px rgba(0,0,0,.42);
 }
 
@@ -20,8 +20,8 @@ body{
   font-family:Inter,"Segoe UI",system-ui,sans-serif;
   color:var(--text);
   background:
-    radial-gradient(circle at 50% -10%,rgba(218,181,60,.20),transparent 38%),
-    linear-gradient(145deg,#080807 0%,#111110 52%,#090908 100%);
+    radial-gradient(circle at 50% -10%,rgba(23,140,255,.20),transparent 38%),
+    linear-gradient(145deg,#020710 0%,#061321 52%,#020812 100%);
   text-align:center;
   overflow-x:hidden;
 }
@@ -32,8 +32,8 @@ body:before{
   inset:0;
   pointer-events:none;
   background:
-    linear-gradient(rgba(228,201,112,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(228,201,112,.025) 1px,transparent 1px);
+    linear-gradient(rgba(85,181,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(85,181,255,.025) 1px,transparent 1px);
   background-size:44px 44px;
   mask-image:linear-gradient(to bottom,black,transparent 75%);
 }
@@ -47,7 +47,7 @@ body:before{
   transform:translateX(-50%);
   background:url("../../cliente/logo.png") center/contain no-repeat;
   opacity:.045;
-  filter:drop-shadow(0 0 30px rgba(218,181,60,.25));
+  filter:drop-shadow(0 0 30px rgba(23,140,255,.25));
   pointer-events:none;
 }
 
@@ -108,7 +108,7 @@ h1{
   height:2px;
   margin-top:12px;
   background:linear-gradient(90deg,transparent,var(--blue),transparent);
-  box-shadow:0 0 14px rgba(218,181,60,.7);
+  box-shadow:0 0 14px rgba(23,140,255,.7);
 }
 
 #nav{
@@ -131,7 +131,7 @@ button{
   border:1px solid var(--line);
   border-radius:18px;
   color:var(--text);
-  background:linear-gradient(145deg,rgba(35,34,33,.88),rgba(19,19,18,.92));
+  background:linear-gradient(145deg,rgba(16,39,64,.88),rgba(7,20,36,.92));
   box-shadow:var(--shadow),inset 0 1px rgba(255,255,255,.035);
   font:inherit;
   font-size:16px;
@@ -157,9 +157,9 @@ button:before{
 
 button:hover{
   transform:translateY(-2px);
-  border-color:rgba(228,201,112,.45);
-  background:linear-gradient(145deg,rgba(46,45,43,.94),rgba(23,22,21,.96));
-  box-shadow:0 22px 45px rgba(0,0,0,.48),0 0 25px rgba(218,181,60,.08);
+  border-color:rgba(85,181,255,.45);
+  background:linear-gradient(145deg,rgba(19,53,86,.94),rgba(7,25,44,.96));
+  box-shadow:0 22px 45px rgba(0,0,0,.48),0 0 25px rgba(23,140,255,.08);
 }
 
 button:active{transform:scale(.985)}
@@ -169,9 +169,9 @@ button:active{transform:scale(.985)}
   min-height:52px;
   padding:14px 18px;
   margin-bottom:15px;
-  color:#d2d4d8;
+  color:#bcd8ee;
   font-size:14px;
-  background:rgba(20,19,18,.7);
+  background:rgba(7,22,38,.7);
 }
 
 .back:before{display:none}
@@ -182,7 +182,7 @@ button:active{transform:scale(.985)}
 
 .piso:before{background:#ff5575}
 .arzon:before{background:#ffb84d}
-.anillos:before{background:#dfc059}
+.anillos:before{background:#39d5ff}
 .salto:before{background:#45e08a}
 .paralelas:before{background:#9d7cff}
 .fija:before{background:#ff6db6}
@@ -206,7 +206,7 @@ button:active{transform:scale(.985)}
   min-height:54px;
   padding:12px 4px;
   border-bottom:1px solid rgba(255,255,255,.055);
-  color:#ecedef;
+  color:#dcecff;
   font-size:15px;
   font-weight:600;
 }
@@ -238,19 +238,19 @@ input[type="checkbox"]{
 
 /* ===== AKC IDENTIDAD METÁLICA — SOLO ESTÉTICA ===== */
 :root{
-  --akc-gun:#0c0c0b;--akc-gun2:#181816;--akc-steel:#bfc2c8;--akc-silver:#f2f2f3;
-  --akc-blue:#ddbb4d;--akc-cyan:#e4ca73;--akc-gold:#c9aa62;--akc-line:rgba(204,206,210,.22);
+  --akc-gun:#070d15;--akc-gun2:#101a27;--akc-steel:#b8c3cf;--akc-silver:#eef3f7;
+  --akc-blue:#2b9dff;--akc-cyan:#58d8ff;--akc-gold:#c9aa62;--akc-line:rgba(190,207,224,.22);
 }
 body{
-  background:radial-gradient(circle at 50% -8%,rgba(221,187,77,.18),transparent 32%),radial-gradient(circle at 90% 75%,rgba(201,170,98,.09),transparent 28%),linear-gradient(145deg,#070707 0%,#131312 52%,#080808 100%) !important;
+  background:radial-gradient(circle at 50% -8%,rgba(43,157,255,.18),transparent 32%),radial-gradient(circle at 90% 75%,rgba(201,170,98,.09),transparent 28%),linear-gradient(145deg,#03070d 0%,#0b1420 52%,#04080f 100%) !important;
 }
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:url("../fuerza/logo-transparent.png") center 12%/min(980px,92vw) auto no-repeat;opacity:.045;filter:drop-shadow(0 0 22px rgba(221,187,77,.18));}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:url("../fuerza/logo-transparent.png") center 12%/min(980px,92vw) auto no-repeat;opacity:.045;filter:drop-shadow(0 0 22px rgba(43,157,255,.18));}
 button{border-color:var(--akc-line) !important;}
 .logo,[data-cliente-logo],.logo-main,.brand-mark img,.modal-logo img{filter:none !important;}
-.brand-mark,.modal-logo{background:linear-gradient(145deg,rgba(242,242,243,.10),rgba(63,62,58,.14)) !important;border:1px solid rgba(201,170,98,.22);box-shadow:inset 0 1px rgba(255,255,255,.16),0 0 28px rgba(221,187,77,.08);}
+.brand-mark,.modal-logo{background:linear-gradient(145deg,rgba(238,243,247,.10),rgba(55,70,88,.14)) !important;border:1px solid rgba(201,170,98,.22);box-shadow:inset 0 1px rgba(255,255,255,.16),0 0 28px rgba(43,157,255,.08);}
 
 /* Superficie visual global */
 .hero,.header,.menu-panel,.panel,.shell,.akc-shell,#menu,.app-shell{position:relative;z-index:1;}
-.hero,.header{background:linear-gradient(135deg,rgba(23,22,21,.94),rgba(10,9,9,.86),rgba(29,25,18,.50)) !important;border-color:rgba(191,194,200,.20) !important;box-shadow:0 20px 60px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.07),0 0 0 1px rgba(201,170,98,.05);}
-button,.btn,.button{background-image:linear-gradient(145deg,rgba(40,39,37,.92),rgba(13,13,12,.92)) !important;}
-button:hover,.btn:hover,.button:hover{border-color:rgba(201,170,98,.50) !important;box-shadow:0 12px 32px rgba(0,0,0,.35),0 0 22px rgba(221,187,77,.12) !important;}
+.hero,.header{background:linear-gradient(135deg,rgba(13,25,39,.94),rgba(5,10,17,.86),rgba(29,25,18,.50)) !important;border-color:rgba(184,195,207,.20) !important;box-shadow:0 20px 60px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.07),0 0 0 1px rgba(201,170,98,.05);}
+button,.btn,.button{background-image:linear-gradient(145deg,rgba(31,44,59,.92),rgba(8,14,22,.92)) !important;}
+button:hover,.btn:hover,.button:hover{border-color:rgba(201,170,98,.50) !important;box-shadow:0 12px 32px rgba(0,0,0,.35),0 0 22px rgba(43,157,255,.12) !important;}

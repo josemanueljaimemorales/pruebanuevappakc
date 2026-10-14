@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Respaldo Firebase AKC</title>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0d1117;color:#e6edf3;padding:16px}
+  h1{font-size:20px;margin:0 0 4px}
+  p{color:#9aa7b4;margin:0 0 16px;font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px}
+  th,td{padding:8px;border-bottom:1px solid #30363d;text-align:left;vertical-align:top}
+  th{color:#aeb9c6}
+  button{background:#2ea8ff;color:#fff;border:0;border-radius:8px;padding:12px 18px;font-size:16px;cursor:pointer;width:100%;max-width:360px}
+  button:disabled{background:#30363d;cursor:default}
+  .ok{color:#3fb950}.err{color:#f85149}
+</style>
+</head>
+<body>
+<h1>Respaldo de la nube (Firebase)</h1>
+<p>Lee todo lo guardado en la app (Normativos, Rutinas, Calendario, MVP, Cargas y registros de Fuerza) y lo descarga en un solo archivo JSON. Solo lectura: no modifica nada.</p>
+<table><thead><tr><th>Colección</th><th>Documentos</th><th>Última actualización</th><th>Estado</th></tr></thead><tbody id="tb"></tbody></table>
+<button id="btn" disabled>Leyendo nube…</button>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+const COLECCIONES=["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros"];
+
+// Convierte Timestamps de Firestore a texto ISO para que el JSON sea legible
+function limpiar(v){
+  if(v===null||v===undefined) return v;
+  if(typeof v.toDate==="function") return v.toDate().toISOString();
+  if(Array.isArray(v)) return v.map(limpiar);
+  if(typeof v==="object"){const o={};for(const k in v)o[k]=limpiar(v[k]);return o;}
+  return v;
+}
+function ultimaFecha(docs){
+  let max="";
+  const buscar=v=>{
+    if(typeof v==="string"&&/^\d{4}-\d{2}-\d{2}T/.test(v)&&v>max)max=v;
+    else if(v&&typeof v==="object")for(const k in v)buscar(v[k]);
+  };
+  docs.forEach(d=>buscar(d.data));
+  return max?new Date(max).toLocaleString("es-MX"):"—";
+}
+
+(async()=>{
+  const tb=document.getElementById("tb"),btn=document.getElementById("btn");
+  const respaldo={proyecto:"akc-con-reporte",generado:new Date().toISOString(),colecciones:{}};
+  for(const c of COLECCIONES){
+    const tr=document.createElement("tr");tb.appendChild(tr);
+    tr.innerHTML=`<td>${c}</td><td>…</td><td>…</td><td>Leyendo</td>`;
+    try{
+      const snap=await db.collection(c).get();
+      const docs=snap.docs.map(d=>({id:d.id,data:limpiar(d.data())}));
+      respaldo.colecciones[c]=docs;
+      tr.innerHTML=`<td>${c}</td><td>${docs.length}</td><td>${ultimaFecha(docs)}</td><td class="ok">OK</td>`;
+    }catch(e){
+      respaldo.colecciones[c]={error:String(e.message||e)};
+      tr.innerHTML=`<td>${c}</td><td>—</td><td>—</td><td class="err">${e.message||e}</td>`;
+    }
+  }
+  btn.disabled=false;btn.textContent="Descargar respaldo JSON";
+  btn.onclick=()=>{
+    const f=new Date(),dd=String(f.getDate()).padStart(2,"0"),mm=String(f.getMonth()+1).padStart(2,"0");
+    const blob=new Blob([JSON.stringify(respaldo,null,1)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download=`Respaldo_Firebase_AKC_${dd}-${mm}-${f.getFullYear()}.json`;a.click();
+  };
+})();
+</script>
+</body>
+</html>
