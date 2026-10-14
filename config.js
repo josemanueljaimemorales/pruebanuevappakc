@@ -8,7 +8,7 @@ window.CLIENTE = {
     acento: "#2ea8ff"
   },
   repositorios: {
-    normativosExcel: "https://raw.githubusercontent.com/josemanueljaimemorales/NormativosAKC/main/NORMATIVOS_AKC.xlsx",
+    normativosExcel: new URL("modulos/normativos/NORMATIVOS_AKC.xlsx", (document.currentScript && document.currentScript.src) || location.href).href, // copia de este repo; cliente/fuentes.js lo pide primero a Google Drive
     normativosDatabase: "https://raw.githubusercontent.com/josemanueljaimemorales/NormativosAKC/main/database.json",
     rutinasExcel: "https://raw.githubusercontent.com/josemanueljaimemorales/RutinasAKC/main/Excel_Solo_Valores.xlsx"
   }

@@ -14,8 +14,9 @@
 @media(max-width:900px){.grid{grid-template-columns:1fr}.tablewrap{max-height:none}.filters{grid-template-columns:1fr 1fr}}@media(max-width:560px){.wrap{padding:10px}.topin{padding:9px 12px}.brand h1{font-size:14px}.logo{width:54px;height:54px}.sync span{display:none}.topactions{display:none}.filters{grid-template-columns:1fr}.bulk{grid-template-columns:1fr}.mainhead{align-items:flex-start;flex-direction:column}.appnav{grid-template-columns:1fr 1fr}.tablewrap{margin:0 10px 10px}.bulk{margin:10px}.formgrid{grid-template-columns:1fr}}
 @media print{body{background:#fff}.top{position:static;box-shadow:none}.topactions,.filters,.bulk,.actions,.appnav,.notice,.sync{display:none!important}.grid{display:block}.panel{box-shadow:none;border:0}.mainhead{border-bottom:2px solid #111}.tablewrap{max-height:none;overflow:visible;margin:0}th{position:static}}
 </style>
+<script src="../../cliente/fuentes.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script><script src="../../cliente/fuentes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="../../cliente/config.js"></script>
 <script src="../../cliente/theme.js"></script>
@@ -61,7 +62,24 @@ const APPS=["PISO","ARZON","ANILLOS","SALTO DE CABALLO","BARRAS PARALELAS","BARR
 let db=null,currentApp="PISO",unsubscribe=null,cloudReady=false;
 const normName=s=>String(s??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toLowerCase();
 async function init(){setupLogo();setupIdentity();setSync("busy","Actualizando atletas…");try{const source=window.CLIENTE?.repositorios?.normativosExcel||"NORMATIVOS_AKC.xlsx";const rows=await AKC_XLSX.read(source,"NORMATIVOS");const base=buildDbFromRows(rows);const ref=cloudDb.collection(COLLECTION).doc(DOC);const snap=await ref.get();if(!snap.exists){db=base;await ref.set({...db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}else{db=mergeExcelWithCloud(base,snap.data());await ref.set({...db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}cloudReady=true;setSync("ok","Sincronizado");unsubscribe=ref.onSnapshot(s=>{if(s.exists){db=s.data();renderAll();setSync("ok","Sincronizado")}},e=>{console.error(e);setSync("","Error de sincronización")});renderAll()}catch(e){console.error(e);try{const dbUrl=window.CLIENTE?.repositorios?.normativosDatabase||"database.json";const base=await fetch(dbUrl,{cache:"no-cache"}).then(r=>{if(!r.ok)throw Error("No se encontró respaldo");return r.json()});db=base;cloudReady=true;setSync("ok","Respaldo local");renderAll()}catch(e2){setSync("","Error de carga");alert("No se pudo sincronizar Normativos AKC: "+e.message)}}}
-function mergeExcelWithCloud(base,cloud){const oldAth=Array.isArray(cloud?.athletes)?cloud.athletes:[],byName=new Map(oldAth.map(a=>[normName(a.name),a])),byColumn=new Map(oldAth.filter(a=>Number.isFinite(a.column)).map(a=>[a.column,a]));const athletes=base.athletes.map(a=>{const old=byName.get(normName(a.name))||byColumn.get(a.column)||{};return {...old,name:a.name,column:a.column}});const oldItems=Array.isArray(cloud?.items)?cloud.items:[],oldById=new Map(oldItems.map(x=>[x.id,x])),oldByRow=new Map(oldItems.map(x=>[String(x.row||"")+"|"+x.apparatus+"|"+normName(x.element),x]));const items=base.items.map(x=>{const old=oldById.get(x.id)||oldByRow.get(String(x.row)+"|"+x.apparatus+"|"+normName(x.element));const status={};athletes.forEach(a=>{const prior=old?.status||{},oldA=oldAth.find(o=>Number(o.column)===Number(a.column));status[a.name]=prior[a.name]||(oldA?prior[oldA.name]:null)||x.status[a.name]||"NA"});return {...x,status}});return {...base,athletes,items,version:3};}
+function mergeExcelWithCloud(base,cloud){
+/* Une el Excel (base) con lo guardado en la nube SIN perder avances:
+   - Empareja elementos por aparato + clasificación + nombre (no por número de fila),
+     así insertar o mover filas en el Excel ya no cruza estados entre elementos.
+   - Lo guardado en la nube manda sobre el Excel.
+   - Elementos y atletas que existen en la nube pero no en el Excel se conservan. */
+const oldAth=Array.isArray(cloud?.athletes)?cloud.athletes:[],byName=new Map(oldAth.map(a=>[normName(a.name),a])),byColumn=new Map(oldAth.filter(a=>Number.isFinite(a.column)).map(a=>[a.column,a]));
+const athletes=base.athletes.map(a=>{const old=byName.get(normName(a.name))||byColumn.get(a.column)||{};return {...old,name:a.name,column:a.column}});
+const baseNames=new Set(athletes.map(a=>normName(a.name)));
+oldAth.forEach(o=>{if(o&&o.name&&!baseNames.has(normName(o.name))&&!athletes.some(a=>byColumn.get(a.column)===o)){athletes.push({...o,soloNube:true});baseNames.add(normName(o.name));}});
+const oldItems=Array.isArray(cloud?.items)?cloud.items:[];
+const keyOf=(x,n)=>x.apparatus+"|"+normName(x.classification||"")+"|"+normName(x.element)+"|"+n;
+const keyed=list=>{const seen=new Map();return list.map(x=>{const b=x.apparatus+"|"+normName(x.classification||"")+"|"+normName(x.element);const n=(seen.get(b)||0)+1;seen.set(b,n);return [keyOf(x,n),x];});};
+const oldByKey=new Map(keyed(oldItems)),oldById=new Map(oldItems.map(x=>[x.id,x])),usados=new Set();
+const items=keyed(base.items).map(([k,x])=>{let old=oldByKey.get(k);if(!old){const c=oldById.get(x.id);if(c&&normName(c.element)===normName(x.element)&&c.apparatus===x.apparatus)old=c;}if(old)usados.add(old);
+const status={};athletes.forEach(a=>{const prior=old?.status||{},oldA=byColumn.get(a.column);status[a.name]=prior[a.name]||(oldA?prior[oldA.name]:null)||x.status?.[a.name]||"NA"});return {...x,status}});
+oldItems.forEach(o=>{if(!usados.has(o)){const status={};athletes.forEach(a=>status[a.name]=o.status?.[a.name]||"NA");items.push({...o,status,soloNube:true});}});
+return {...base,athletes,items,version:3};}
 function buildDbFromRows(rows){if(!rows.length)throw Error("El Excel está vacío.");const names=[];for(let c=2;c<(rows[0]||[]).length;c++){const name=String(rows[0][c]??"").trim();if(name)names.push({name,column:c})}if(!names.length)throw Error("No se encontraron atletas en la fila 1 del Excel.");const appSet=new Set(APPS),items=[];let currentApp="",classification="";const mapStatus=v=>({"Consolidado":"C","En proceso":"EP","Proyección":"P","N/A":"NA"}[String(v??"").trim()]||"NA");for(let r=1;r<rows.length;r++){const a=String(rows[r]?.[0]??"").trim(),b=String(rows[r]?.[1]??"").trim();if(appSet.has(a)){currentApp=a;classification="";continue}if(!currentApp)continue;if(a)classification=a;if(!b)continue;const status={};names.forEach(n=>status[n.name]=mapStatus(rows[r]?.[n.column]));items.push({id:`${currentApp}|${r+1}`,row:r+1,apparatus:currentApp,classification,element:b,status})}return{version:3,sourceWorkbook:"NORMATIVOS_AKC.xlsx",athletes:names,apparatus:APPS,items,statusLabels:{C:"Consolidado",EP:"En proceso",P:"Proyección",NA:"No adquirido"}};}
 function sourceFingerprint(){return "AKC-CLOUD"}
 function applyLocalOverridesIfCurrent(){}
@@ -171,14 +189,14 @@ async function downloadExcel(){
     }
 
     // Nombres actuales de AKC.
-    db.athletes.forEach(a=>setSharedCell(colName(a.column+1)+"1",a.name));
+    db.athletes.filter(a=>Number.isFinite(a.column)).forEach(a=>setSharedCell(colName(a.column+1)+"1",a.name));
 
     // Estados actuales del módulo, sobre las mismas filas del Excel original.
     const statusText={C:"Consolidado",EP:"En proceso",P:"Proyección",NA:"N/A"};
     db.items.forEach(item=>{
       const row=Number(item.row || String(item.id).split("|").pop());
-      if(!row) return;
-      db.athletes.forEach(a=>{
+      if(!row || item.soloNube) return; // los elementos que solo existen en la nube no tienen fila en el Excel
+      db.athletes.filter(a=>Number.isFinite(a.column)).forEach(a=>{
         const status=item.status?.[a.name]||"NA";
         setSharedCell(colName(a.column+1)+row,statusText[status]||"N/A");
       });

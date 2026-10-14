@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnóstico de fuentes AKC</title>
+<script src="../../cliente/fuentes.js"></script>
+<style>
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0d1117;color:#e6edf3;padding:16px}
+  h1{font-size:20px;margin:0 0 4px}
+  p{color:#9aa7b4;margin:0 0 14px;font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px}
+  th,td{padding:8px;border-bottom:1px solid #30363d;text-align:left;vertical-align:top}
+  th{color:#aeb9c6}
+  .ok{color:#3fb950;font-weight:700}.warn{color:#d29922;font-weight:700}.err{color:#f85149;font-weight:700}
+  .small{color:#9aa7b4;font-size:12px;word-break:break-word}
+  .box{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:14px}
+</style>
+</head>
+<body>
+<h1>Diagnóstico de fuentes de datos</h1>
+<p>Revisa, archivo por archivo, si la app está leyendo el Excel desde Google Drive o desde la copia del repositorio. Solo lectura.</p>
+<div class="box" id="fb"></div>
+<table><thead><tr><th>Archivo</th><th>Origen</th><th>Tamaño</th><th>Detalle</th></tr></thead><tbody id="tb"></tbody></table>
+<script>
+(async()=>{
+  const F=window.AKC_FUENTES, tb=document.getElementById("tb");
+  document.getElementById("fb").innerHTML = F.sufijoFirebase
+    ? `Firebase en <b class="warn">modo prueba</b>: las colecciones se guardan como <b>…${F.sufijoFirebase}</b> (los datos reales no se tocan).`
+    : `Firebase en <b class="ok">modo oficial</b>: colecciones reales.`;
+  // Rutas reales donde vive la copia de cada archivo en el repositorio
+  const RUTAS={
+    "MACRO_26_27.xlsx":"../plan-anual/MACRO_26_27.xlsx",
+    "ASIGNACION DE COMPETENCIAS.xlsx":"../plan-anual/ASIGNACION DE COMPETENCIAS.xlsx",
+    "AKC.xlsx":"../fuerza/AKC.xlsx",
+    "AKC_FuerzaFIG.xlsx":"../fuerzafig/AKC_FuerzaFIG.xlsx",
+    "trabajo_gav.xlsx":"../gav-training/trabajo_gav.xlsx",
+    "Excel_Solo_Valores.xlsx":"../rutinas/Excel_Solo_Valores.xlsx",
+    "NORMATIVOS_AKC.xlsx":"../normativos/NORMATIVOS_AKC.xlsx",
+    "Secuencias_Base_APP_AKC.xlsx":"../basicos/Secuencias_Base_APP_AKC.xlsx",
+    "Estadistica de competencias totales.xlsx":"../reportes/estadisticas/Estadistica de competencias totales.xlsx"
+  };
+  for(const archivo of Object.keys(F.archivos)){
+    const tr=document.createElement("tr"); tb.appendChild(tr);
+    tr.innerHTML=`<td>${archivo}</td><td>Probando…</td><td></td><td></td>`;
+    const antes=F.registro.length;
+    try{
+      const res=await fetch(RUTAS[archivo]||archivo,{cache:"no-store"});
+      const bytes=(await res.arrayBuffer()).byteLength;
+      const r=F.registro.slice(antes).find(x=>x.archivo===archivo)||{};
+      const zipOk=bytes>4;
+      const origen=r.origen==="drive"?'<span class="ok">Google Drive</span>':'<span class="warn">Copia del repo</span>';
+      tr.innerHTML=`<td>${archivo}</td><td>${origen}</td><td>${(bytes/1024).toFixed(1)} KB</td><td class="small">${res.ok&&zipOk?"":"<span class='err'>No se pudo leer. </span>"}${r.detalle||""}${r.ms?` · ${r.ms} ms`:""}</td>`;
+    }catch(e){
+      tr.innerHTML=`<td>${archivo}</td><td class="err">Error</td><td></td><td class="small">${e.message||e}</td>`;
+    }
+  }
+})();
+</script>
+</body>
+</html>
