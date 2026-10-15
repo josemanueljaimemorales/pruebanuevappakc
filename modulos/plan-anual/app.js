@@ -356,6 +356,29 @@ function competitionsForAthlete(athlete){
     .map(c=>({assignment:c,event:eventForAssignment(c)}));
 }
 
+// Año en que empieza el MACRO, deducido de la fila de días (L M M J V S D):
+// se prueba cada año cercano a hoy y se queda el que coincide con los días de
+// la semana. Así sirve para 26-27, 27-28, etc., sin escribir el año a mano.
+function startYearOfMacro(monthRow, dayRow, dowRow){
+  const LETRA = ['D','L','M','M','J','V','S'];
+  const muestra=[]; let off=0, prev=0;
+  for(let c=1;c<monthRow.length && muestra.length<21;c++){
+    const month=MONTHS[upper(monthRow[c])], day=Number(dayRow[c]);
+    if(!month || !Number.isFinite(day) || day<1 || day>31) continue;
+    if(prev && month<prev) off++;
+    prev=month;
+    let l=upper(dowRow[c]).charAt(0); if(l==='X') l='M';
+    if(l) muestra.push({off,month,day,l});
+  }
+  const hoy=new Date().getFullYear();
+  const candidatos=[hoy,hoy-1,hoy+1,hoy-2,hoy+2,hoy-3,hoy+3];
+  for(const y of candidatos){
+    if(muestra.length && muestra.every(m=>LETRA[new Date(Date.UTC(y+m.off,m.month-1,m.day)).getUTCDay()]===m.l)) return y;
+  }
+  const m0=MONTHS[upper(monthRow.find(v=>MONTHS[upper(v)]))]||1;
+  return m0>new Date().getMonth()+1 ? hoy-1 : hoy;
+}
+
 function readCalendar(wb){
   const ws = wb.Sheets['macro gral'];
   if(!ws) throw Error('No existe la hoja "macro gral"');
@@ -415,7 +438,7 @@ function readCalendar(wb){
   const unitRow = fillRow(matrix[8]||[]);
   const descRow = fillRow(matrix[9]||[]);
 
-  let year=2026, previousMonth=0;
+  let year=startYearOfMacro(monthRow,dayRow,dowRow), previousMonth=0;
   const out=[];
   for(let c=1;c<monthRow.length;c++){
     const monthName=upper(monthRow[c]);

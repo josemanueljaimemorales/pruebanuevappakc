@@ -16,6 +16,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 
 ## Datos
 - **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los busca **por nombre** en la carpeta "Utilidades App" (`CARPETA_DRIVE`, compartida con enlace); si no puede listarla usa los IDs fijos de `ARCHIVOS_DRIVE`, y si Drive falla, la copia del repo. Para cambiar un Excel basta subir a esa carpeta un archivo con el mismo nombre; no hace falta subirlo al repo. Las dos apps (prueba y oficial) buscan por nombre desde el 15-oct-2026.
+- **MACRO por ciclo**: se llama `MACRO_AA_BB.xlsx` (26_27, 27_28…). Cuando la app pide el MACRO, `fuentes.js` usa el de ciclo más nuevo que haya en "Utilidades App". Plan Anual y Calendario deducen el año de inicio con la fila de días de la semana (no hay año fijo). La copia del repo (`modulos/plan-anual/MACRO_26_27.xlsx`) es solo respaldo si falla Drive.
 - Reglas de la carpeta "Utilidades App":
   - Nombre exacto (mayúsculas, espacios, extensión); si se renombra, la app no ve la versión nueva.
   - Con dos archivos del mismo nombre gana el modificado más recientemente; dejar uno solo por nombre.
