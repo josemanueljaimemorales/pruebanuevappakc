@@ -17,6 +17,10 @@
   const SUFIJO_FIREBASE = "_prueba";          // "" en la app oficial
   const DRIVE_API_KEY   = "AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg"; // proyecto akc-con-reporte
   const TIEMPO_MAX_DRIVE_MS = 10000;
+  // Carpeta "Utilidades App" (compartida con enlace). Cada Excel se busca aquí por su NOMBRE,
+  // así basta con subir un archivo nuevo con el mismo nombre; el más reciente es el que se usa.
+  // Si la búsqueda falla, se usa el ID fijo de ARCHIVOS_DRIVE.
+  const CARPETA_DRIVE = "1hpU7ZeK-iv83c1hULbvt-5zRXeDpyMJi";
   const COLECCIONES = ["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros"];
   // Nombre exacto del archivo que pide la app -> ID del archivo en Drive (carpeta "Utilidades App")
   const ARCHIVOS_DRIVE = {
@@ -60,6 +64,26 @@
     return `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media&supportsAllDrives=true&key=${encodeURIComponent(DRIVE_API_KEY)}`;
   }
 
+  // Lista la carpeta una sola vez por página: nombre -> ID del archivo más reciente.
+  let listaCarpeta = null;
+  function idsPorNombre(fetchOriginal){
+    if (!listaCarpeta) listaCarpeta = (async () => {
+      const q = `'${CARPETA_DRIVE}' in parents and trashed=false`;
+      const url = "https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent(q) +
+        "&fields=files(id,name)&orderBy=modifiedTime%20desc&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true&key=" + encodeURIComponent(DRIVE_API_KEY);
+      const ctrl = typeof AbortController === "function" ? new AbortController() : null;
+      const t = ctrl ? setTimeout(() => ctrl.abort(), TIEMPO_MAX_DRIVE_MS) : null;
+      try {
+        const res = await fetchOriginal(url, {cache: "no-store", signal: ctrl ? ctrl.signal : undefined});
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const mapa = {};
+        ((await res.json()).files || []).forEach(f => { if (!(f.name in mapa)) mapa[f.name] = f.id; });
+        return mapa;
+      } finally { if (t) clearTimeout(t); }
+    })().catch(err => { console.warn("[AKC fuentes] No se pudo listar la carpeta de Drive; se usan los IDs fijos:", err && err.message || err); return {}; });
+    return listaCarpeta;
+  }
+
   async function pedirADrive(fetchOriginal, id){
     const ctrl = typeof AbortController === "function" ? new AbortController() : null;
     const t = ctrl ? setTimeout(() => ctrl.abort(), TIEMPO_MAX_DRIVE_MS) : null;
@@ -80,16 +104,16 @@
   const fetchOriginal = window.fetch.bind(window);
   window.fetch = async function(input, init){
     const archivo = nombreArchivo(input);
-    const id = ARCHIVOS_DRIVE[archivo];
-    if (!id) return fetchOriginal(input, init);
+    if (!ARCHIVOS_DRIVE[archivo]) return fetchOriginal(input, init);
     if (soloRepo) {
       anotar(archivo, "repo", "forzado con ?fuente=repo");
       return fetchOriginal(input, init);
     }
     const t0 = performance.now();
     try {
-      const res = await pedirADrive(fetchOriginal, id);
-      anotar(archivo, "drive", "", performance.now() - t0);
+      const porNombre = (await idsPorNombre(fetchOriginal))[archivo];
+      const res = await pedirADrive(fetchOriginal, porNombre || ARCHIVOS_DRIVE[archivo]);
+      anotar(archivo, "drive", porNombre ? "" : "por ID fijo", performance.now() - t0);
       return res;
     } catch(err) {
       const motivo = err && err.name === "AbortError" ? "Drive tardó demasiado" : String(err && err.message || err);
