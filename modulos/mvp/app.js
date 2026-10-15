@@ -57,12 +57,14 @@ function scoreFor(name,day){
 }
 function totalFor(name){return DAYS.reduce((a,d)=>a+scoreFor(name,d),0);}
 const DAY_NAMES={L:"Lunes",M:"Martes",X:"Miércoles",J:"Jueves",V:"Viernes",S:"Sábado"};
-// Día que se está registrando: por defecto hoy (domingo -> lunes). Se conserva al actualizar la pantalla.
-let selDay=DAYS[Math.min(5,Math.max(0,new Date().getDay()-1))];
+// Día que se está registrando: por defecto hoy (domingo -> sábado). Se conserva al actualizar la pantalla.
+let selDay=new Date().getDay()===0?"S":DAYS[new Date().getDay()-1];
 function escHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function dayTotal(d){return ATHLETES.reduce((a,x)=>a+scoreFor(x.name,d),0);}
 function renderDayPicker(){
-  document.getElementById("dayPicker").innerHTML=DAYS.map(d=>`<button type="button" class="day-btn" data-day="${d}" aria-pressed="${d===selDay}"><b>${DAY_NAMES[d]}</b><small>${dayTotal(d)} MVP</small></button>`).join("");
+  // Solo de lunes a hoy (el conteo se reinicia cada lunes). En domingo se muestran los 6 días.
+  const hoy=new Date().getDay(),visibles=hoy===0?DAYS:DAYS.slice(0,hoy);
+  document.getElementById("dayPicker").innerHTML=visibles.map(d=>`<button type="button" class="day-btn" data-day="${d}" aria-pressed="${d===selDay}"><b>${DAY_NAMES[d]}</b><small>${dayTotal(d)} MVP</small></button>`).join("");
   document.getElementById("dayNow").textContent=DAY_NAMES[selDay];
 }
 function setDay(d){selDay=d;renderRecords();}
