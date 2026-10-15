@@ -29,6 +29,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Normativos une Excel + nube por aparato+clasificación+elemento (no por fila); la nube manda y nunca se borran avances.
 
 ## Reglas de trabajo (de Manu)
+- PRs: cuando Manu apruebe los cambios, Claude abre el PR y también hace el merge (Manu no lo hace a mano).
 - Cambiar solo lo que se pide; no rehacer ni "mejorar" otras partes; no romper funciones existentes. Si algo falla repetidamente, volver a la última versión funcional.
 - **No modificar el editor de rutinas** (`modulos/rutinas/editor.*`) salvo que Manu lo pida explícitamente.
 - Distinguir lo hecho, lo probado y lo verificado; no afirmar que algo funciona sin probarlo.
