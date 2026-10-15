@@ -297,6 +297,9 @@ function assignmentColumnsForEvent(event){
     normalizeName(comp.title) === normalizedTitle
   );
   if(exact) return [exact];
+  // Eventos y descansos solo con nombre exacto (un "DESCANSO" genérico no debe
+  // tomar los atletas de otro descanso que sí tiene columna).
+  if(event.type && event.type!=='competencia') return [];
 
   // 2) Si el nombre cambió ligeramente (año, prefijos, etc.), usamos
   // coincidencia por contenido, pero nunca inventamos una competencia.
@@ -320,10 +323,11 @@ function athletesForEvent(event){
   return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
 }
 
-// Un EVENTO (p. ej. un campamento) también puede tener atletas y sede si
-// tiene su propia columna en ASIGNACION DE COMPETENCIAS.
+// Un EVENTO (p. ej. un campamento) o un DESCANSO que solo aplica a algunos
+// atletas también puede tener atletas y sede si tiene su propia columna en
+// ASIGNACION DE COMPETENCIAS (con el mismo nombre que en el MACRO).
 function eventHasAssignment(e){
-  return e.type==='competencia' || (e.type==='eventos' && assignmentColumnsForEvent(e).length>0);
+  return e.type==='competencia' || assignmentColumnsForEvent(e).length>0;
 }
 function venuesForEvent(event){
   const cols=assignmentColumnsForEvent(event);
@@ -334,8 +338,10 @@ function eventForAssignment(comp){
   const key=normalizeName(comp?.title || '');
   if(!key) return null;
 
-  // Primero competencias; los eventos (campamentos) solo si tienen columna propia.
-  const scored=[...specialEvents.competencia,...specialEvents.eventos]
+  // Competencias por parecido de nombre; eventos y descansos solo con nombre exacto.
+  const otros=[...specialEvents.eventos,...specialEvents.descansos].find(e=>normalizeName(e.title)===key);
+  if(otros && !specialEvents.competencia.some(e=>normalizeName(e.title)===key)) return otros;
+  const scored=specialEvents.competencia
     .map(e=>({event:e,score:competitionMatchScore(comp.title,e.title)}))
     .filter(x=>x.score>=65)
     .sort((a,b)=>b.score-a.score);
@@ -696,7 +702,7 @@ function showAthleteDetail(name,returnEventId=null,returnType='competencia'){
       ${items.length ? items.map(({assignment,event})=>`
         <button class="athlete-competition ${event?'linked':''}" data-athlete-event="${event?esc(event.id):''}" data-athlete-event-type="${event?esc(event.type):'competencia'}">
           <div><strong>${esc(assignment.title)}</strong><small>${event?esc(formatRange(event)):'Fecha pendiente en Plan Anual'}</small></div>
-          <span>${event?(event.type==='eventos'?'Ver evento ›':'Ver competencia ›'):'Asignada'}</span>
+          <span>${event?(event.type==='eventos'?'Ver evento ›':event.type==='descansos'?'Ver descanso ›':'Ver competencia ›'):'Asignada'}</span>
         </button>`).join('') : '<div class="empty">Este atleta no tiene competencias con SI en el archivo de asignación.</div>'}
     </section>
   </section>`;
