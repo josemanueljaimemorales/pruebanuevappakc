@@ -76,7 +76,6 @@ function groupHtml(block){
     g.athletes.forEach(name=>{
       const n=scoreFor(name,selDay),e=escHtml(name);
       html+=`<div class="rec-row${n?" has":""}"><div class="rec-name">${e}<small>Semana: ${totalFor(name)}</small></div>`+
-        `<button type="button" class="rec-minus" data-name="${e}" data-delta="-1" aria-label="Quitar 1 MVP a ${e}" ${n?"":"disabled"}>−</button>`+
         `<div class="rec-count" aria-label="${n} MVP el ${DAY_NAMES[selDay]}">${n}</div>`+
         `<button type="button" class="rec-plus" data-name="${e}" data-delta="1" aria-label="Sumar 1 MVP a ${e}">+1</button></div>`;
     });
@@ -86,7 +85,7 @@ function groupHtml(block){
 }
 function esc(s){return s.replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
 function renderRecords(){
-  renderDayPicker();
+  renderDayPicker();renderUndo();
   document.getElementById("recordContent").innerHTML=groupHtml("Bloque 1")+groupHtml("Bloque 2");
   document.getElementById("weekLabel").textContent=weekLabel();
 }
@@ -126,9 +125,28 @@ function checkPassword(){
   if(action==="records"){document.getElementById("records").classList.remove("hidden");renderRecords();document.getElementById("records").scrollIntoView({behavior:"smooth"});}
   if(action==="upload"){document.getElementById("upload").classList.remove("hidden");document.getElementById("upload").scrollIntoView({behavior:"smooth"});}
 }
-async function addScore(name,day,delta=1){
+// Historial de cambios hechos en este dispositivo, para "Deshacer último".
+let historial=[];
+try{historial=JSON.parse(sessionStorage.getItem("AKC_MVP_HISTORIAL")||"[]");}catch(e){}
+function guardarHistorial(){try{sessionStorage.setItem("AKC_MVP_HISTORIAL",JSON.stringify(historial.slice(-50)));}catch(e){}}
+function renderUndo(){
+  const b=document.getElementById("undoBtn");if(!b)return;
+  const u=historial[historial.length-1];
+  b.disabled=!u;
+  b.title=u?`Deshacer: ${u.delta>0?"+1":"−1"} a ${u.name} (${DAY_NAMES[u.day]})`:"No hay cambios para deshacer";
+}
+async function undoLast(){
+  const u=historial[historial.length-1];if(!u)return;
+  if(!confirm(`¿Deshacer el último cambio?\n\n${u.delta>0?"+1":"−1"} a ${u.name} (${DAY_NAMES[u.day]})`))return;
+  historial.pop();guardarHistorial();
+  await addScore(u.name,u.day,-u.delta,false);
+  toastMvp(`Se deshizo: ${u.delta>0?"+1":"−1"} a ${u.name} (${DAY_NAMES[u.day]})`);
+}
+function toastMvp(t){const e=document.getElementById("mvpToast");if(!e)return;e.textContent=t;e.classList.add("show");clearTimeout(window.__mt);window.__mt=setTimeout(()=>e.classList.remove("show"),2600);}
+async function addScore(name,day,delta=1,registrar=true){
   const nuevo=Math.max(0,scoreFor(name,day)+delta);
-  if(nuevo===scoreFor(name,day))return;
+  if(nuevo===scoreFor(name,day)){renderUndo();return;}
+  if(registrar){historial.push({name,day,delta});guardarHistorial();}
   if(!data.scores[name])data.scores[name]={};
   data.scores[name][day]=nuevo;
   renderRecords();renderScores();saveLocal();
@@ -166,6 +184,7 @@ function goBack(){if(window.parent!==window){window.parent.goHome?.();}else hist
 document.addEventListener("keydown",e=>{if(!document.getElementById("passwordModal").classList.contains("hidden")){if(e.key==="Enter")checkPassword();if(e.key==="Escape")closePassword();}});
 document.addEventListener("click",e=>{
   const d=e.target.closest(".day-btn");if(d){setDay(d.dataset.day);return;}
-  const b=e.target.closest(".rec-plus,.rec-minus");if(b&&!b.disabled)addScore(b.dataset.name,selDay,Number(b.dataset.delta));
+  if(e.target.closest("#undoBtn")){undoLast();return;}
+  const b=e.target.closest(".rec-plus");if(b)addScore(b.dataset.name,selDay,1);
 });
 window.addEventListener("load",initCloud);
