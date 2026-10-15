@@ -30,7 +30,7 @@
     "AKC_FuerzaFIG.xlsx":                      "1t4CpjnNAKponpJIKK_GF57LEu29BxEtj",
     "trabajo_gav.xlsx":                        "12DcvEwFns3Kf8f99qM-LA0wsqHluCuNj",
     "Excel_Solo_Valores.xlsx":                 "1lyNxLp8fdTUU9RKDgynGGiUTuOrwV7sd",
-    "NORMATIVOS_AKC.xlsx":                     "1Mfi8AlUnPWIng5Jrp46GnHLS6UMrlYZv",
+    "NORMATIVOS_AKC.xlsx":                     "1gU2C2Ev5_-PxmqnjlbqQj6HIg1lFTlnv",
     "Secuencias_Base_APP_AKC.xlsx":            "1AH_lM80up_Z5aAQiMZwLvKiBWZdFZLZv",
     "Estadistica de competencias totales.xlsx":"1L_hn4Wd24fUXFAmkCMqyZdca0-6sG1sG"
   };
