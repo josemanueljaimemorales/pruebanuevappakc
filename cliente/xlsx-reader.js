@@ -101,5 +101,17 @@
     const path=sheetPath(files,wb,sheetName);
     return worksheet(files,path,ss);
   }
-  window.AKC_XLSX={read};
+  // Igual que read(), pero además devuelve las celdas combinadas de la hoja (p. ej. "AG145:AG173").
+  async function readSheetInfo(url,sheetName){
+    const response=await fetch(url,{cache:"no-store"});
+    if(!response.ok) throw new Error("No se pudo cargar "+url);
+    const files=await unzip(await response.arrayBuffer());
+    const wb=xml(files,"xl/workbook.xml");
+    const ss=sharedStrings(files);
+    const path=sheetPath(files,wb,sheetName);
+    const rows=worksheet(files,path,ss);
+    const merges=childrenByName(xml(files,path),"mergeCell").map(m=>m.getAttribute("ref")).filter(Boolean);
+    return {rows,merges};
+  }
+  window.AKC_XLSX={read,readSheetInfo};
 })();
