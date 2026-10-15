@@ -104,6 +104,11 @@ function athletesForEvent(event){
   if(!cols.length) return [];
   return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
 }
+// Un EVENTO (p. ej. un campamento) también puede tener atletas y sede si
+// tiene su propia columna en ASIGNACION DE COMPETENCIAS.
+function eventHasAssignment(e){
+  return e.type==='competencia' || (e.type==='eventos' && assignmentColumnsForEvent(e).length>0);
+}
 function venuesForEvent(event){
   const cols=assignmentColumnsForEvent(event);
   return [...new Set(cols.map(c=>clean(c.venue)).filter(Boolean))];

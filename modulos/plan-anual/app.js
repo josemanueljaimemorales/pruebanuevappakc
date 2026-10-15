@@ -107,7 +107,7 @@ function printableItemsForMonth(m){
     for(const e of specialEvents[type]){
       const matchingDays=e.days.filter(d=>monthDays.has(d.key));
       for(const d of matchingDays){
-        const venues=type==='competencia' ? venuesForEvent(e) : [];
+        const venues=eventHasAssignment(e) ? venuesForEvent(e) : [];
         add(d.key,{type,title:e.title,venues});
       }
     }
@@ -320,6 +320,11 @@ function athletesForEvent(event){
   return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
 }
 
+// Un EVENTO (p. ej. un campamento) también puede tener atletas y sede si
+// tiene su propia columna en ASIGNACION DE COMPETENCIAS.
+function eventHasAssignment(e){
+  return e.type==='competencia' || (e.type==='eventos' && assignmentColumnsForEvent(e).length>0);
+}
 function venuesForEvent(event){
   const cols=assignmentColumnsForEvent(event);
   return [...new Set(cols.map(c=>clean(c.venue)).filter(Boolean))];
@@ -329,7 +334,8 @@ function eventForAssignment(comp){
   const key=normalizeName(comp?.title || '');
   if(!key) return null;
 
-  const scored=specialEvents.competencia
+  // Primero competencias; los eventos (campamentos) solo si tienen columna propia.
+  const scored=[...specialEvents.competencia,...specialEvents.eventos]
     .map(e=>({event:e,score:competitionMatchScore(comp.title,e.title)}))
     .filter(x=>x.score>=65)
     .sort((a,b)=>b.score-a.score);
@@ -625,9 +631,9 @@ function showSpecialList(type){
 
 function specialCard(e){
   const label=e.type==='competencia'?'COMPETENCIA':e.type==='eventos'?'EVENTO':'DESCANSO';
-  const athletes=e.type==='competencia'?athletesForEvent(e):[];
-  const extra=e.type==='competencia'?` · ${athletes.length} atletas`:'';
-  const venue=e.type==='competencia' ? venuesForEvent(e) : [];
+  const athletes=eventHasAssignment(e)?athletesForEvent(e):[];
+  const extra=eventHasAssignment(e)?` · ${athletes.length} atletas`:'';
+  const venue=eventHasAssignment(e) ? venuesForEvent(e) : [];
   const venueText=venue.length ? ` · ${venue.join(' / ')}` : '';
   return `<button class="special-card ${esc(e.type)}" data-event-id="${esc(e.id)}"><span class="tag">${label}</span><strong>${esc(e.title)}</strong><small>${esc(formatRange(e))}${extra}${esc(venueText)}</small><b>›</b></button>`;
 }
@@ -642,8 +648,8 @@ function openSpecialByDate(key){
 function openSpecial(id,type){
   const e=findEvent(id,type); if(!e)return;
   backBtn.style.visibility='visible'; backBtn.onclick=()=>showSpecialList(type);
-  const athletes=e.type==='competencia'?athletesForEvent(e):[];
-  const athleteSection=e.type==='competencia' ? `
+  const athletes=eventHasAssignment(e)?athletesForEvent(e):[];
+  const athleteSection=eventHasAssignment(e) ? `
     <section class="assigned-athletes">
       <div class="subsection-head"><div><span>ATLETAS ASIGNADOS</span><small>${athletes.length} atletas</small></div></div>
       ${athletes.length ? `<div class="athlete-grid">${athletes.map(a=>`<button class="athlete-chip" data-athlete="${esc(a.name)}"><strong>${esc(a.name)}</strong><span>Nivel ${esc(a.level)}</span>›</button>`).join('')}</div>` : '<div class="empty small">No hay atletas asignados a esta competencia.</div>'}
@@ -653,12 +659,12 @@ function openSpecial(id,type){
       <div class="eyebrow">${type==='competencia'?'COMPETENCIA':type==='eventos'?'EVENTO':'DESCANSO'}</div>
       <h2>${esc(e.title)}</h2>
       <div class="event-range">${esc(formatRange(e))}</div>
-      ${e.type==='competencia' && venuesForEvent(e).length ? `<div class="competition-venue"><small>SEDE</small><strong>${esc(venuesForEvent(e).join(' · '))}</strong></div>` : ''}
+      ${eventHasAssignment(e) && venuesForEvent(e).length ? `<div class="competition-venue"><small>SEDE</small><strong>${esc(venuesForEvent(e).join(' · '))}</strong></div>` : ''}
       <div class="event-description"><small>DESCRIPCIÓN</small><p>${esc(e.title)}</p></div>
       ${athleteSection}
       <button class="calendar-jump" id="calendarJump">VER EN CALENDARIO GENERAL ›</button>
     </section>`;
-  document.querySelectorAll('[data-athlete]').forEach(b=>b.onclick=()=>showAthleteDetail(b.dataset.athlete, e.id));
+  document.querySelectorAll('[data-athlete]').forEach(b=>b.onclick=()=>showAthleteDetail(b.dataset.athlete, e.id, e.type));
   document.getElementById('calendarJump').onclick=()=>{
     selectedDate=e.start.key;
     const m=months.find(x=>x.days.some(d=>d.key===e.start.key));
@@ -675,11 +681,11 @@ function showAthletesList(){
   document.querySelectorAll('[data-athlete-row]').forEach(b=>b.onclick=()=>showAthleteDetail(b.dataset.athleteRow));
 }
 
-function showAthleteDetail(name,returnEventId=null){
+function showAthleteDetail(name,returnEventId=null,returnType='competencia'){
   const athlete=assignmentData.athletes.find(a=>normalizeName(a.name)===normalizeName(name));
   if(!athlete)return;
   backBtn.style.visibility='visible';
-  backBtn.onclick=()=>returnEventId ? openSpecial(returnEventId,'competencia') : showAthletesList();
+  backBtn.onclick=()=>returnEventId ? openSpecial(returnEventId,returnType) : showAthletesList();
   const items=competitionsForAthlete(athlete);
   content.innerHTML=`<section class="athlete-detail">
     <div class="eyebrow">ATLETA</div>
@@ -688,14 +694,14 @@ function showAthleteDetail(name,returnEventId=null){
     <div class="subsection-head"><div><span>COMPETENCIAS ASIGNADAS</span><small>${items.length} competencias</small></div></div>
     <section class="athlete-competitions">
       ${items.length ? items.map(({assignment,event})=>`
-        <button class="athlete-competition ${event?'linked':''}" data-athlete-event="${event?esc(event.id):''}" data-athlete-event-type="competencia">
+        <button class="athlete-competition ${event?'linked':''}" data-athlete-event="${event?esc(event.id):''}" data-athlete-event-type="${event?esc(event.type):'competencia'}">
           <div><strong>${esc(assignment.title)}</strong><small>${event?esc(formatRange(event)):'Fecha pendiente en Plan Anual'}</small></div>
-          <span>${event?'Ver competencia ›':'Asignada'}</span>
+          <span>${event?(event.type==='eventos'?'Ver evento ›':'Ver competencia ›'):'Asignada'}</span>
         </button>`).join('') : '<div class="empty">Este atleta no tiene competencias con SI en el archivo de asignación.</div>'}
     </section>
   </section>`;
   document.querySelectorAll('[data-athlete-event]').forEach(b=>{
-    if(b.dataset.athleteEvent) b.onclick=()=>openSpecial(b.dataset.athleteEvent,'competencia');
+    if(b.dataset.athleteEvent) b.onclick=()=>openSpecial(b.dataset.athleteEvent,b.dataset.athleteEventType);
   });
 }
 

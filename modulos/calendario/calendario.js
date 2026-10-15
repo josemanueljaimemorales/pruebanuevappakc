@@ -27,7 +27,7 @@ function buildEvents(){
   const out=[];
   for(const type of ['competencia','eventos','descansos'])for(const e of specialEvents[type]){
     const ev={type,title:e.title,start:e.start,end:e.end,days:e.days};
-    if(type==='competencia'){
+    if(eventHasAssignment(e)){
       ev.athletes=athletesForEvent(e);ev.venues=venuesForEvent(e);
       ev.levels=[...new Set(ev.athletes.map(a=>clean(a.level)).filter(l=>/^\d+$|^FIG$/i.test(l)))].sort((a,b)=>(+a||99)-(+b||99));
     }
@@ -60,7 +60,8 @@ function pills(e){const m=man(e);let p='';
   if(e.type==='competencia'){p+=`<span class="pill ${m.estatus==='Definitivo'?'ok':'ten'}">${esc(m.estatus||'Tentativo')}</span>`;
     const sede=m.ubicacion||(e.venues||[]).join(' / ');if(sede)p+=`<span class="pill">${esc(sede)}</span>`;
     if(e.levels?.length)p+=`<span class="pill gold">Niveles ${esc(e.levels.join(', '))}</span>`;}
-  else p+=`<span class="pill">${e.type==='eventos'?'Evento':'Descanso'}</span>`;
+  else{p+=`<span class="pill">${e.type==='eventos'?'Evento':'Descanso'}</span>`;
+    const sede=m.ubicacion||(e.venues||[]).join(' / ');if(e.type==='eventos'&&sede)p+=`<span class="pill">${esc(sede)}</span>`;}
   return p;}
 function horarios(e){const m=man(e);const hs=(m.horarios||[]).filter(x=>x.nivel||x.fecha||x.hora);let h='';
   if(hs.length)h+=`<div class="blk"><b>Días y horarios por nivel</b><div class="hor">${hs.map(x=>`<span class="lv">${esc(x.nivel||'Todos')}</span><span>${esc([fmtIso(x.fecha),x.hora].filter(Boolean).join(' · '))}${x.link?` · <a href="${esc(x.link)}" target="_blank" rel="noopener">Ver</a>`:''}</span>`).join('')}</div></div>`;
