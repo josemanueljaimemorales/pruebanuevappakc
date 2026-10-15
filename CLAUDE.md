@@ -23,12 +23,13 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
   - Debe seguir compartida "Cualquier persona con el enlace: lector".
   - Nada privado ahí (todo es público con el enlace). Respaldos y datos personales van en "Respaldos AKC (privado)".
   - Los IDs de `ARCHIVOS_DRIVE` son solo respaldo; "NORMATIVOS_AKC (anterior - usa la oficial).xlsx" ya no lo usa ninguna app.
-- El conector de Drive puede leer, mover, renombrar y crear archivos, pero no reemplazar el contenido de uno existente; subir Excel grandes lo hace Manu.
+- El conector de Drive puede leer, mover, renombrar y crear archivos, pero no reemplazar el contenido de uno existente. Para actualizar un Excel, Claude crea uno nuevo con el mismo nombre en "Utilidades App" (gana el más reciente), mueve el anterior a "Respaldos AKC (privado)" y verifica descargándolo que sea idéntico y público. Solo después de que el código que lo lee esté en las dos apps. El MACRO se sube sin las filas vacías de Hoja1 (si no, es demasiado grande para el conector).
 - **Firebase** (proyecto `akc-con-reporte`, SDK compat 9.6.10). Colecciones: normativosAKC, rutinasAKC, calendarioAKC, mvpAKC, cargasAKC (doc `estado`) y registros (Fuerza).
 - En la app de prueba `SUFIJO_FIREBASE = "_prueba"`: todo se guarda en `<coleccion>_prueba`, nunca en los datos reales. `modulos/respaldo/` descarga un JSON de los datos reales y tiene un botón para copiarlos a modo prueba.
 - Normativos une Excel + nube por aparato+clasificación+elemento (no por fila); la nube manda y nunca se borran avances.
 
 ## Reglas de trabajo (de Manu)
+- PRs: cuando Manu apruebe los cambios, Claude abre el PR y también hace el merge (Manu no lo hace a mano).
 - Cambiar solo lo que se pide; no rehacer ni "mejorar" otras partes; no romper funciones existentes. Si algo falla repetidamente, volver a la última versión funcional.
 - **No modificar el editor de rutinas** (`modulos/rutinas/editor.*`) salvo que Manu lo pida explícitamente.
 - Distinguir lo hecho, lo probado y lo verificado; no afirmar que algo funciona sin probarlo.
