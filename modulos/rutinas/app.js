@@ -83,10 +83,27 @@ function getApparatusValue(index, name, apparatus){
 }
 
 function showHome(){
+  const card = (action, tono, num, titulo, texto, icono) => `
+    <div class="rh-card rh-${tono}" data-action="${action}" role="button" tabindex="0">
+      <span class="rh-num">${num}</span>
+      <span class="rh-ico">${icono}</span>
+      <span class="rh-txt"><strong>${titulo}</strong><small>${texto}</small></span>
+      <span class="rh-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </div>`;
   screen.innerHTML = `
-    <div class="button" data-action="athletes">Libres</div>
-    <div class="button" data-action="obligatorios">Obligatorios</div>
-    <div class="button" data-action="editor">Editor de rutinas</div>`;
+    <div class="rh-head">
+      <div class="rh-eyebrow">Gimnasia Artística Varonil</div>
+      <h1>Rutinas</h1>
+      <p>Elige qué quieres consultar</p>
+    </div>
+    <div class="rh-grid">
+      ${card('athletes','libres','01','Libres','Rutina de cada atleta por aparato',
+        '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v6M12 13.5l-4 6M12 13.5l4 6M5 9.5l7-1.5 7 1.5"/></svg>')}
+      ${card('obligatorios','obl','02','Obligatorios','Rutina oficial por nivel y lo que presenta cada atleta',
+        '<svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 9l1.6 1.6L13 7.7M8.5 15h7M15 9.5h.5"/></svg>')}
+      ${card('editor','editor','03','Editor de rutinas','Crear y ajustar rutinas · acceso protegido',
+        '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>')}
+    </div>`;
 }
 
 function showAthletes(){
@@ -252,6 +269,10 @@ screen.addEventListener('click', e=>{
   if(action==='apparatusList') return showAparatos(el.dataset.athlete);
   if(action==='obligatorio') return showObligatorioDetalle(el.dataset.value);
   if(action==='oblAparato') return showObligatorioAparato(el.dataset.athlete, el.dataset.value);
+});
+// Tarjetas del inicio: Enter o espacio también las abren.
+screen.addEventListener('keydown', e=>{
+  if((e.key==='Enter' || e.key===' ') && e.target.classList.contains('rh-card')){ e.preventDefault(); e.target.click(); }
 });
 
 loadExcel();
