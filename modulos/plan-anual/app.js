@@ -503,61 +503,40 @@ function nextDay(a,b){
   return (new Date(b.year,b.month-1,b.day)-new Date(a.year,a.month-1,a.day))===86400000;
 }
 
+// Un día puede tener dos eventos a la vez (p. ej. una competencia y un campamento):
+// en el Excel la descripción los separa con " / " y la unidad con "/" (C/E), en el mismo orden.
+function dayParts(d){
+  const descs=String(d.description||'').split(/\s+\/\s+/).map(clean).filter(Boolean);
+  const units=upper(d.unit).replace(/\s+/g,'').split('/');
+  if(descs.length>1 && units.length===descs.length) return descs.map((description,i)=>({...d,description,unit:units[i]}));
+  return [d];
+}
+function classifyDay(d){
+  for(const type of ['competencia','eventos','descansos']) if(dayParts(d).some(p=>classify(p)===type)) return type;
+  return null;
+}
 function buildSpecialEvents(){
   const result={competencia:[],eventos:[],descansos:[]};
   const sorted=days.slice().sort((a,b)=>a.key.localeCompare(b.key));
 
-  // COMPETENCIAS: se agrupan únicamente días consecutivos que pertenecen
-  // al mismo nombre de competencia. El nombre se toma del Excel, quitando
-  // solamente las fechas que cambian de un día al siguiente.
-  let i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='competencia' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d, j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='competencia' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){
-        end=n; j++;
-      } else break;
+  // Se agrupan días consecutivos con el mismo nombre de evento (quitando solo
+  // las fechas que cambian de un día al siguiente). Competencias, eventos y
+  // descansos salen solo de lo que está en el Excel (unidad C/E o descripción).
+  for(const type of Object.keys(result)){
+    const abiertos=new Map();
+    for(const d of sorted){
+      for(const p of dayParts(d)){
+        if(classify(p)!==type || !p.description) continue;
+        const key=eventTitleKey(p.description);
+        const ev=abiertos.get(key);
+        if(ev && ev.end!==d && nextDay(ev.end,d)){ ev.end=d; ev.days.push(d); continue; }
+        if(ev && ev.end===d) continue;
+        let id=`${type}-${d.key}`;
+        if(result[type].some(e=>e.id===id)) id+=`-${result[type].length}`;
+        const nuevo={id,type,title:p.description,start:d,end:d,days:[d]};
+        result[type].push(nuevo); abiertos.set(key,nuevo);
+      }
     }
-    result.competencia.push({id:`competencia-${d.key}`,type:'competencia',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
-  }
-
-  // EVENTOS: aparecen solamente cuando realmente existe un evento en el Excel.
-  // No se generan automáticamente por domingos ni por días ordinarios.
-  i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='eventos' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d,j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='eventos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
-      else break;
-    }
-    result.eventos.push({id:`eventos-${d.key}`,type:'eventos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
-  }
-
-  // DESCANSOS: solo descansos explícitos del Excel (D/descanso/vacaciones/puente),
-  // excluyendo TODOS los domingos porque son descanso natural.
-  i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='descansos' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d,j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='descansos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
-      else break;
-    }
-    result.descansos.push({id:`descansos-${d.key}`,type:'descansos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
   }
 
   Object.keys(result).forEach(k=>result[k].sort((a,b)=>a.start.key.localeCompare(b.start.key)));
@@ -616,7 +595,7 @@ function showMonth(key){
 }
 
 function dayCard(d){
-  const hasSpecial=classify(d);
+  const hasSpecial=classifyDay(d);
   return `<article class="day-card ${hasSpecial?'special':''}" id="day-${esc(d.key)}" data-date="${esc(d.key)}">
     <div class="date"><strong>${esc(d.day)}</strong><span>${esc(d.dow)}</span></div>
     <div class="day-main">
