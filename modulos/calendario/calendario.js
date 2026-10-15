@@ -61,7 +61,7 @@ function pills(e){const m=man(e);let p='';
     const sede=m.ubicacion||(e.venues||[]).join(' / ');if(sede)p+=`<span class="pill">${esc(sede)}</span>`;
     if(e.levels?.length)p+=`<span class="pill gold">Niveles ${esc(e.levels.join(', '))}</span>`;}
   else{p+=`<span class="pill">${e.type==='eventos'?'Evento':'Descanso'}</span>`;
-    const sede=m.ubicacion||(e.venues||[]).join(' / ');if(sede)p+=`<span class="pill">${esc(sede)}</span>`;}
+    const sede=m.ubicacion||(e.venues||[]).join(' / ');if(e.type==='eventos'&&sede)p+=`<span class="pill">${esc(sede)}</span>`;}
   return p;}
 function horarios(e){const m=man(e);const hs=(m.horarios||[]).filter(x=>x.nivel||x.fecha||x.hora);let h='';
   if(hs.length)h+=`<div class="blk"><b>Días y horarios por nivel</b><div class="hor">${hs.map(x=>`<span class="lv">${esc(x.nivel||'Todos')}</span><span>${esc([fmtIso(x.fecha),x.hora].filter(Boolean).join(' · '))}${x.link?` · <a href="${esc(x.link)}" target="_blank" rel="noopener">Ver</a>`:''}</span>`).join('')}</div></div>`;

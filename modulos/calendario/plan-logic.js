@@ -83,8 +83,7 @@ function assignmentColumnsForEvent(event){
     normalizeName(comp.title) === normalizedTitle
   );
   if(exact) return [exact];
-  // Eventos y descansos solo con nombre exacto (un "DESCANSO" genérico no debe
-  // tomar los atletas de otro descanso que sí tiene columna).
+  // Los eventos (campamentos, etc.) solo se ligan con nombre exacto.
   if(event.type && event.type!=='competencia') return [];
 
   // 2) Si el nombre cambió ligeramente (año, prefijos, etc.), usamos
@@ -107,11 +106,10 @@ function athletesForEvent(event){
   if(!cols.length) return [];
   return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
 }
-// Un EVENTO (p. ej. un campamento) o un DESCANSO que solo aplica a algunos
-// atletas también puede tener atletas y sede si tiene su propia columna en
-// ASIGNACION DE COMPETENCIAS (con el mismo nombre que en el MACRO).
+// Un EVENTO (p. ej. un campamento) también puede tener atletas y sede si
+// tiene su propia columna en ASIGNACION DE COMPETENCIAS.
 function eventHasAssignment(e){
-  return e.type==='competencia' || assignmentColumnsForEvent(e).length>0;
+  return e.type==='competencia' || (e.type==='eventos' && assignmentColumnsForEvent(e).length>0);
 }
 function venuesForEvent(event){
   const cols=assignmentColumnsForEvent(event);
