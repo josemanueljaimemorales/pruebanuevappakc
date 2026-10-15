@@ -403,7 +403,7 @@ function renderList(){
     if(ui.delMode){h+=`<button class="card del" data-act="delask" data-v="${esc(n)}"><span><b>${esc(n)}</b><span class="lv">${esc(a.nivel)}</span></span><span class="xdel">Eliminar</span></button>`;continue;}
     h+=`<button class="card" data-act="open" data-v="${esc(n)}"><span><b>${esc(n)}</b><span class="lv">${esc(a.nivel)}</span></span><span class="aa">${f1(t.aa)}${APS.reduce((x,[k])=>x+nAv(t[k]),0)?`<small class="warn"> ⚠${APS.reduce((x,[k])=>x+nAv(t[k]),0)}</small>`:''}</span></button>`;}
   h+=`</div><div class="actions"><button class="btn" data-act="export">Descargar Excel actualizado</button></div>`;
-  h+=`<div class="actions printbar"><button class="btn" data-act="print">Imprimir rutinas</button><small>Una hoja tamaño carta por atleta. En el diálogo elige "Guardar como PDF".</small></div>`;
+  h+=`<div class="actions printbar"><button class="btn" data-act="print">Imprimir rutinas</button><small>Una hoja tamaño carta horizontal por atleta. En el diálogo elige "Guardar como PDF".</small></div>`;
   root.innerHTML=h;
 }
 function metaLine(r,res,i){
@@ -663,7 +663,7 @@ function printAll(build){
   const fecha=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
   let h='';
   if(typeof build==='function')h=build(fecha); else for(const n of ORDER){const a=S.atletas[n];if(!a)continue;const t=totals(n);
-    h+=`<section class="sheet"><header class="ph"><img src="logo.png" alt=""><div><h1>${esc(n)}</h1><p>Nivel ${esc(a.nivel)} · Rutinas libres · ${esc(fecha)}</p></div><div class="paa"><span>NP AA</span><b>${f1(t.aa)}</b></div></header><div class="pgrid">`;
+    h+=`<section class="sheet fsheet"><header class="ph"><img src="logo.png" alt=""><div><h1>${esc(n)}</h1><p>Nivel ${esc(a.nivel)} · Rutinas libres · ${esc(fecha)}</p></div><div class="paa"><span>NP AA</span><b>${f1(t.aa)}</b></div></header><div class="pgrid">`;
     for(const [ap] of APS){const c=t[ap], rows=a.r[ap]||[];
       h+=`<article class="pap"><div class="pap-h"><h2>${AP_NAME[ap]}</h2><b>NP ${f1(c.np)}</b></div>`;
       if(ap==='SALTO'){
@@ -682,16 +682,16 @@ function printAll(build){
   area.innerHTML=h;
   const imgs=[...area.querySelectorAll('img')];
   Promise.all(imgs.map(im=>im.complete?1:new Promise(r=>{im.onload=im.onerror=r;}))).then(()=>{
-    if(typeof build==='function')fitOblSheets(area);
+    fitOblSheets(area);
     const prev=document.title, d=new Date(); document.title=`${PRINT_PREF} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
     window.print(); setTimeout(()=>{document.title=prev;},1000);});
 }
-/* Obligatorios: acomoda los 6 aparatos en 3 columnas (opción A o B, la que deje letra más grande) y elige por atleta
+/* Libres y obligatorios: acomoda los 6 aparatos en 3 columnas (opción A o B, la que deje letra más grande) y elige por atleta
    la letra más grande con la que todo cabe en una hoja carta horizontal. */
 function fitOblSheets(area){
   const pxmm=96/25.4, alto=199.9*pxmm*0.98; // alto útil de la hoja (215.9 mm - márgenes), con 2 % de holgura
   area.classList.add('measuring');
-  area.querySelectorAll('.osheet').forEach(sh=>{
+  area.querySelectorAll('.osheet,.fsheet').forEach(sh=>{
     const grid=sh.querySelector('.pgrid'), cards=[...grid.querySelectorAll(':scope > .pap')];
     grid.innerHTML='';const cols=[0,1,2].map(()=>{const d=document.createElement('div');d.className='ocol';grid.appendChild(d);return d;});
     const acomodar=fs=>{

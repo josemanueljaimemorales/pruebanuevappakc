@@ -158,32 +158,37 @@ button{cursor:pointer}
 .okind.add{background:rgba(0,224,184,.15);color:var(--ok)}
 .orow.repl .otx{opacity:.6}
 
-/* ===== Obligatorios impresos: hoja horizontal, 3 columnas, letra ajustada a la hoja =====
+/* ===== Rutinas libres y obligatorios impresos: hoja horizontal, 3 columnas, letra ajustada a la hoja =====
    Estas reglas aplican también fuera de @media print para poder medir antes de imprimir. */
 #printArea.measuring{display:block;position:absolute;left:-99999px;top:0;width:263.4mm;background:#fff}
-#printArea .osheet{--fs:10px;page:obl;font-family:'Segoe UI',Arial,sans-serif;color:#111}
-#printArea .osheet .ph{display:flex;align-items:center;gap:12px;border-bottom:2px solid #1b3a5c;padding-bottom:5px;margin-bottom:7px}
-#printArea .osheet .ph img{height:42px;width:auto;filter:none}
-#printArea .osheet .ph h1{margin:0;font-size:22px}
-#printArea .osheet .ph p{margin:2px 0 0;font-size:11px;color:#444}
-#printArea .osheet .paa{margin-left:auto;text-align:right}
-#printArea .osheet .paa span{display:block;font-size:10px;color:#444}
-#printArea .osheet .paa b{font-size:24px;color:#1b3a5c}
-#printArea .osheet .pgrid{display:flex;gap:3mm;align-items:flex-start}
-#printArea .osheet .ocol{flex:1 1 0;min-width:0}
-#printArea .osheet .pap{display:block;break-inside:avoid;page-break-inside:avoid;border:1px solid #9aa9b8;border-radius:6px;padding:4px 6px;margin:0 0 2.5mm}
-#printArea .osheet .pap-h{display:flex;justify-content:space-between;align-items:baseline}
-#printArea .osheet .pap-h h2,#printArea .osheet .pap-h b{margin:0;font-size:calc(var(--fs)*1.35);color:#1b3a5c}
-#printArea .osheet .pap-h b{color:#111}
-#printArea .osheet .pm{font-size:calc(var(--fs)*.92);color:#333;margin:1px 0 3px}
-#printArea .osheet .pap table{width:100%;border-collapse:collapse;table-layout:fixed}
-#printArea .osheet .pap td{font-size:var(--fs);line-height:1.25;border-top:1px solid #dde3ea;padding:2px 3px;text-align:left;width:auto;vertical-align:top}
+#printArea :is(.osheet,.fsheet){--fs:10px;page:obl;font-family:'Segoe UI',Arial,sans-serif;color:#111}
+#printArea :is(.osheet,.fsheet) .ph{display:flex;align-items:center;gap:12px;border-bottom:2px solid #1b3a5c;padding-bottom:5px;margin-bottom:7px}
+#printArea :is(.osheet,.fsheet) .ph img{height:42px;width:auto;filter:none}
+#printArea :is(.osheet,.fsheet) .ph h1{margin:0;font-size:22px}
+#printArea :is(.osheet,.fsheet) .ph p{margin:2px 0 0;font-size:11px;color:#444}
+#printArea :is(.osheet,.fsheet) .paa{margin-left:auto;text-align:right}
+#printArea :is(.osheet,.fsheet) .paa span{display:block;font-size:10px;color:#444}
+#printArea :is(.osheet,.fsheet) .paa b{font-size:24px;color:#1b3a5c}
+#printArea :is(.osheet,.fsheet) .pgrid{display:flex;gap:3mm;align-items:flex-start}
+#printArea :is(.osheet,.fsheet) .ocol{flex:1 1 0;min-width:0}
+#printArea :is(.osheet,.fsheet) .pap{display:block;break-inside:avoid;page-break-inside:avoid;border:1px solid #9aa9b8;border-radius:6px;padding:4px 6px;margin:0 0 2.5mm}
+#printArea :is(.osheet,.fsheet) .pap-h{display:flex;justify-content:space-between;align-items:baseline}
+#printArea :is(.osheet,.fsheet) .pap-h h2,#printArea :is(.osheet,.fsheet) .pap-h b{margin:0;font-size:calc(var(--fs)*1.35);color:#1b3a5c}
+#printArea :is(.osheet,.fsheet) .pap-h b{color:#111}
+#printArea :is(.osheet,.fsheet) .pm{font-size:calc(var(--fs)*.92);color:#333;margin:1px 0 3px}
+#printArea :is(.osheet,.fsheet) .pap table{width:100%;border-collapse:collapse;table-layout:fixed}
+#printArea :is(.osheet,.fsheet) .pap td{font-size:var(--fs);line-height:1.25;border-top:1px solid #dde3ea;padding:2px 3px;text-align:left;width:auto;vertical-align:top}
 #printArea .osheet td.ck{width:1.4em;text-align:center;font-weight:700}
 #printArea .osheet td.oid{width:5.4em;white-space:nowrap;font-weight:700}
-#printArea .osheet tr.off td{color:#888}
-#printArea .osheet .pf{margin-top:3px;font-size:calc(var(--fs)*.85);color:#555}
+#printArea :is(.osheet,.fsheet) tr.off td{color:#888}
+#printArea :is(.osheet,.fsheet) .pf{margin-top:3px;font-size:calc(var(--fs)*.85);color:#555}
+#printArea .fsheet .pap th{font-size:calc(var(--fs)*.85);background:#e6edf4;-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:left;padding:2px 3px;font-weight:600}
+#printArea .fsheet .pap th:nth-child(n+2),#printArea .fsheet .pap td:nth-child(n+2){text-align:center;width:2.7em}
+#printArea .fsheet .pap th:nth-child(3),#printArea .fsheet .pap td:nth-child(3){width:3.6em}
+#printArea .fsheet .pap th:nth-child(4),#printArea .fsheet .pap td:nth-child(4){width:3.2em}
+#printArea .fsheet .cx{color:#1b3a5c;font-weight:700}
 @media print{
   @page obl{size:letter landscape;margin:8mm}
-  #printArea .osheet{break-after:page;page-break-after:always}
-  #printArea .osheet:last-child{break-after:auto;page-break-after:auto}
+  #printArea :is(.osheet,.fsheet){break-after:page;page-break-after:always}
+  #printArea :is(.osheet,.fsheet):last-child{break-after:auto;page-break-after:auto}
 }
