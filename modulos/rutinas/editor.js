@@ -244,6 +244,15 @@ function compute(ap,rows,nivel,plantada,opt){
     const kipHS=/ (alemana|kip|kipe|kippe|dominacion at(ras)?) /.test(ta)&&/ (a manos|apoyo invertido|ap inv) /.test(ta);
     const atras=/ (gigante|molino at(ras)?|stalder|quinta|salvada) /.test(tb)||/ 1\/2 g .*cubital/.test(tb);
     if(kipHS&&atras&&!/ (molino ad(elante)?|endo) /.test(tb))res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". Error de composición -0.30 (jurado E) si van seguidos.`);});
+  // Paralelas (FIG, N9 y N10): después de llegar a manos balanceando atrás (vuelo o impulso a manos),
+  // el siguiente elemento no puede bajar hacia adelante (Moy, Tippelt, molino/gigante, Kenmotsu, Bhavsar, Diamidov,
+  // Makuts, Felge, Peters): contrabalanceo, -0.30 del jurado E (Código FIG 2025-2028, art. 14.2.1 4.a y 4.b).
+  // Si entre ellos hay un elemento de fuerza (L-sit, Kato…) ya no van seguidos y no aplica.
+  if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
+    const na=' '+nk(a.n)+' ', nb=' '+nk(b.n)+' ';
+    const aManos=a.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(na);
+    const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb);
+    if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza).`);});
   const valued=items.filter(x=>x.val>0);
   const n7=nivel==='N7', n8=nivel==='N8', usag=n7||n8;
   let dis=null;
