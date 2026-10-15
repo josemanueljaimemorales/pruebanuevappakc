@@ -176,10 +176,10 @@ button{cursor:pointer}
 #printArea .osheet .pap-h h2,#printArea .osheet .pap-h b{margin:0;font-size:calc(var(--fs)*1.35);color:#1b3a5c}
 #printArea .osheet .pap-h b{color:#111}
 #printArea .osheet .pm{font-size:calc(var(--fs)*.92);color:#333;margin:1px 0 3px}
-#printArea .osheet .pap table{width:100%;border-collapse:collapse}
+#printArea .osheet .pap table{width:100%;border-collapse:collapse;table-layout:fixed}
 #printArea .osheet .pap td{font-size:var(--fs);line-height:1.25;border-top:1px solid #dde3ea;padding:2px 3px;text-align:left;width:auto;vertical-align:top}
-#printArea .osheet td.ck{width:1.2em;text-align:center;font-weight:700}
-#printArea .osheet td.oid{width:auto;white-space:nowrap;font-weight:700}
+#printArea .osheet td.ck{width:1.4em;text-align:center;font-weight:700}
+#printArea .osheet td.oid{width:5.4em;white-space:nowrap;font-weight:700}
 #printArea .osheet tr.off td{color:#888}
 #printArea .osheet .pf{margin-top:3px;font-size:calc(var(--fs)*.85);color:#555}
 @media print{

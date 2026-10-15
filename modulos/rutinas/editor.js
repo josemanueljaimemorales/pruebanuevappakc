@@ -686,7 +686,7 @@ function printAll(build){
     const prev=document.title, d=new Date(); document.title=`${PRINT_PREF} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
     window.print(); setTimeout(()=>{document.title=prev;},1000);});
 }
-/* Obligatorios: reparte los 6 aparatos en 3 columnas lo más parejas posible y elige por atleta
+/* Obligatorios: acomoda los 6 aparatos en 3 columnas (opción A o B, la que deje letra más grande) y elige por atleta
    la letra más grande con la que todo cabe en una hoja carta horizontal. */
 function fitOblSheets(area){
   const pxmm=96/25.4, alto=199.9*pxmm*0.98; // alto útil de la hoja (215.9 mm - márgenes), con 2 % de holgura
@@ -698,18 +698,18 @@ function fitOblSheets(area){
       sh.style.setProperty('--fs',fs+'px');
       cards.forEach(c=>cols[0].appendChild(c));
       const hs=cards.map(c=>c.getBoundingClientRect().height+2.5*pxmm);
-      let mejor=null,maxMejor=Infinity;
-      for(let k=0;k<729;k++){const asig=[],suma=[0,0,0];let x=k;
-        for(let i=0;i<cards.length;i++){asig.push(x%3);suma[x%3]+=hs[i];x=Math.floor(x/3);}
-        const m=Math.max(...suma);if(m<maxMejor-0.5){maxMejor=m;mejor=asig;}}
-      // Columnas en el orden oficial (la que tiene Piso primero…) y, dentro de cada una, también.
-      const orden=[0,1,2].map(cl=>({cl,first:mejor.indexOf(cl)<0?99:mejor.indexOf(cl)})).sort((a,b)=>a.first-b.first).map(x=>x.cl);
-      cards.forEach((c,i)=>cols[orden.indexOf(mejor[i])].appendChild(c));
+      // Orden de las tarjetas: Piso, Hongo/Arzón, Anillos, Salto, Paralelas, Fija (OAPS).
+      // Opción A: Piso+Arzón | Anillos+Salto+Paralelas | Fija.  Opción B: Piso+Arzón | Anillos+Salto | Paralelas+Fija.
+      const OPCIONES=[[0,0,1,1,1,2],[0,0,1,1,2,2]];
+      let mejor=OPCIONES[0],maxMejor=Infinity;
+      OPCIONES.forEach(asig=>{const suma=[0,0,0];asig.forEach((cl,i)=>suma[cl]+=hs[i]||0);const m=Math.max(...suma);if(m<maxMejor){maxMejor=m;mejor=asig;}});
+      cards.forEach((c,i)=>cols[mejor[i]].appendChild(c));
       return sh.getBoundingClientRect().height;
     };
     let lo=7,hi=18;
     for(let k=0;k<12;k++){const mid=(lo+hi)/2;if(acomodar(mid)<=alto)lo=mid;else hi=mid;}
-    acomodar(+lo.toFixed(2));
+    // Verificación final: si con la letra elegida no cabe, se baja poco a poco hasta que quepa.
+    while(acomodar(lo)>alto&&lo>6)lo-=0.25;
   });
   area.classList.remove('measuring');
 }
