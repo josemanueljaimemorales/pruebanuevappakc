@@ -51,7 +51,8 @@ function search(q,ap,nivel){
   const pre=`${tab}|${ap}|`;
   for(const src of [S.alias,ALIAS]) for(const [ak,k] of Object.entries(src)){
     if(!ak.startsWith(pre)||!CAT[k])continue; const an=ak.slice(pre.length);
-    {const ct=canon(CAT[k].d), ca=canon(an); if((ct.includes('dob')&&!ca.includes('dob'))||(ct.includes('tri')&&!ca.includes('tri')))continue;}
+    // Protección doble/triple solo para los apodos de fábrica; los que enseñan los entrenadores se respetan.
+    if(src===ALIAS){const ct=canon(CAT[k].d), ca=canon(an); if((ct.includes('dob')&&!ca.includes('dob'))||(ct.includes('tri')&&!ca.includes('tri')))continue;}
     let sc=0; if(an===qn)sc=3; else if(an.startsWith(qn))sc=2.4; else if(an.includes(qn))sc=2;
     else{const at=canon(an);const hit=qt.filter(t=>at.some(a=>a.startsWith(t))).length;if(hit===qt.length&&hit)sc=1.6;}
     if(sc)add(k,sc,an);
@@ -78,8 +79,14 @@ function search(q,ap,nivel){
 }
 
 /* ---------- filas ---------- */
+// Apodo más usado para un elemento del Código en las rutinas de los atletas (si no hay, null).
+function apodoDe(k){const c=new Map(),desc=nk(CAT[k]?.d||'');
+  for(const x of Object.values(S.atletas||{}))for(const rows of Object.values(x?.r||{}))for(const o of rows||[])
+    if(o.k===k&&o.n&&!/^\d/.test(o.n)&&nk(o.n)!==desc)c.set(o.n.trim(),(c.get(o.n.trim())||0)+1);
+  let mejor=null,max=0;for(const [n,v] of c)if(v>max){max=v;mejor=n;}return mejor;}
 function rowFromKey(k,name){
   const e=CAT[k]; const p=k.split('|');
+  name=name||apodoDe(k);
   if(p[0]==='JA')return{n:name||e.d,k,t:'JA',l:'A',g:null,id:'JA'};
   const g=+p[1], id=p[2];
   if(p[0]==='SALTO'){const lvl=ui.atleta&&S.atletas[ui.atleta]?.nivel;const ov=(lvl==='N7'||lvl==='N8')?VAULT_N78[`${g}|${id}`]:null;return{n:name||e.d,k,t:'C',g,id,v:ov??e.v??0};}
@@ -557,7 +564,13 @@ root.addEventListener('change',e=>{
   const t=e.target, a=ui.atleta&&S.atletas[ui.atleta];
   if(t.dataset.act==='nivel'){a.nivel=t.value;save();return render();}
   if(t.dataset.f){const r=a.r[ui.ap][+t.dataset.i], f=t.dataset.f;
-    if(f==='n')r.n=t.value.trim()||r.n;
+    if(f==='n'){const antes=r.n;r.n=t.value.trim()||r.n;
+      if(r.k&&CAT[r.k]&&r.n!==antes&&!/^\d/.test(r.n)&&nk(r.n)!==nk(CAT[r.k].d)){
+        learn(r.n,ui.ap,a.nivel,r.k);
+        const otros=[];for(const n of ORDER){const x=S.atletas[n];(x?.r?.[ui.ap]||[]).forEach(o=>{if(o!==r&&o.k===r.k&&nk(o.n)!==nk(r.n))otros.push([n,o]);});}
+        if(otros.length){const lista=otros.slice(0,10).map(([n,o])=>`• ${n}: "${o.n}"`).join('\n')+(otros.length>10?`\n… y ${otros.length-10} más`:'');
+          if(confirm(`Otros ${otros.length} elemento(s) tienen este mismo elemento del Código (${keyLabel(r)}):\n\n${lista}\n\n¿Ponerles también el nombre "${r.n}"? Solo cambia el nombre, no el valor ni la nota.`))otros.forEach(([,o])=>{o.n=r.n;});}
+      }}
     if(f==='v')r.v=parseFloat(t.value)||0;
     if(f==='g')r.g=+t.value;
     if(f==='l')r.l=t.value;
