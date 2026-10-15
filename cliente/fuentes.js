@@ -100,6 +100,18 @@
     } finally { if (t) clearTimeout(t); }
   }
 
+  // El MACRO cambia de nombre cada ciclo (MACRO_26_27.xlsx, MACRO_27_28.xlsx…).
+  // Cuando la app pide cualquier MACRO, se usa el del ciclo más nuevo que haya en la carpeta.
+  const PATRON_MACRO = /^MACRO[ _-]?(\d{2})[ _-](\d{2})\.xlsx$/i;
+  function macroMasNuevo(mapa){
+    let mejor = null, clave = -1;
+    Object.keys(mapa).forEach(n => {
+      const m = n.match(PATRON_MACRO);
+      if (m && +m[1] * 100 + +m[2] > clave) { clave = +m[1] * 100 + +m[2]; mejor = n; }
+    });
+    return mejor;
+  }
+
   // ---- 1) Interceptar fetch para los Excel ----
   const fetchOriginal = window.fetch.bind(window);
   window.fetch = async function(input, init){
@@ -111,9 +123,11 @@
     }
     const t0 = performance.now();
     try {
-      const porNombre = (await idsPorNombre(fetchOriginal))[archivo];
+      const mapa = await idsPorNombre(fetchOriginal);
+      const nombreDrive = PATRON_MACRO.test(archivo) ? (macroMasNuevo(mapa) || archivo) : archivo;
+      const porNombre = mapa[nombreDrive];
       const res = await pedirADrive(fetchOriginal, porNombre || ARCHIVOS_DRIVE[archivo]);
-      anotar(archivo, "drive", porNombre ? "" : "por ID fijo", performance.now() - t0);
+      anotar(archivo, "drive", porNombre ? (nombreDrive !== archivo ? "usa " + nombreDrive : "") : "por ID fijo", performance.now() - t0);
       return res;
     } catch(err) {
       const motivo = err && err.name === "AbortError" ? "Drive tardó demasiado" : String(err && err.message || err);

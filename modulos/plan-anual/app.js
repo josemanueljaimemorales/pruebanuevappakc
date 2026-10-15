@@ -107,7 +107,7 @@ function printableItemsForMonth(m){
     for(const e of specialEvents[type]){
       const matchingDays=e.days.filter(d=>monthDays.has(d.key));
       for(const d of matchingDays){
-        const venues=type==='competencia' ? venuesForEvent(e) : [];
+        const venues=eventHasAssignment(e) ? venuesForEvent(e) : [];
         add(d.key,{type,title:e.title,venues});
       }
     }
@@ -297,6 +297,8 @@ function assignmentColumnsForEvent(event){
     normalizeName(comp.title) === normalizedTitle
   );
   if(exact) return [exact];
+  // Los eventos (campamentos, etc.) solo se ligan con nombre exacto.
+  if(event.type && event.type!=='competencia') return [];
 
   // 2) Si el nombre cambió ligeramente (año, prefijos, etc.), usamos
   // coincidencia por contenido, pero nunca inventamos una competencia.
@@ -320,6 +322,11 @@ function athletesForEvent(event){
   return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
 }
 
+// Un EVENTO (p. ej. un campamento) también puede tener atletas y sede si
+// tiene su propia columna en ASIGNACION DE COMPETENCIAS.
+function eventHasAssignment(e){
+  return e.type==='competencia' || (e.type==='eventos' && assignmentColumnsForEvent(e).length>0);
+}
 function venuesForEvent(event){
   const cols=assignmentColumnsForEvent(event);
   return [...new Set(cols.map(c=>clean(c.venue)).filter(Boolean))];
@@ -329,7 +336,8 @@ function eventForAssignment(comp){
   const key=normalizeName(comp?.title || '');
   if(!key) return null;
 
-  const scored=specialEvents.competencia
+  // Primero competencias; los eventos (campamentos) solo si tienen columna propia.
+  const scored=[...specialEvents.competencia,...specialEvents.eventos]
     .map(e=>({event:e,score:competitionMatchScore(comp.title,e.title)}))
     .filter(x=>x.score>=65)
     .sort((a,b)=>b.score-a.score);
@@ -354,6 +362,29 @@ function competitionsForAthlete(athlete){
   return orderedAssignmentCompetitions()
     .filter(c=>athlete.assignments[c.key])
     .map(c=>({assignment:c,event:eventForAssignment(c)}));
+}
+
+// Año en que empieza el MACRO, deducido de la fila de días (L M M J V S D):
+// se prueba cada año cercano a hoy y se queda el que coincide con los días de
+// la semana. Así sirve para 26-27, 27-28, etc., sin escribir el año a mano.
+function startYearOfMacro(monthRow, dayRow, dowRow){
+  const LETRA = ['D','L','M','M','J','V','S'];
+  const muestra=[]; let off=0, prev=0;
+  for(let c=1;c<monthRow.length && muestra.length<21;c++){
+    const month=MONTHS[upper(monthRow[c])], day=Number(dayRow[c]);
+    if(!month || !Number.isFinite(day) || day<1 || day>31) continue;
+    if(prev && month<prev) off++;
+    prev=month;
+    let l=upper(dowRow[c]).charAt(0); if(l==='X') l='M';
+    if(l) muestra.push({off,month,day,l});
+  }
+  const hoy=new Date().getFullYear();
+  const candidatos=[hoy,hoy-1,hoy+1,hoy-2,hoy+2,hoy-3,hoy+3];
+  for(const y of candidatos){
+    if(muestra.length && muestra.every(m=>LETRA[new Date(Date.UTC(y+m.off,m.month-1,m.day)).getUTCDay()]===m.l)) return y;
+  }
+  const m0=MONTHS[upper(monthRow.find(v=>MONTHS[upper(v)]))]||1;
+  return m0>new Date().getMonth()+1 ? hoy-1 : hoy;
 }
 
 function readCalendar(wb){
@@ -415,7 +446,7 @@ function readCalendar(wb){
   const unitRow = fillRow(matrix[8]||[]);
   const descRow = fillRow(matrix[9]||[]);
 
-  let year=2026, previousMonth=0;
+  let year=startYearOfMacro(monthRow,dayRow,dowRow), previousMonth=0;
   const out=[];
   for(let c=1;c<monthRow.length;c++){
     const monthName=upper(monthRow[c]);
@@ -480,61 +511,40 @@ function nextDay(a,b){
   return (new Date(b.year,b.month-1,b.day)-new Date(a.year,a.month-1,a.day))===86400000;
 }
 
+// Un día puede tener dos eventos a la vez (p. ej. una competencia y un campamento):
+// en el Excel la descripción los separa con " / " y la unidad con "/" (C/E), en el mismo orden.
+function dayParts(d){
+  const descs=String(d.description||'').split(/\s+\/\s+/).map(clean).filter(Boolean);
+  const units=upper(d.unit).replace(/\s+/g,'').split('/');
+  if(descs.length>1 && units.length===descs.length) return descs.map((description,i)=>({...d,description,unit:units[i]}));
+  return [d];
+}
+function classifyDay(d){
+  for(const type of ['competencia','eventos','descansos']) if(dayParts(d).some(p=>classify(p)===type)) return type;
+  return null;
+}
 function buildSpecialEvents(){
   const result={competencia:[],eventos:[],descansos:[]};
   const sorted=days.slice().sort((a,b)=>a.key.localeCompare(b.key));
 
-  // COMPETENCIAS: se agrupan únicamente días consecutivos que pertenecen
-  // al mismo nombre de competencia. El nombre se toma del Excel, quitando
-  // solamente las fechas que cambian de un día al siguiente.
-  let i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='competencia' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d, j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='competencia' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){
-        end=n; j++;
-      } else break;
+  // Se agrupan días consecutivos con el mismo nombre de evento (quitando solo
+  // las fechas que cambian de un día al siguiente). Competencias, eventos y
+  // descansos salen solo de lo que está en el Excel (unidad C/E o descripción).
+  for(const type of Object.keys(result)){
+    const abiertos=new Map();
+    for(const d of sorted){
+      for(const p of dayParts(d)){
+        if(classify(p)!==type || !p.description) continue;
+        const key=eventTitleKey(p.description);
+        const ev=abiertos.get(key);
+        if(ev && ev.end!==d && nextDay(ev.end,d)){ ev.end=d; ev.days.push(d); continue; }
+        if(ev && ev.end===d) continue;
+        let id=`${type}-${d.key}`;
+        if(result[type].some(e=>e.id===id)) id+=`-${result[type].length}`;
+        const nuevo={id,type,title:p.description,start:d,end:d,days:[d]};
+        result[type].push(nuevo); abiertos.set(key,nuevo);
+      }
     }
-    result.competencia.push({id:`competencia-${d.key}`,type:'competencia',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
-  }
-
-  // EVENTOS: aparecen solamente cuando realmente existe un evento en el Excel.
-  // No se generan automáticamente por domingos ni por días ordinarios.
-  i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='eventos' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d,j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='eventos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
-      else break;
-    }
-    result.eventos.push({id:`eventos-${d.key}`,type:'eventos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
-  }
-
-  // DESCANSOS: solo descansos explícitos del Excel (D/descanso/vacaciones/puente),
-  // excluyendo TODOS los domingos porque son descanso natural.
-  i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='descansos' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d,j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='descansos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
-      else break;
-    }
-    result.descansos.push({id:`descansos-${d.key}`,type:'descansos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
   }
 
   Object.keys(result).forEach(k=>result[k].sort((a,b)=>a.start.key.localeCompare(b.start.key)));
@@ -593,7 +603,7 @@ function showMonth(key){
 }
 
 function dayCard(d){
-  const hasSpecial=classify(d);
+  const hasSpecial=classifyDay(d);
   return `<article class="day-card ${hasSpecial?'special':''}" id="day-${esc(d.key)}" data-date="${esc(d.key)}">
     <div class="date"><strong>${esc(d.day)}</strong><span>${esc(d.dow)}</span></div>
     <div class="day-main">
@@ -623,9 +633,9 @@ function showSpecialList(type){
 
 function specialCard(e){
   const label=e.type==='competencia'?'COMPETENCIA':e.type==='eventos'?'EVENTO':'DESCANSO';
-  const athletes=e.type==='competencia'?athletesForEvent(e):[];
-  const extra=e.type==='competencia'?` · ${athletes.length} atletas`:'';
-  const venue=e.type==='competencia' ? venuesForEvent(e) : [];
+  const athletes=eventHasAssignment(e)?athletesForEvent(e):[];
+  const extra=eventHasAssignment(e)?` · ${athletes.length} atletas`:'';
+  const venue=eventHasAssignment(e) ? venuesForEvent(e) : [];
   const venueText=venue.length ? ` · ${venue.join(' / ')}` : '';
   return `<button class="special-card ${esc(e.type)}" data-event-id="${esc(e.id)}"><span class="tag">${label}</span><strong>${esc(e.title)}</strong><small>${esc(formatRange(e))}${extra}${esc(venueText)}</small><b>›</b></button>`;
 }
@@ -640,8 +650,8 @@ function openSpecialByDate(key){
 function openSpecial(id,type){
   const e=findEvent(id,type); if(!e)return;
   backBtn.style.visibility='visible'; backBtn.onclick=()=>showSpecialList(type);
-  const athletes=e.type==='competencia'?athletesForEvent(e):[];
-  const athleteSection=e.type==='competencia' ? `
+  const athletes=eventHasAssignment(e)?athletesForEvent(e):[];
+  const athleteSection=eventHasAssignment(e) ? `
     <section class="assigned-athletes">
       <div class="subsection-head"><div><span>ATLETAS ASIGNADOS</span><small>${athletes.length} atletas</small></div></div>
       ${athletes.length ? `<div class="athlete-grid">${athletes.map(a=>`<button class="athlete-chip" data-athlete="${esc(a.name)}"><strong>${esc(a.name)}</strong><span>Nivel ${esc(a.level)}</span>›</button>`).join('')}</div>` : '<div class="empty small">No hay atletas asignados a esta competencia.</div>'}
@@ -651,12 +661,12 @@ function openSpecial(id,type){
       <div class="eyebrow">${type==='competencia'?'COMPETENCIA':type==='eventos'?'EVENTO':'DESCANSO'}</div>
       <h2>${esc(e.title)}</h2>
       <div class="event-range">${esc(formatRange(e))}</div>
-      ${e.type==='competencia' && venuesForEvent(e).length ? `<div class="competition-venue"><small>SEDE</small><strong>${esc(venuesForEvent(e).join(' · '))}</strong></div>` : ''}
+      ${eventHasAssignment(e) && venuesForEvent(e).length ? `<div class="competition-venue"><small>SEDE</small><strong>${esc(venuesForEvent(e).join(' · '))}</strong></div>` : ''}
       <div class="event-description"><small>DESCRIPCIÓN</small><p>${esc(e.title)}</p></div>
       ${athleteSection}
       <button class="calendar-jump" id="calendarJump">VER EN CALENDARIO GENERAL ›</button>
     </section>`;
-  document.querySelectorAll('[data-athlete]').forEach(b=>b.onclick=()=>showAthleteDetail(b.dataset.athlete, e.id));
+  document.querySelectorAll('[data-athlete]').forEach(b=>b.onclick=()=>showAthleteDetail(b.dataset.athlete, e.id, e.type));
   document.getElementById('calendarJump').onclick=()=>{
     selectedDate=e.start.key;
     const m=months.find(x=>x.days.some(d=>d.key===e.start.key));
@@ -673,11 +683,11 @@ function showAthletesList(){
   document.querySelectorAll('[data-athlete-row]').forEach(b=>b.onclick=()=>showAthleteDetail(b.dataset.athleteRow));
 }
 
-function showAthleteDetail(name,returnEventId=null){
+function showAthleteDetail(name,returnEventId=null,returnType='competencia'){
   const athlete=assignmentData.athletes.find(a=>normalizeName(a.name)===normalizeName(name));
   if(!athlete)return;
   backBtn.style.visibility='visible';
-  backBtn.onclick=()=>returnEventId ? openSpecial(returnEventId,'competencia') : showAthletesList();
+  backBtn.onclick=()=>returnEventId ? openSpecial(returnEventId,returnType) : showAthletesList();
   const items=competitionsForAthlete(athlete);
   content.innerHTML=`<section class="athlete-detail">
     <div class="eyebrow">ATLETA</div>
@@ -686,14 +696,14 @@ function showAthleteDetail(name,returnEventId=null){
     <div class="subsection-head"><div><span>COMPETENCIAS ASIGNADAS</span><small>${items.length} competencias</small></div></div>
     <section class="athlete-competitions">
       ${items.length ? items.map(({assignment,event})=>`
-        <button class="athlete-competition ${event?'linked':''}" data-athlete-event="${event?esc(event.id):''}" data-athlete-event-type="competencia">
+        <button class="athlete-competition ${event?'linked':''}" data-athlete-event="${event?esc(event.id):''}" data-athlete-event-type="${event?esc(event.type):'competencia'}">
           <div><strong>${esc(assignment.title)}</strong><small>${event?esc(formatRange(event)):'Fecha pendiente en Plan Anual'}</small></div>
-          <span>${event?'Ver competencia ›':'Asignada'}</span>
+          <span>${event?(event.type==='eventos'?'Ver evento ›':'Ver competencia ›'):'Asignada'}</span>
         </button>`).join('') : '<div class="empty">Este atleta no tiene competencias con SI en el archivo de asignación.</div>'}
     </section>
   </section>`;
   document.querySelectorAll('[data-athlete-event]').forEach(b=>{
-    if(b.dataset.athleteEvent) b.onclick=()=>openSpecial(b.dataset.athleteEvent,'competencia');
+    if(b.dataset.athleteEvent) b.onclick=()=>openSpecial(b.dataset.athleteEvent,b.dataset.athleteEventType);
   });
 }
 

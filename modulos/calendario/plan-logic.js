@@ -83,6 +83,8 @@ function assignmentColumnsForEvent(event){
     normalizeName(comp.title) === normalizedTitle
   );
   if(exact) return [exact];
+  // Los eventos (campamentos, etc.) solo se ligan con nombre exacto.
+  if(event.type && event.type!=='competencia') return [];
 
   // 2) Si el nombre cambió ligeramente (año, prefijos, etc.), usamos
   // coincidencia por contenido, pero nunca inventamos una competencia.
@@ -104,10 +106,38 @@ function athletesForEvent(event){
   if(!cols.length) return [];
   return assignmentData.athletes.filter(a=>cols.some(c=>a.assignments[c.key]));
 }
+// Un EVENTO (p. ej. un campamento) también puede tener atletas y sede si
+// tiene su propia columna en ASIGNACION DE COMPETENCIAS.
+function eventHasAssignment(e){
+  return e.type==='competencia' || (e.type==='eventos' && assignmentColumnsForEvent(e).length>0);
+}
 function venuesForEvent(event){
   const cols=assignmentColumnsForEvent(event);
   return [...new Set(cols.map(c=>clean(c.venue)).filter(Boolean))];
 }
+// Año en que empieza el MACRO, deducido de la fila de días (L M M J V S D):
+// se prueba cada año cercano a hoy y se queda el que coincide con los días de
+// la semana. Así sirve para 26-27, 27-28, etc., sin escribir el año a mano.
+function startYearOfMacro(monthRow, dayRow, dowRow){
+  const LETRA = ['D','L','M','M','J','V','S'];
+  const muestra=[]; let off=0, prev=0;
+  for(let c=1;c<monthRow.length && muestra.length<21;c++){
+    const month=MONTHS[upper(monthRow[c])], day=Number(dayRow[c]);
+    if(!month || !Number.isFinite(day) || day<1 || day>31) continue;
+    if(prev && month<prev) off++;
+    prev=month;
+    let l=upper(dowRow[c]).charAt(0); if(l==='X') l='M';
+    if(l) muestra.push({off,month,day,l});
+  }
+  const hoy=new Date().getFullYear();
+  const candidatos=[hoy,hoy-1,hoy+1,hoy-2,hoy+2,hoy-3,hoy+3];
+  for(const y of candidatos){
+    if(muestra.length && muestra.every(m=>LETRA[new Date(Date.UTC(y+m.off,m.month-1,m.day)).getUTCDay()]===m.l)) return y;
+  }
+  const m0=MONTHS[upper(monthRow.find(v=>MONTHS[upper(v)]))]||1;
+  return m0>new Date().getMonth()+1 ? hoy-1 : hoy;
+}
+
 function readCalendar(wb){
   const ws = wb.Sheets['macro gral'];
   if(!ws) throw Error('No existe la hoja "macro gral"');
@@ -167,7 +197,7 @@ function readCalendar(wb){
   const unitRow = fillRow(matrix[8]||[]);
   const descRow = fillRow(matrix[9]||[]);
 
-  let year=2026, previousMonth=0;
+  let year=startYearOfMacro(monthRow,dayRow,dowRow), previousMonth=0;
   const out=[];
   for(let c=1;c<monthRow.length;c++){
     const monthName=upper(monthRow[c]);
@@ -218,61 +248,40 @@ function eventTitleKey(text){
 function nextDay(a,b){
   return (new Date(b.year,b.month-1,b.day)-new Date(a.year,a.month-1,a.day))===86400000;
 }
+// Un día puede tener dos eventos a la vez (p. ej. una competencia y un campamento):
+// en el Excel la descripción los separa con " / " y la unidad con "/" (C/E), en el mismo orden.
+function dayParts(d){
+  const descs=String(d.description||'').split(/\s+\/\s+/).map(clean).filter(Boolean);
+  const units=upper(d.unit).replace(/\s+/g,'').split('/');
+  if(descs.length>1 && units.length===descs.length) return descs.map((description,i)=>({...d,description,unit:units[i]}));
+  return [d];
+}
+function classifyDay(d){
+  for(const type of ['competencia','eventos','descansos']) if(dayParts(d).some(p=>classify(p)===type)) return type;
+  return null;
+}
 function buildSpecialEvents(){
   const result={competencia:[],eventos:[],descansos:[]};
   const sorted=days.slice().sort((a,b)=>a.key.localeCompare(b.key));
 
-  // COMPETENCIAS: se agrupan únicamente días consecutivos que pertenecen
-  // al mismo nombre de competencia. El nombre se toma del Excel, quitando
-  // solamente las fechas que cambian de un día al siguiente.
-  let i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='competencia' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d, j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='competencia' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){
-        end=n; j++;
-      } else break;
+  // Se agrupan días consecutivos con el mismo nombre de evento (quitando solo
+  // las fechas que cambian de un día al siguiente). Competencias, eventos y
+  // descansos salen solo de lo que está en el Excel (unidad C/E o descripción).
+  for(const type of Object.keys(result)){
+    const abiertos=new Map();
+    for(const d of sorted){
+      for(const p of dayParts(d)){
+        if(classify(p)!==type || !p.description) continue;
+        const key=eventTitleKey(p.description);
+        const ev=abiertos.get(key);
+        if(ev && ev.end!==d && nextDay(ev.end,d)){ ev.end=d; ev.days.push(d); continue; }
+        if(ev && ev.end===d) continue;
+        let id=`${type}-${d.key}`;
+        if(result[type].some(e=>e.id===id)) id+=`-${result[type].length}`;
+        const nuevo={id,type,title:p.description,start:d,end:d,days:[d]};
+        result[type].push(nuevo); abiertos.set(key,nuevo);
+      }
     }
-    result.competencia.push({id:`competencia-${d.key}`,type:'competencia',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
-  }
-
-  // EVENTOS: aparecen solamente cuando realmente existe un evento en el Excel.
-  // No se generan automáticamente por domingos ni por días ordinarios.
-  i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='eventos' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d,j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='eventos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
-      else break;
-    }
-    result.eventos.push({id:`eventos-${d.key}`,type:'eventos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
-  }
-
-  // DESCANSOS: solo descansos explícitos del Excel (D/descanso/vacaciones/puente),
-  // excluyendo TODOS los domingos porque son descanso natural.
-  i=0;
-  while(i<sorted.length){
-    const d=sorted[i];
-    if(classify(d)!=='descansos' || !d.description){i++;continue;}
-    const key=eventTitleKey(d.description);
-    let end=d,j=i+1;
-    while(j<sorted.length){
-      const n=sorted[j];
-      if(classify(n)==='descansos' && n.description && nextDay(end,n) && eventTitleKey(n.description)===key){end=n;j++;}
-      else break;
-    }
-    result.descansos.push({id:`descansos-${d.key}`,type:'descansos',title:d.description,start:d,end,days:sorted.filter(x=>x.key>=d.key&&x.key<=end.key)});
-    i=j;
   }
 
   Object.keys(result).forEach(k=>result[k].sort((a,b)=>a.start.key.localeCompare(b.start.key)));

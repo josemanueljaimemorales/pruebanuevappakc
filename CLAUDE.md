@@ -16,6 +16,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 
 ## Datos
 - **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los busca **por nombre** en la carpeta "Utilidades App" (`CARPETA_DRIVE`, compartida con enlace); si no puede listarla usa los IDs fijos de `ARCHIVOS_DRIVE`, y si Drive falla, la copia del repo. Para cambiar un Excel basta subir a esa carpeta un archivo con el mismo nombre; no hace falta subirlo al repo. Las dos apps (prueba y oficial) buscan por nombre desde el 15-oct-2026.
+- **MACRO por ciclo**: se llama `MACRO_AA_BB.xlsx` (26_27, 27_28…). Cuando la app pide el MACRO, `fuentes.js` usa el de ciclo más nuevo que haya en "Utilidades App". Plan Anual y Calendario deducen el año de inicio con la fila de días de la semana (no hay año fijo). La copia del repo (`modulos/plan-anual/MACRO_26_27.xlsx`) es solo respaldo si falla Drive.
 - Reglas de la carpeta "Utilidades App":
   - Nombre exacto (mayúsculas, espacios, extensión); si se renombra, la app no ve la versión nueva.
   - Con dos archivos del mismo nombre gana el modificado más recientemente; dejar uno solo por nombre.
@@ -34,6 +35,14 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Probar pantalla y también PDF/impresión (fondo blanco, sin etiquetas de prueba), navegación sin botones duplicados y cálculos con casos límite (no multiplicar porcentajes por 100 dos veces).
 - No exponer contraseñas ni tokens en texto visible ni en el repo.
 - Gimnasia varonil: sin figuras femeninas; imágenes/videos reales, no generados por IA.
+
+## MACRO y ASIGNACION DE COMPETENCIAS (convenciones para editarlos)
+- Los edita Claude con openpyxl a partir de la versión vigente en Drive (descargarla y comparar antes); conservar formato, colores, celdas combinadas y área de impresión; revisar la impresión (PDF) y probar Plan Anual y Calendario con los archivos nuevos antes de entregarlos.
+- MACRO, hoja "macro gral": fila 9 = unidad por día (CH O R D C E V), fila 10 = descripción. Competencia = unidad C + descripción en rojo; evento = unidad E.
+- Dos cosas el mismo día: descripción "A / B" y unidad "C/E" (misma cantidad y orden). P. ej. "COPA PANAMERICANA GUATEMALA 26 / CAMPAMENTO…".
+- Descanso solo para algunos: "DESCANSO PARA PARTICIPANTES DE <competencia>"; la app no lista nombres de descansos.
+- ASIGNACION: una columna por competencia o evento, en orden de fecha; fila 1 = nombre **idéntico** al del MACRO, fila 2 = "SEDE\n<lugar>"; valores SI / NO (podría ir pero no va) / No aplica (no le corresponde por nivel o categoría); PARTICIPACION = COUNTIF(SI)/número de SI de la fila. Los eventos (campamentos) se ligan solo por nombre exacto.
+- Patrones del ciclo 26-27: copas para todos los niveles (Pablo Mares, FIG, solo va a Mikulak, selectivos, Estatal y Nacional); Copa CDI solo niveles 3–8; selectivos nacionales solo 9, 10 y FIG; Estatal GUEM y Nacional FMG desde nivel 4; Juegos CONADE / Olimpiada Nacional depende de la categoría por edad, no del nivel (preguntar a Manu quién entra).
 
 ## Rutinas (criterios de Manu)
 - N7 y N8 usan la estructura de rutinas USAG; elementos del mismo cuadro del Código dan valor cada uno sin contar como repetición.
