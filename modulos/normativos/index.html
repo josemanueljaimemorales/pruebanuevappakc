@@ -91,17 +91,20 @@ function renderAthletes(){const s=document.getElementById("athlete"),current=s.v
 function selectAthlete(name){if(!db)return;document.getElementById("athlete").value=name;const a=db.athletes.find(x=>x.name===name)||{};document.getElementById("athleteName").textContent=name||"—";document.getElementById("group").textContent=a.group||"Sin grupo";document.getElementById("level").textContent=[a.level,a.category].filter(Boolean).join(" / ")||"Sin nivel";renderApps();renderClassifications();renderSummary();renderTable()}
 function renderApps(){document.getElementById("apparatus").innerHTML=APPS.map(a=>`<button class="${a===currentApp?'active':''}" onclick="setApp('${a}')">${appLabels[a]}</button>`).join("")}
 function setApp(a){currentApp=a;renderApps();renderClassifications();renderSummary();renderTable()}
-function renderClassifications(){const s=document.getElementById("classification"),cats=[...new Set(db.items.filter(x=>x.apparatus===currentApp).map(x=>x.classification).filter(Boolean))];s.innerHTML='<option value="ALL">Todos los bloques</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");s.onchange=renderTable}
+function renderClassifications(){const s=document.getElementById("classification"),cats=[...new Set(db.items.filter(x=>x.apparatus===currentApp).map(x=>x.classification).filter(Boolean))];const prev=s.value;s.innerHTML='<option value="ALL">Todos los bloques</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");if(prev&&cats.includes(prev))s.value=prev;s.onchange=renderTable}
 function itemsVisible(){const cat=document.getElementById("classification").value,q=document.getElementById("search").value.toLowerCase().trim(),f=document.getElementById("showFilter").value,a=document.getElementById("athlete").value;return db.items.filter(x=>x.apparatus===currentApp&&(cat==="ALL"||x.classification===cat)&&(!q||x.element.toLowerCase().includes(q)||x.classification.toLowerCase().includes(q))&&!(f==="pending"&&((x.status[a]||"NA")==="C"))&&(!["C","EP","P","NA"].includes(f)||(x.status[a]||"NA")===f))}
 function renderTable(){if(!db)return;const body=document.getElementById("tbody"),items=itemsVisible(),a=document.getElementById("athlete").value;document.getElementById("appTitle").textContent=appLabels[currentApp];document.getElementById("countText").textContent=items.length+" normativos visibles";if(!items.length){body.innerHTML='<tr><td colspan="3" class="empty">No hay normativos para los filtros seleccionados.</td></tr>';return}let last="";body.innerHTML=items.map(x=>{const st=x.status[a]||"NA";let group="";if(x.classification!==last){last=x.classification;group=`<tr class="group"><td colspan="3">${esc(x.classification||"Sin clasificación")}</td></tr>`}return group+`<tr class="row-${st.toLowerCase()}"><td>${esc(x.element)}</td><td>${esc(x.classification)}</td><td><select class="status" onchange="setStatus('${esc(x.id)}',this.value)">${opt(st,"C","C — Consolidado")}${opt(st,"EP","EP — En proceso")}${opt(st,"P","P — Proyección")}${opt(st,"NA","NA — No adquirido")}</select></td></tr>`}).join("")}
 function opt(st,v,t){return `<option value="${v}" ${st===v?"selected":""}>${t}</option>`}
-async function setStatus(id,val){const item=db.items.find(x=>x.id===id);if(!item)return;const athlete=document.getElementById("athlete").value;item.status[athlete]=val;renderTable();renderSummary();await saveCloud()}
+async function setStatus(id,val){const item=db.items.find(x=>x.id===id);if(!item)return;const athlete=document.getElementById("athlete").value;item.status[athlete]=val;renderTable();renderSummary();await saveCloud([{id,athlete,val}])}
 function renderSummary(){const a=document.getElementById("athlete").value,items=db.items.filter(x=>x.apparatus===currentApp),cnt={C:0,EP:0,P:0,NA:0};items.forEach(x=>cnt[x.status[a]||"NA"]++);const total=items.length,pct=total?Math.round(cnt.C/total*100):0;document.getElementById("pct").textContent=pct+"%";document.getElementById("bar").style.width=pct+"%";document.getElementById("stats").innerHTML=`<div class="stat c"><div class="num">${cnt.C}</div><div class="lbl">Consolidado</div></div><div class="stat ep"><div class="num">${cnt.EP}</div><div class="lbl">En proceso</div></div><div class="stat p"><div class="num">${cnt.P}</div><div class="lbl">Proyección</div></div><div class="stat na"><div class="num">${cnt.NA}</div><div class="lbl">No adquirido</div></div>`}
-async function applyBulk(){const val=document.getElementById("bulkStatus").value,a=document.getElementById("athlete").value;itemsVisible().forEach(x=>x.status[a]=val);renderTable();renderSummary();await saveCloud();toast("Cambio masivo guardado localmente")}
+async function applyBulk(){const val=document.getElementById("bulkStatus").value,a=document.getElementById("athlete").value;const lista=itemsVisible();lista.forEach(x=>x.status[a]=val);renderTable();renderSummary();await saveCloud(lista.map(x=>({id:x.id,athlete:a,val})))}
 function resetFilters(){document.getElementById("classification").value="ALL";document.getElementById("showFilter").value="all";document.getElementById("search").value="";renderTable()}
-async function saveCloud(){
-  if(!cloudReady)return;
+// Guarda en la nube SOLO los cambios indicados ({id, athlete, val}). Lee la versión más reciente
+// dentro de una transacción y aplica encima, para no pisar lo que otra persona haya guardado.
+async function saveCloud(cambios){
+  if(!cloudReady||!cambios||!cambios.length)return;
   try{
+    // Respaldo en este dispositivo (por si falla la conexión).
     const overrides={};
     db.items.forEach(item=>{
       Object.entries(item.status||{}).forEach(([athlete,val])=>{
@@ -112,14 +115,28 @@ async function saveCloud(){
       fingerprint:sourceFingerprint(),
       overrides
     }));
-    setSync("ok","Cambios locales");
-    toast("Cambios guardados en este dispositivo");
+  }catch(e){console.warn("Respaldo local no disponible:",e)}
+  setSync("busy","Guardando…");
+  try{
+    const ref=cloudDb.collection(COLLECTION).doc(DOC);
+    await cloudDb.runTransaction(async t=>{
+      const snap=await t.get(ref);
+      if(!snap.exists)throw new Error("No existe el registro de Normativos en la nube.");
+      const data=snap.data(),items=Array.isArray(data.items)?data.items:[];
+      let aplicados=0;
+      cambios.forEach(c=>{const it=items.find(x=>x.id===c.id);if(it){it.status={...(it.status||{}),[c.athlete]:c.val};aplicados++}});
+      if(!aplicados)throw new Error("No se encontró el elemento en la nube.");
+      t.set(ref,{...data,items,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    });
+    setSync("ok","Guardado en la nube");
+    toast(cambios.length>1?cambios.length+" cambios guardados en la nube":"Guardado en la nube");
   }catch(e){
     console.error(e);
     setSync("","Error al guardar");
-    alert("No se pudo guardar el respaldo local: "+e.message);
+    alert("No se pudo guardar en la nube: "+e.message+"\nEl cambio quedó solo en este dispositivo; revisa la conexión e inténtalo de nuevo.");
   }
 }
+
 async function downloadExcel(){
   try{
     if(!db || !window.JSZip) throw new Error("No se pudo preparar el archivo Excel.");
