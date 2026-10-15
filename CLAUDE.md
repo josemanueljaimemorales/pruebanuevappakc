@@ -14,7 +14,14 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - `cliente/config.js` (identidad del club), `cliente/xlsx-reader.js` (lector XLSX propio), `cliente/fuentes.js` (fuentes de datos).
 
 ## Datos
-- **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los pide a la API de Drive (carpeta "Utilidades App", IDs en `ARCHIVOS_DRIVE`); si Drive falla usa la copia del repo. Para cambiar un Excel, se actualiza en Drive (mismo ID); no hace falta subirlo al repo.
+- **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los busca **por nombre** en la carpeta "Utilidades App" (`CARPETA_DRIVE`, compartida con enlace); si no puede listarla usa los IDs fijos de `ARCHIVOS_DRIVE`, y si Drive falla, la copia del repo. Para cambiar un Excel basta subir a esa carpeta un archivo con el mismo nombre; no hace falta subirlo al repo. La app oficial todavía busca por ID hasta que se le pase este cambio.
+- Reglas de la carpeta "Utilidades App":
+  - Nombre exacto (mayúsculas, espacios, extensión); si se renombra, la app no ve la versión nueva.
+  - Con dos archivos del mismo nombre gana el modificado más recientemente; dejar uno solo por nombre.
+  - Debe seguir compartida "Cualquier persona con el enlace: lector".
+  - Nada privado ahí (todo es público con el enlace). Respaldos y datos personales van en "Respaldos AKC (privado)".
+  - No borrar los Excel con los IDs de `ARCHIVOS_DRIVE` mientras la oficial los use (p. ej. "NORMATIVOS_AKC (anterior - usa la oficial).xlsx").
+- El conector de Drive puede leer, mover, renombrar y crear archivos, pero no reemplazar el contenido de uno existente; subir Excel grandes lo hace Manu.
 - **Firebase** (proyecto `akc-con-reporte`, SDK compat 9.6.10). Colecciones: normativosAKC, rutinasAKC, calendarioAKC, mvpAKC, cargasAKC (doc `estado`) y registros (Fuerza).
 - En la app de prueba `SUFIJO_FIREBASE = "_prueba"`: todo se guarda en `<coleccion>_prueba`, nunca en los datos reales. `modulos/respaldo/` descarga un JSON de los datos reales y tiene un botón para copiarlos a modo prueba.
 - Normativos une Excel + nube por aparato+clasificación+elemento (no por fila); la nube manda y nunca se borran avances.
