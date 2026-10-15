@@ -298,3 +298,15 @@ button{border-color:var(--akc-line) !important;}
 .hero,.header{background:linear-gradient(135deg,rgba(13,25,39,.94),rgba(5,10,17,.86),rgba(29,25,18,.50)) !important;border-color:rgba(184,195,207,.20) !important;box-shadow:0 20px 60px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.07),0 0 0 1px rgba(201,170,98,.05);}
 button,.btn,.button{background-image:linear-gradient(145deg,rgba(31,44,59,.92),rgba(8,14,22,.92)) !important;}
 button:hover,.btn:hover,.button:hover{border-color:rgba(201,170,98,.50) !important;box-shadow:0 12px 32px rgba(0,0,0,.35),0 0 22px rgba(43,157,255,.12) !important;}
+
+
+/* ===== Obligatorios: rutina que presenta el atleta ===== */
+.obl-ap{cursor:pointer}
+.obl-ap:hover td,.obl-ap:active td{background:rgba(0,198,255,.12)}
+.obl-ver{color:#00c6ff;font-weight:700;margin-left:4px}
+.obl-tip{opacity:.75;font-size:14px;margin:10px 12px}
+.obl-rutina td{text-align:left;vertical-align:top}
+.obl-rutina td small{display:block;opacity:.75;font-size:12px;margin-top:2px}
+.obl-ck{width:28px;text-align:center!important;font-weight:700}
+.obl-be td{color:#7ee787}
+.obl-off td{opacity:.45}

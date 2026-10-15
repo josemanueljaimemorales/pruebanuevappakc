@@ -4,6 +4,11 @@ let DIFICULTAD = {};
 let GRUPOS = {};
 let OBL = [];
 let CLOUD = null;
+let OBL_RUT = null; // obligatorios.json: rutinas oficiales por nivel y aparato
+async function loadOblRutinas(){
+  try{ const r = await fetch('./obligatorios.json', {cache:'no-cache'}); if(r.ok) OBL_RUT = await r.json(); }
+  catch(err){ console.error('No se pudo cargar obligatorios.json', err); }
+}
 const FB_CONFIG = {apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 const AP_ORDER = ['PISO','ARZON','ANILLOS','SALTO','PARALELAS','FIJA'];
 async function loadCloud(){
@@ -47,7 +52,7 @@ async function loadExcel(){
     DIFICULTAD = indexByFirstColumn(diffRows);
     GRUPOS = indexByFirstColumn(groupRows);
 
-    await loadCloud();
+    await Promise.all([loadCloud(), loadOblRutinas()]);
     if(!data.length && !CLOUD) throw new Error('La hoja BASEAPPRUTINAS está vacía.');
     showHome();
   }catch(err){
@@ -159,7 +164,7 @@ function showObligatorioDetalle(name){
   const ov = oblVistaCloud();
   if(ov && ov.atletas[name]){
     const x = ov.atletas[name], f = v => Number(v).toFixed(1);
-    const fila = (lbl, ap) => `<tr><td>${lbl}</td><td>${f(x.np[ap])}</td><td>${escapeHtml((x.be[ap]||[]).join(', ')) || (ap==='SALTO' ? escapeHtml(x.salto||'') : '-')}</td></tr>`;
+    const fila = (lbl, ap) => `<tr class="obl-ap" data-action="oblAparato" data-athlete="${escapeHtml(name)}" data-value="${ap}"><td>${lbl} <span class="obl-ver">›</span></td><td>${f(x.np[ap])}</td><td>${escapeHtml((x.be[ap]||[]).join(', ')) || (ap==='SALTO' ? escapeHtml(x.salto||'') : '-')}</td></tr>`;
     screen.innerHTML = `
       <div class="back" data-action="obligatorios">⬅️</div>
       <h2>${escapeHtml(name)}</h2>
@@ -168,7 +173,8 @@ function showObligatorioDetalle(name){
       <table class="table">
         <tr><th>Aparato</th><th>Nota de partida</th><th>Bonificaciones</th></tr>
         ${fila('Piso','PISO')}${fila('Hongo / Arzón','ARZON')}${fila('Anillo','ANILLOS')}${fila('Salto','SALTO')}${fila('Paralela','PARALELAS')}${fila('Fija','FIJA')}
-      </table>`;
+      </table>
+      <p class="obl-tip">Toca un aparato para ver la rutina que va a presentar.</p>`;
     return;
   }
   const r = OBL.find(x=>norm(x.NOMBRE || Object.values(x)[0])===norm(name));
@@ -189,6 +195,50 @@ function showObligatorioDetalle(name){
     </table>`;
 }
 
+const OBL_LABEL = {PISO:'Piso', ARZON:'Hongo / Arzón', ANILLOS:'Anillo', SALTO:'Salto', PARALELAS:'Paralela', FIJA:'Fija'};
+/* Rutina obligatoria que presenta el atleta en un aparato.
+   Misma lógica que la hoja impresa del editor: ✓ realizado, ↺ reemplazado por una BE, ✗ no realizado;
+   de las bonificaciones (BE) solo se muestran las que el atleta hace. */
+function showObligatorioAparato(name, ap){
+  const ov = oblVistaCloud();
+  const x = ov && ov.atletas[name];
+  const a = CLOUD && CLOUD.obligatorios && CLOUD.obligatorios.atletas && CLOUD.obligatorios.atletas[name];
+  if(!x){ return showObligatorios(); }
+  const nivel = String(x.nivel ?? (a && a.nivel) ?? '');
+  const f = v => Number.isFinite(Number(v)) ? Number(v).toFixed(1) : '-';
+  let html = `<div class="back" data-action="obligatorio" data-value="${escapeHtml(name)}">⬅️</div>
+    <h2>${escapeHtml(name)} - ${escapeHtml(OBL_LABEL[ap] || ap)}</h2>
+    <div class="np">Nivel ${escapeHtml(nivel)} · Nota de partida: ${f(x.np && x.np[ap])}</div>`;
+
+  if(ap === 'SALTO'){
+    const op = OBL_RUT && OBL_RUT.salto && (OBL_RUT.salto[nivel] || []).find(s => s[1] === x.salto || s[0] === (a && a.salto));
+    html += `<table class="table"><tr><th>Salto que presenta</th><th>Valor</th></tr>
+      <tr><td>${escapeHtml(x.salto || (op && op[1]) || '-')}</td><td>${op ? f(op[2]) : f(x.np && x.np.SALTO)}</td></tr></table>`;
+    screen.innerHTML = html; return;
+  }
+
+  const lista = OBL_RUT && OBL_RUT.rut && OBL_RUT.rut[nivel] && OBL_RUT.rut[nivel][ap];
+  if(!lista || !lista.length){
+    screen.innerHTML = html + `<div class="card"><p>No hay rutina oficial registrada para nivel ${escapeHtml(nivel)} en este aparato.</p></div>`;
+    return;
+  }
+  // Palomeos del editor; si el atleta aún no tiene, se toma la rutina base completa (sin BE).
+  let m = a && a.m && a.m[ap];
+  if(!m || !Object.keys(m).length){ m = {}; lista.forEach(z => { if(z.v == null) m[z.id] = true; }); }
+  const repl = new Set(lista.filter(z => z.v != null && m[z.id]).flatMap(z => z.rep || []));
+  html += `<table class="table obl-rutina"><tr><th></th><th>#</th><th>Elemento</th></tr>`;
+  lista.forEach(z => {
+    const be = z.v != null, done = !!m[z.id];
+    if(be && !done) return;
+    const mark = done ? '✓' : (repl.has(z.id) ? '↺' : '✗');
+    const cls = done ? (be ? 'obl-be' : '') : 'obl-off';
+    const nota = be ? (z.rep ? `<small>Reemplaza #${z.rep.join(' y #')} · +${Number(z.v).toFixed(1)}</small>` : `<small>Se agrega · +${Number(z.v).toFixed(1)}</small>`) : '';
+    html += `<tr class="${cls}"><td class="obl-ck">${mark}</td><td>${be ? escapeHtml(z.id) : '#' + escapeHtml(z.id)}</td><td>${escapeHtml(z.t)}${nota}</td></tr>`;
+  });
+  html += `</table><p class="obl-tip">✓ realiza · ↺ lo reemplaza una bonificación · ✗ no lo realiza</p>`;
+  screen.innerHTML = html;
+}
+
 screen.addEventListener('click', e=>{
   const el = e.target.closest('[data-action]');
   if(!el) return;
@@ -201,6 +251,7 @@ screen.addEventListener('click', e=>{
   if(action==='apparatus') return showRutina(el.dataset.athlete, el.dataset.value);
   if(action==='apparatusList') return showAparatos(el.dataset.athlete);
   if(action==='obligatorio') return showObligatorioDetalle(el.dataset.value);
+  if(action==='oblAparato') return showObligatorioAparato(el.dataset.athlete, el.dataset.value);
 });
 
 loadExcel();

@@ -21,6 +21,9 @@
 <p>Lee todo lo guardado en la app (Normativos, Rutinas, Calendario, MVP, Cargas y registros de Fuerza) y lo descarga en un solo archivo JSON. Solo lectura: no modifica nada.</p>
 <table><thead><tr><th>Colección</th><th>Documentos</th><th>Última actualización</th><th>Estado</th></tr></thead><tbody id="tb"></tbody></table>
 <button id="btn" disabled>Leyendo nube…</button>
+<p style="margin-top:22px">Solo app de prueba: copia los datos reales a las colecciones <b>…_prueba</b> para probar con información real. No modifica los datos reales.</p>
+<button id="copiar" disabled style="background:#d29922;color:#000">Copiar datos reales a modo prueba</button>
+<p id="msg" style="margin-top:10px"></p>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
@@ -65,6 +68,23 @@ function ultimaFecha(docs){
     }
   }
   btn.disabled=false;btn.textContent="Descargar respaldo JSON";
+  const cp=document.getElementById("copiar"),msg=document.getElementById("msg");
+  cp.disabled=false;
+  cp.onclick=async()=>{
+    cp.disabled=true;let n=0;
+    try{
+      for(const c of COLECCIONES){
+        const docs=respaldo.colecciones[c]; if(!Array.isArray(docs)) continue;
+        for(const d of docs){
+          // Se copia cada documento tal cual, leido de nuevo de la nube.
+          const snap=await db.collection(c).doc(d.id).get();
+          await db.collection(c+"_prueba").doc(d.id).set(snap.data()); n++;
+          msg.textContent=`Copiando… ${n} documentos`;
+        }
+      }
+      msg.innerHTML=`<span class="ok">Listo: ${n} documentos copiados a modo prueba.</span>`;
+    }catch(e){msg.innerHTML=`<span class="err">Error: ${e.message||e}</span>`;cp.disabled=false;}
+  };
   btn.onclick=()=>{
     const f=new Date(),dd=String(f.getDate()).padStart(2,"0"),mm=String(f.getMonth()+1).padStart(2,"0");
     const blob=new Blob([JSON.stringify(respaldo,null,1)],{type:"application/json"});
