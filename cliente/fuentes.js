@@ -24,8 +24,8 @@
   const COLECCIONES = ["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros"];
   // Nombre exacto del archivo que pide la app -> ID del archivo en Drive (carpeta "Utilidades App")
   const ARCHIVOS_DRIVE = {
-    "MACRO_26_27.xlsx":                        "1wcz-A9Lnypc-WeaiZqP7CYkNn8RNcd4D",
-    "ASIGNACION DE COMPETENCIAS.xlsx":         "1eHHr51yXsHSe9ZjyxCVlpQjVXJH50pS1",
+    "MACRO_26_27.xlsx":                        "1EykSlwYmfnoMYu2fjT9mEbFeQ6R4HqfF",
+    "ASIGNACION DE COMPETENCIAS.xlsx":         "1GBEaO_sKOpd2zjIqC4CqUyG6ZXez5jkH",
     "AKC.xlsx":                                "1rNobFppHPP9gQBpy7NRGJ_yUj0Xn1pQP",
     "AKC_FuerzaFIG.xlsx":                      "1t4CpjnNAKponpJIKK_GF57LEu29BxEtj",
     "trabajo_gav.xlsx":                        "12DcvEwFns3Kf8f99qM-LA0wsqHluCuNj",
