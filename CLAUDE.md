@@ -7,6 +7,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - `pruebanuevappakc` = **app de prueba**. Todo cambio nuevo se hace y se prueba aquí primero.
 - `GAV-APP-AKC` = **app oficial**. No se toca hasta que Manu diga que lo de prueba ya funciona ("pásalo a la oficial").
 - Al pasar a la oficial: copiar los cambios y poner `SUFIJO_FIREBASE = ""` en `cliente/fuentes.js`.
+- Antes de pasar a la oficial, comparar la oficial actual contra el commit "base: espejo de GAV-APP-AKC" (6ee5541): si cambió algo allá (p. ej. `modulos/mvp/app.js` con fotos en `foto1`/`foto2`), integrarlo, no sobrescribirlo. Nunca copiar archivos de prueba encima sin revisar.
 
 ## Estructura
 - `index.html` + `script.js`: menú principal; cada módulo vive en `modulos/<nombre>/`.
