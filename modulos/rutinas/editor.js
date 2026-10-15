@@ -427,6 +427,7 @@ function renderList(){
     h+=`<button class="card" data-act="open" data-v="${esc(n)}"><span><b>${esc(n)}</b><span class="lv">${esc(a.nivel)}</span></span><span class="aa">${f1(t.aa)}${APS.reduce((x,[k])=>x+nAv(t[k]),0)?`<small class="warn"> ⚠${APS.reduce((x,[k])=>x+nAv(t[k]),0)}</small>`:''}</span></button>`;}
   h+=`</div><div class="actions"><button class="btn" data-act="export">Descargar Excel actualizado</button></div>`;
   h+=`<div class="actions printbar"><button class="btn" data-act="print">Imprimir rutinas</button><small>Una hoja tamaño carta horizontal por atleta. En el diálogo elige "Guardar como PDF".</small></div>`;
+  h+=`<div class="actions printbar"><button class="btn" data-act="dprint">Imprimir división (grupal)</button><small>Para que los atletas aprendan su rutina: por nivel, hasta 6 atletas por hoja, con 1er enlace, 2do enlace y enlace a salir.</small></div>`;
   root.innerHTML=h;
 }
 function metaLine(r,res,i){
@@ -533,6 +534,7 @@ root.addEventListener('click',e=>{
   if(act==='delno'){ui.delAsk=null;return render();}
   if(act==='delok'){const nm=ui.delAsk;delete S.atletas[nm];ORDER=ORDER.filter(x=>x!==nm);S.bajas=[...new Set([...(S.bajas||[]),nm])];ui.delAsk=null;save();return render();}
   if(act==='print')return printAll();
+  if(act==='dprint')return printAll(divPrintHTML,DIV_PREF);
   if(act==='edit'){ui.open=ui.open===i?-1:i;ui.replace=-1;ui.q='';return render();}
   if(act==='up'&&i>0){[rows[i-1],rows[i]]=[rows[i],rows[i-1]];ui.open=-1;save();return render();}
   if(act==='down'&&i<rows.length-1){[rows[i+1],rows[i]]=[rows[i],rows[i+1]];ui.open=-1;save();return render();}
@@ -689,8 +691,8 @@ root.addEventListener('change',e=>{
 /* ---------- imprimir ---------- */
 const AP_NAME={PISO:'Piso',ARZON:'Arzón',ANILLOS:'Anillos',SALTO:'Salto',PARALELAS:'Paralelas',FIJA:'Fija'};
 let PRINT_PREF='Rutinas AKC';
-function printAll(build){
-  PRINT_PREF=typeof build==='function'?'Obligatorios AKC':'Rutinas AKC';
+function printAll(build,pref){
+  PRINT_PREF=pref||(typeof build==='function'?'Obligatorios AKC':'Rutinas AKC');
   let area=document.getElementById('printArea');
   if(!area){area=document.createElement('div');area.id='printArea';document.body.appendChild(area);}
   const fecha=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
@@ -715,7 +717,7 @@ function printAll(build){
   area.innerHTML=h;
   const imgs=[...area.querySelectorAll('img')];
   Promise.all(imgs.map(im=>im.complete?1:new Promise(r=>{im.onload=im.onerror=r;}))).then(()=>{
-    fitOblSheets(area);
+    fitOblSheets(area);fitDivSheets(area);
     const prev=document.title, d=new Date(); document.title=`${PRINT_PREF} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
     window.print(); setTimeout(()=>{document.title=prev;},1000);});
 }
@@ -744,6 +746,40 @@ function fitOblSheets(area){
     // Verificación final: si con la letra elegida no cabe, se baja poco a poco hasta que quepa.
     while(acomodar(lo)>alto&&lo>6)lo-=0.25;
   });
+  area.classList.remove('measuring');
+}
+/* ---------- División de rutinas (impresión grupal para que los atletas aprendan su rutina) ---------- */
+const DIV_PREF='División de rutinas AKC';
+const DIV_GRUPOS=[['Nivel 7 y 8',['N7','N8']],['Nivel 9',['N9']],['Nivel 10',['N10']],['FIG',['FIG']]];
+const DIV_AP={PISO:'PISO',ARZON:'ARZONES',ANILLOS:'ANILLOS',SALTO:'SALTO DE CABALLO',PARALELAS:'PARALELAS',FIJA:'FIJA'};
+// Con 8 elementos: 1er enlace 1-3, 2do enlace 3-6, enlace a salir 6-8 (con otro número se ajusta igual).
+function divBloques(n){if(n<4)return[];const b=[['1er enlace',1,3,'d1']];if(n-2>3)b.push(['2do enlace',3,n-2,'d2']);b.push(['Enlace a salir',n-2,n,'d3']);return b;}
+function divPrintHTML(fecha){
+  let h='';
+  for(const [titulo,niveles] of DIV_GRUPOS){
+    const at=ORDER.filter(n=>S.atletas[n]&&niveles.includes(S.atletas[n].nivel));
+    const POR=6;for(let p=0;p<at.length;p+=POR){const grupo=at.slice(p,p+POR);
+      h+=`<section class="sheet dsheet"><header class="dh"><img src="logo.png" alt=""><div><h1>División de rutinas · ${esc(titulo)}</h1><p>${esc(fecha)}${at.length>POR?` · hoja ${p/POR+1} de ${Math.ceil(at.length/POR)}`:''}</p></div></header><div class="dgrid" style="grid-template-columns:repeat(${Math.max(4,grupo.length)},minmax(0,1fr))">`;
+      for(const n of grupo){const a=S.atletas[n];
+        h+=`<div class="dcol"><div class="dname">${esc(n)}</div>`;
+        for(const [ap] of APS){const rows=(a.r[ap]||[]).map(r=>r.n);const salto=ap==='SALTO';
+          h+=`<div class="dap"><div class="dt">${DIV_AP[ap]}</div><div class="dhd${salto?' solo':''}"><span>NOMBRE</span>${salto?'':'<span>DIVISIÓN</span>'}</div><div class="dbody${salto?' solo':''}">`;
+          (rows.length?rows:['—']).forEach((nm,i)=>{h+=`<div class="de" style="grid-row:${i+1}">${esc(nm)}</div>`;});
+          if(!salto)divBloques(rows.length).forEach(([t,x,y,c])=>{h+=`<div class="db ${c}" style="grid-row:${x}/${y+1}"><span>${t}</span></div>`;});
+          h+=`</div></div>`;}
+        h+=`</div>`;}
+      h+=`</div></section>`;}
+  }
+  return h||'<section class="sheet dsheet"><p>No hay atletas.</p></section>';
+}
+// Letra más grande con la que cada hoja de división cabe en una carta vertical.
+function fitDivSheets(area){
+  const sheets=area.querySelectorAll('.dsheet');if(!sheets.length)return;
+  const pxmm=96/25.4, alto=263.4*pxmm*0.98;
+  area.classList.add('measuring');
+  sheets.forEach(sh=>{let lo=6,hi=15;
+    for(let k=0;k<12;k++){const mid=(lo+hi)/2;sh.style.setProperty('--fs',mid+'px');if(sh.getBoundingClientRect().height<=alto)lo=mid;else hi=mid;}
+    sh.style.setProperty('--fs',lo+'px');while(sh.getBoundingClientRect().height>alto&&lo>5){lo-=.25;sh.style.setProperty('--fs',lo+'px');}});
   area.classList.remove('measuring');
 }
 function oblPrintHTML(fecha){

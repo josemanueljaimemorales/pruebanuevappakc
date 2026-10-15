@@ -192,3 +192,28 @@ button{cursor:pointer}
   #printArea :is(.osheet,.fsheet){break-after:page;page-break-after:always}
   #printArea :is(.osheet,.fsheet):last-child{break-after:auto;page-break-after:auto}
 }
+
+/* ===== División de rutinas (impresión grupal, carta vertical) ===== */
+#printArea .dsheet{--fs:10px;page:divp;width:199.9mm;font-family:Calibri,'Segoe UI',Arial,sans-serif;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#printArea .dsheet .dh{display:flex;align-items:center;gap:10px;border-bottom:2px solid #1b3a5c;padding-bottom:4px;margin-bottom:5px}
+#printArea .dsheet .dh img{height:34px;width:auto}
+#printArea .dsheet .dh h1{margin:0;font-size:16px}
+#printArea .dsheet .dh p{margin:0;font-size:10px;color:#444}
+#printArea .dsheet .dgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2.5mm;align-items:start}
+#printArea .dsheet .dname{border:1.5px solid #000;text-align:center;font-size:calc(var(--fs)*1.8);line-height:1.15;padding:1px 2px;margin-bottom:1.5mm;overflow-wrap:anywhere}
+#printArea .dsheet .dap{border:1.5px solid #000;margin-bottom:2mm;break-inside:avoid}
+#printArea .dsheet .dt{background:#a8d08e;text-align:center;font-weight:800;font-style:italic;font-size:calc(var(--fs)*1.25);border-bottom:1px solid #000}
+#printArea .dsheet .dhd{display:grid;grid-template-columns:1fr 3.4em;background:#ffd865;font-size:calc(var(--fs)*.85);text-align:center;border-bottom:1px solid #000}
+#printArea .dsheet .dhd.solo{grid-template-columns:1fr}
+#printArea .dsheet .dbody{display:grid;grid-template-columns:minmax(0,1fr) 1.15em 1.15em 1.15em}
+#printArea .dsheet .dbody.solo{grid-template-columns:minmax(0,1fr)}
+#printArea .dsheet .de{grid-column:1;background:#d0cece;border-bottom:1px solid #fff;text-align:center;font-size:var(--fs);line-height:1.25;padding:1px 2px;overflow-wrap:anywhere}
+#printArea .dsheet .db{writing-mode:vertical-rl;transform:rotate(180deg);font-size:calc(var(--fs)*.6);display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;border-left:1px solid #fff}
+#printArea .dsheet .d1{grid-column:2;background:#ddebf7}
+#printArea .dsheet .d2{grid-column:3;background:#8ea9db}
+#printArea .dsheet .d3{grid-column:4;background:#00b0f0}
+@media print{
+  @page divp{size:letter portrait;margin:8mm}
+  #printArea .dsheet{break-after:page;page-break-after:always}
+  #printArea .dsheet:last-child{break-after:auto;page-break-after:auto}
+}
