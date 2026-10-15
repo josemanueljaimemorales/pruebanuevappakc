@@ -19,6 +19,8 @@ const r1=x=>Math.round(x*10+1e-9)/10;
 const f1=x=>(Math.round(x*10+1e-9)/10).toFixed(1);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function nk(s){return String(s??'').replace(/½/g,' 1/2 ').replace(/¼/g,' 1/4 ').replace(/¾/g,' 3/4 ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9/]+/g,' ').trim();}
+// Piso: elementos que cubren la balanza en una pierna (planchas I.61/I.62, arabesca, flick facial o salto con giro a facial).
+const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|ck|k)( flac)? facial|salto( con)?( [a-z0-9/]+)? giro a facial) /.test(' '+nk(r.n)+' ');
 const nameKey=v=>String(v??'').toUpperCase().replace(/\s+/g,'');
 function normLevel(v){v=String(v||'').toUpperCase().replace(/\s+/g,'');if(v==='NFIG'||v==='FIG')return'FIG';const m=v.match(/^N?(7|8|9|10)$/);return m?'N'+m[1]:'FIG';}
 function table(ap,nivel){return nivel==='N8'&&ap==='ARZON'?'N8ARZON':'FIG';}
@@ -318,7 +320,6 @@ function compute(ap,rows,nivel,plantada,opt){
     }
     // Balanza en una pierna: la cubren las planchas I.61/I.62 o cualquier elemento llamado arabesca,
     // flick facial o salto con giro a facial (cuente o no entre los 8). Si no hay, se puede marcar en la coreografía.
-    const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|ck|k)( flac)? facial|salto( con)?( [a-z0-9/]+)? giro a facial) /.test(' '+nk(r.n)+' ');
     if(!rows.some(esBalanza)&&!(opt&&opt.balPiso)){res.nd=r1(res.nd+.3);res.notes.push('Sin balanza en una pierna (arabesca, flick facial, salto con giro a facial o plancha I.61/I.62): -0.3 del jurado D. Agrégala como elemento (cuente o no entre los 8) o marca que la tiene en la coreografía.');}
   }
   if(ap==='ANILLOS'&&!usagN&&rows.length){
@@ -436,7 +437,8 @@ function renderAthlete(){
     h+=`<div class="metrics"><div><b>${f1(res.dv)}</b><small>Dificultad</small></div><div><b>${f1(res.eg)}</b><small>Grupos</small></div><div><b>${f1(res.cv)}</b><small>Conexión</small></div><div><b>${f1(res.bon)}</b><small>Bonos</small></div><div><b>${res.nd?'-'+f1(res.nd):'0.0'}</b><small>Ded. jurado D</small></div></div>`;
     h+=`<div class="chips">${res.egDet.map(d=>`<span class="chip ${d.hit?'hit':'miss'}">${d.sal?'Salida':'Grupo '+ROM[d.g]}${d.v!=null?' '+d.v.toFixed(1):''}</span>`).join('')}</div>`;
     if(a.nivel!=='N7')h+=`<label class="opt"><input type="checkbox" data-act="plant" ${a.p?.[ui.ap]?'checked':''}> Salida plantada (bono)</label>`;
-    if(ui.ap==='PISO')h+=`<label class="opt"><input type="checkbox" data-act="balpiso" ${a.p?.balPiso?'checked':''}> Tiene balanza en una pierna en la coreografía (fuera de los 8)</label>`;
+    // La casilla solo se muestra si la rutina no tiene ya un elemento de balanza.
+    if(ui.ap==='PISO'&&!(a.r.PISO||[]).some(esBalanza))h+=`<label class="opt"><input type="checkbox" data-act="balpiso" ${a.p?.balPiso?'checked':''}> Tiene balanza en una pierna en la coreografía (fuera de los 8)</label>`;
   }else h+=`<div class="metrics"><div><b>${res.vaults[0]?res.vaults[0].v.toFixed(1):'-'}</b><small>Salto 1</small></div><div><b>${res.vaults[1]?res.vaults[1].v.toFixed(1):'-'}</b><small>Salto 2</small></div>${res.avg!=null?`<div><b>${f1(res.avg)}</b><small>Promedio final</small></div>`:''}</div>`;
   if(res.notes.length||res.enotes?.length){h+=`<div class="avisos"><b>Avisos (${(new Set(res.notes)).size+(res.enotes?.length||0)})</b>`;
     if(res.notes.length)h+=`<ul class="notes">${[...new Set(res.notes)].map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`;
