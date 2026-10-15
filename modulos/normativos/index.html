@@ -6,13 +6,77 @@
 <meta name="theme-color" content="#07111f">
 <title>Normativos · Plataforma del gimnasio</title>
 <style>
-:root{--navy:#07111f;--navy2:#0b1b30;--blue:#1266c9;--blue2:#1b82ef;--gold:#c6a15b;--ink:#17202b;--muted:#667085;--line:#dfe5ec;--soft:#f5f7fa;--white:#fff;--green:#087f35;--greenbg:#eaf7ef;--yellow:#a87800;--yellowbg:#fff7dc;--purple:#3657b7;--purplebg:#eef2ff;--red:#a91515;--redbg:#fdecec;--shadow:0 10px 30px rgba(7,17,31,.08)}
-*{box-sizing:border-box}body{margin:0;background:#f3f6f9;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}button,input,select{font:inherit}button{cursor:pointer}
-.top{background:linear-gradient(135deg,var(--navy),#102b49);color:#fff;position:sticky;top:0;z-index:30;box-shadow:0 4px 18px rgba(0,0,0,.18)}.topin{max-width:1280px;margin:auto;padding:10px 18px;display:flex;align-items:center;gap:15px}.logo{width:58px;height:58px;border-radius:14px;object-fit:contain;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:5px}.brand h1{font-size:17px;letter-spacing:.4px;margin:0;font-weight:800}.brand p{margin:3px 0 0;color:#b9c8d9;font-size:11px}.sync{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800}.dot{width:9px;height:9px;border-radius:50%;background:#a91515}.dot.ok{background:#22c55e}.dot.busy{background:#f59e0b}.topactions{display:flex;gap:7px}.topactions button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px}
-.wrap{max-width:1280px;margin:auto;padding:18px}.grid{display:grid;grid-template-columns:310px 1fr;gap:16px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.pad{padding:16px}.sectiontitle{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#738092;font-weight:800;margin-bottom:10px}label{display:block;font-size:11px;font-weight:700;color:#667085;margin:0 0 5px}select,input{width:100%;border:1px solid #d6dde6;background:#fff;border-radius:9px;padding:10px 11px;color:var(--ink);outline:none}select:focus,input:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(27,130,239,.12)}.athleteName{font-size:20px;font-weight:850;margin:3px 0 12px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}.meta .box{background:var(--soft);border-radius:10px;padding:9px}.meta .k{font-size:9px;text-transform:uppercase;color:#7b8796;font-weight:800}.meta .v{font-size:12px;font-weight:700;margin-top:3px}.appnav{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.appnav button{text-align:left;border:1px solid var(--line);background:#fff;color:#344054;border-radius:10px;padding:10px;font-size:11px;font-weight:750}.appnav button.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 5px 12px rgba(7,17,31,.15)}.progress{margin-top:15px}.bar{height:9px;border-radius:99px;background:#e8edf2;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));border-radius:99px}.prow{display:flex;justify-content:space-between;font-size:11px;color:#667085;margin-bottom:6px}.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.stat{border-radius:10px;padding:9px;border:1px solid var(--line)}.stat .num{font-size:18px;font-weight:850}.stat .lbl{font-size:9px;text-transform:uppercase;font-weight:800;color:#697586}.stat.c{background:var(--greenbg);color:var(--green)}.stat.ep{background:var(--yellowbg);color:var(--yellow)}.stat.p{background:var(--purplebg);color:var(--purple)}.stat.na{background:var(--redbg);color:var(--red)}
-.mainhead{padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.mainhead h2{margin:0;font-size:20px}.mainhead p{margin:4px 0 0;color:var(--muted);font-size:11px}.actions{display:flex;gap:7px;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:9px 12px;font-weight:800;font-size:11px}.btn.primary{background:var(--blue);color:#fff}.btn.dark{background:var(--navy);color:#fff}.btn.light{background:#eef2f6;color:#263242}.btn.gold{background:var(--gold);color:#fff}.btn.red{background:#a91515;color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}.filters{padding:13px 16px;background:#fafbfc;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:8px}.bulk{margin:13px 16px;padding:11px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.tablewrap{margin:0 16px 16px;border:1px solid var(--line);border-radius:11px;overflow:auto;max-height:66vh}table{width:100%;border-collapse:separate;border-spacing:0;min-width:720px}th{position:sticky;top:0;background:#f4f7fa;color:#596579;font-size:10px;text-transform:uppercase;letter-spacing:.05em;text-align:left;padding:10px;border-bottom:1px solid var(--line);z-index:2}td{padding:9px 10px;border-bottom:1px solid #edf0f3;font-size:12px}tr:last-child td{border-bottom:0}.group td{background:#edf2f7;color:#344054;font-weight:850;font-size:10px;text-transform:uppercase;letter-spacing:.04em}.status{font-weight:800;min-width:175px}.row-c td:first-child{border-left:3px solid var(--green)}.row-ep td:first-child{border-left:3px solid var(--yellow)}.row-p td:first-child{border-left:3px solid var(--purple)}.row-na td:first-child{border-left:3px solid var(--red)}.notice{margin-top:12px;color:#667085;font-size:10px;line-height:1.45}.toast{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;padding:11px 14px;border-radius:10px;box-shadow:var(--shadow);display:none;z-index:100;font-size:12px;font-weight:800}.empty{padding:28px;text-align:center;color:#7b8796;font-size:12px}.modal{position:fixed;inset:0;background:rgba(7,17,31,.58);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}.modal.show{display:flex}.modalbox{width:min(520px,100%);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:20px}.modalbox h3{margin:0 0 5px}.modalbox p{font-size:12px;color:#667085;margin:0 0 15px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modalactions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.dangerbox{border:1px solid #f2c4c4;background:#fff5f5;border-radius:10px;padding:12px;margin-top:10px}.dangerbox strong{color:#a91515}.adminrow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
-@media(max-width:900px){.grid{grid-template-columns:1fr}.tablewrap{max-height:none}.filters{grid-template-columns:1fr 1fr}}@media(max-width:560px){.wrap{padding:10px}.topin{padding:9px 12px}.brand h1{font-size:14px}.logo{width:54px;height:54px}.sync span{display:none}.topactions{display:none}.filters{grid-template-columns:1fr}.bulk{grid-template-columns:1fr}.mainhead{align-items:flex-start;flex-direction:column}.appnav{grid-template-columns:1fr 1fr}.tablewrap{margin:0 10px 10px}.bulk{margin:10px}.formgrid{grid-template-columns:1fr}}
-@media print{body{background:#fff}.top{position:static;box-shadow:none}.topactions,.filters,.bulk,.actions,.appnav,.notice,.sync{display:none!important}.grid{display:block}.panel{box-shadow:none;border:0}.mainhead{border-bottom:2px solid #111}.tablewrap{max-height:none;overflow:visible;margin:0}th{position:static}}
+:root{--bg:#0b1420;--ink:#14202e;--muted:#5b6878;--line:#dbe2ea;--soft:#f4f7fa;--blue:#1266c9;--gold:#c9aa62;
+--c:#0f7a36;--cbg:#e6f6ec;--ep:#9a6b00;--epbg:#fff4d6;--p:#3150b0;--pbg:#ebefff;--na:#b42318;--nabg:#fdeceb}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+ background:radial-gradient(circle at 50% -8%,rgba(43,157,255,.16),transparent 32%),linear-gradient(145deg,#03070d,#0b1420 55%,#05090f)}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid #58b0ff;outline-offset:2px}
+.top{position:sticky;top:0;z-index:30;background:linear-gradient(110deg,#070d15,#182330,#2a2419);border-bottom:1px solid rgba(201,170,98,.35);color:#fff}
+.topin{max-width:1100px;margin:auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.logo{width:48px;height:48px;border-radius:12px;flex:none;overflow:hidden}
+.brand{min-width:0}.brand h1{margin:0;font-size:18px;font-weight:850;letter-spacing:.02em}.brand p{margin:1px 0 0;color:#b9c8d9;font-size:12px}
+.sync{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:6px 11px;border-radius:999px;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:#ef4444;flex:none}.dot.ok{background:#22c55e}.dot.busy{background:#f59e0b}
+.topbtn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:700;white-space:nowrap}
+.topbtn:hover{background:rgba(255,255,255,.16)}
+.wrap{max-width:1100px;margin:auto;padding:16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);margin-bottom:14px}
+.pad{padding:16px 18px}
+.step{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 7px}
+.pick{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:18px;align-items:start}.pick>div{min-width:0}
+#athlete{width:100%;font-size:18px;font-weight:750;padding:11px 12px;border:2px solid var(--line);border-radius:12px;background:#fff}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.tab{flex:1 0 auto;min-width:92px;border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 10px;text-align:left}
+.tab b{display:block;font-size:15px}.tab small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.tab:hover{border-color:#9fb4cc}
+.tab[aria-selected="true"]{background:#0b1b30;border-color:#0b1b30;color:#fff}.tab[aria-selected="true"] small{color:#c9d6e6}
+.sumhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 14px}
+.sumhead h2{margin:0;font-size:22px}.sumhead p{margin:0;font-size:15px;color:var(--muted)}.sumhead p b{color:var(--ink)}
+.stack{display:flex;height:14px;border-radius:99px;overflow:hidden;background:#e8edf2;margin:12px 0}
+.stack i{display:block;height:100%}.stack .c{background:var(--c)}.stack .ep{background:#d4a017}.stack .p{background:var(--p)}.stack .na{background:var(--na)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:750;display:inline-flex;align-items:center;gap:7px}
+.chip .sw{width:12px;height:12px;border-radius:3px}
+.chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:#fff}
+.legend{margin:12px 0 0;padding:10px 12px;background:var(--soft);border-radius:10px;font-size:13px;color:var(--muted);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}
+.legend b{color:var(--ink)}
+.tools{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+.tools select,.tools input{width:100%;border:2px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;font-size:15px}
+.linkbtn{border:0;background:none;color:var(--blue);font-weight:750;padding:10px 4px;white-space:nowrap}
+.count{font-size:13px;color:var(--muted);margin:12px 0 0}
+details.bulk{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+details.bulk summary{cursor:pointer;font-weight:750;color:var(--muted);font-size:14px}
+.bulkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;font-size:14px}
+.bulkrow select{border:2px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;font-size:14px;background:var(--gold);color:#1b1404}
+.group{padding:10px 18px;background:#eef2f7;font-size:13px;font-weight:850;letter-spacing:.05em;text-transform:uppercase;color:#344054;border-top:1px solid var(--line)}
+.card .group:first-child{border-radius:16px 16px 0 0;border-top:0}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;padding:10px 18px;border-top:1px solid #edf1f5;border-left:5px solid transparent}
+.row.st-C{border-left-color:var(--c)}.row.st-EP{border-left-color:#d4a017}.row.st-P{border-left-color:var(--p)}.row.st-NA{border-left-color:var(--na)}
+.name{font-size:16px;font-weight:650}
+.seg{display:grid;grid-template-columns:repeat(4,auto);gap:6px}
+.sb{min-height:40px;border:2px solid var(--line);background:#fff;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:750;color:#475467;white-space:nowrap}
+.sb:hover{border-color:#98a2b3}
+.sb.C[aria-pressed="true"]{background:var(--c);border-color:var(--c);color:#fff}
+.sb.EP[aria-pressed="true"]{background:#d4a017;border-color:#d4a017;color:#1f1600}
+.sb.P[aria-pressed="true"]{background:var(--p);border-color:var(--p);color:#fff}
+.sb.NA[aria-pressed="true"]{background:var(--na);border-color:var(--na);color:#fff}
+.empty{padding:30px 18px;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#0b1b30;color:#fff;padding:11px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none;z-index:100;font-size:14px;font-weight:750}
+.printtitle{display:none}
+@media(max-width:820px){.pick{grid-template-columns:minmax(0,1fr)}.tools{grid-template-columns:1fr 1fr}.tools .linkbtn{grid-column:1/-1;justify-self:start;padding:0}}
+@media(max-width:640px){
+ .wrap{padding:10px}.topin{padding:8px 10px;gap:9px}.logo{width:40px;height:40px}.brand p{display:none}.topbtn.opt{display:none}
+ .pad{padding:14px}.legend{grid-template-columns:1fr}.tools{grid-template-columns:1fr}
+ .row{grid-template-columns:1fr;padding:12px 14px}.seg{grid-template-columns:repeat(2,1fr)}.sb{font-size:14px}
+ .sumhead h2{font-size:19px}.group{padding:10px 14px}}
+@media print{
+ body{background:#fff!important;color:#000;font-size:12px}.top,.pickcard,.tools,details.bulk,.chips,.legend,.toast,.count,.sumhead h2,.foot,#akc-modo-prueba{display:none!important}
+ .wrap{padding:0;max-width:none}.card{box-shadow:none;border-radius:0;margin:0}.printtitle{display:block;font-size:18px;font-weight:800;margin:0 0 6px}
+ .row{padding:5px 8px;break-inside:avoid;border-left-width:4px}.name{font-size:12px}.sb{display:none}.sb[aria-pressed="true"]{display:inline-block;min-height:0;padding:2px 8px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .group{padding:5px 8px;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.stack{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 <script src="../../cliente/fuentes.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -21,39 +85,51 @@
 <script src="../../cliente/config.js"></script>
 <script src="../../cliente/theme.js"></script>
 <script src="../../cliente/xlsx-reader.js"></script>
-<style>/* AKC IDENTIDAD METÁLICA — SOLO ESTÉTICA */body{background:radial-gradient(circle at 50% -8%,rgba(43,157,255,.16),transparent 32%),linear-gradient(145deg,#03070d,#0b1420 55%,#05090f)!important}.top{background:linear-gradient(110deg,#070d15,#182330,#2a2419)!important;border-bottom:1px solid rgba(201,170,98,.35)}button{border-color:rgba(184,195,207,.25)!important}button:hover{box-shadow:0 0 22px rgba(43,157,255,.12),0 10px 28px rgba(0,0,0,.30)!important}.logo{background:transparent!important;border-color:rgba(201,170,98,.25)!important;filter:none!important}.topin:after{content:"ÁGUILAS KC";margin-left:auto;color:#c9aa62;font-size:11px;letter-spacing:.2em;font-weight:900}</style></head>
+</head>
 <body>
 <header class="top"><div class="topin">
- <div id="logoBox" class="logo" style="display:grid;place-items:center;color:#e0bf78;font-weight:900">LOGO</div>
- <div class="brand"><h1 data-cliente-name>GIMNASIO</h1><p data-cliente-subtitle>GIMNASIA ARTÍSTICA</p></div>
- <div class="sync"><i id="syncDot" class="dot"></i><span id="syncText">Conectando…</span></div>
- <div class="topactions"><button onclick="openAdmin()">Administración</button><button onclick="window.print()">Imprimir</button></div>
+ <div id="logoBox" class="logo"></div>
+ <div class="brand"><h1>Normativos</h1><p><span data-cliente-name>ÁGUILAS KC</span> · <span data-cliente-subtitle>GIMNASIA ARTÍSTICA VARONIL</span></p></div>
+ <div class="sync" role="status" aria-live="polite"><i id="syncDot" class="dot busy"></i><span id="syncText">Conectando…</span></div>
+ <button class="topbtn opt" type="button" onclick="window.print()">Imprimir</button>
+ <button class="topbtn" type="button" onclick="downloadExcel()" title="Descargar el Excel con los estados actuales">Excel</button>
 </div></header>
-<main class="wrap"><div class="grid">
-<aside>
-<section class="panel pad">
- <div class="sectiontitle">Atleta</div><select id="athlete"></select><div class="athleteName" id="athleteName">—</div>
- <div class="meta"><div class="box"><div class="k">Grupo</div><div class="v" id="group">—</div></div><div class="box"><div class="k">Nivel / categoría</div><div class="v" id="level">—</div></div></div>
- <div class="sectiontitle" style="margin-top:18px">Aparatos</div><div class="appnav" id="apparatus"></div>
- <div class="progress"><div class="prow"><span>Avance del aparato</span><b id="pct">0%</b></div><div class="bar"><i id="bar"></i></div></div><div class="statgrid" id="stats"></div>
-</section>
-<section class="panel pad" style="margin-top:12px"><div class="sectiontitle">Administración</div>
- <div class="adminrow"><button class="btn primary" onclick="openAdd()">＋ Agregar atleta</button><button class="btn red" onclick="openDelete()">🗑 Eliminar atleta</button></div>
- <div class="adminrow"><button class="btn light" onclick="downloadJSON()">Respaldo JSON</button><button class="btn light" onclick="document.getElementById('jsonFile').click()">Restaurar JSON</button></div>
- <input id="jsonFile" type="file" accept=".json" hidden onchange="importJSON(event)">
- <div class="notice">La información principal de este módulo se guarda en este dispositivo. El JSON es el respaldo que puedes copiar al repositorio.</div>
-</section>
-</aside>
-<section class="panel"><div class="mainhead"><div><h2 id="appTitle">PISO</h2><p id="countText">— normativos</p></div><div class="actions"><button class="btn light" onclick="resetFilters()">Limpiar filtros</button><button class="btn dark" onclick="saveCloud()">Guardar cambios</button><button class="btn primary" onclick="downloadExcel()">Descargar Excel</button></div></div>
-<div class="filters"><div><label>CLASIFICACIÓN / BLOQUE</label><select id="classification"></select></div><div><label>MOSTRAR</label><select id="showFilter" onchange="renderTable()"><option value="all">Todos</option><option value="pending">Pendientes</option><option value="C">Consolidados</option><option value="EP">En proceso</option><option value="P">Proyección</option><option value="NA">No adquiridos</option></select></div><div><label>BUSCAR ELEMENTO</label><input id="search" placeholder="Buscar por nombre o clasificación" oninput="renderTable()"></div></div>
-<div class="bulk"><div><label>CAMBIO MASIVO SOBRE LOS ELEMENTOS VISIBLES</label><select id="bulkStatus"><option value="C">C — Consolidado</option><option value="EP">EP — En proceso</option><option value="P">P — Proyección</option><option value="NA">NA — No adquirido</option></select></div><button class="btn gold" onclick="applyBulk()">Aplicar a visibles</button></div>
-<div class="tablewrap"><table><thead><tr><th>Normativo / elemento</th><th>Clasificación</th><th>Etapa</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
-</div></main>
-<div id="toast" class="toast"></div>
-
-<div id="athleteModal" class="modal"><div class="modalbox"><h3 id="modalTitle">Agregar atleta</h3><p id="modalDesc">El atleta se guardará en este repositorio.</p><div class="formgrid"><div><label>Nombre completo</label><input id="newName"></div><div><label>Grupo</label><input id="newGroup"></div><div><label>Nivel</label><input id="newLevel"></div><div><label>Categoría</label><input id="newCategory"></div><div><label>Fecha de nacimiento</label><input id="newBirth" type="date"></div><div><label>Fecha de ingreso</label><input id="newJoin" type="date"></div></div><div class="modalactions"><button class="btn light" onclick="closeModal('athleteModal')">Cancelar</button><button class="btn primary" onclick="addAthlete()">Guardar atleta</button></div></div></div>
-<div id="deleteModal" class="modal"><div class="modalbox"><h3>Eliminar atleta definitivamente</h3><p>Esta acción no se puede deshacer.</p><div class="dangerbox">Se eliminará <strong id="deleteName">—</strong> del repositorio central y de sus evaluaciones.</div><div style="margin-top:12px"><label>Escribe exactamente el nombre del atleta</label><input id="confirmDelete" oninput="checkDelete()"></div><div class="modalactions"><button class="btn light" onclick="closeModal('deleteModal')">Cancelar</button><button id="deleteBtn" class="btn red" disabled onclick="deleteAthlete()">Eliminar definitivamente</button></div></div></div>
-<div id="adminModal" class="modal"><div class="modalbox"><h3>Administración</h3><p>Funciones de mantenimiento del repositorio.</p><div class="adminrow"><button class="btn primary" onclick="closeModal('adminModal');openAdd()">＋ Agregar atleta</button><button class="btn red" onclick="closeModal('adminModal');openDelete()">🗑 Eliminar atleta</button></div><div class="adminrow"><button class="btn light" onclick="downloadJSON()">Descargar respaldo JSON</button><button class="btn light" onclick="document.getElementById('jsonFile').click();closeModal('adminModal')">Restaurar JSON</button></div><div class="notice">Restaurar un JSON reemplaza los datos locales de este módulo después de confirmación.</div><div class="modalactions"><button class="btn light" onclick="closeModal('adminModal')">Cerrar</button></div></div></div>
+<main class="wrap">
+ <section class="card pad pickcard">
+  <div class="pick">
+   <div><label class="step" for="athlete">1 · Atleta</label><select id="athlete"></select></div>
+   <div><span class="step" id="tabsLbl">2 · Aparato</span><div class="tabs" id="apparatus" role="tablist" aria-labelledby="tabsLbl"></div></div>
+  </div>
+ </section>
+ <section class="card pad">
+  <div class="printtitle" id="printTitle"></div>
+  <div class="sumhead"><h2 id="appTitle">—</h2><p id="sumText"></p></div>
+  <div class="stack" id="stack" aria-hidden="true"></div>
+  <div class="chips" id="chips" aria-label="Mostrar solo"></div>
+  <div class="legend">
+   <span><b>Consolidado:</b> lo domina, según el criterio del entrenador.</span>
+   <span><b>En proceso:</b> lo trabaja, pero aún no lo domina.</span>
+   <span><b>Proyección:</b> está previsto desarrollarlo.</span>
+   <span><b>No adquirido:</b> no lo hizo o todavía no le sale.</span>
+  </div>
+ </section>
+ <section class="card pad">
+  <div class="tools">
+   <div><label class="step" for="classification">Bloque</label><select id="classification"></select></div>
+   <div><label class="step" for="search">Buscar elemento</label><input id="search" type="search" placeholder="Ej.: mortal, parado…" oninput="renderTable()"></div>
+   <button class="linkbtn" type="button" onclick="resetFilters()">Quitar filtros</button>
+  </div>
+  <p class="count" id="countText"></p>
+  <details class="bulk"><summary>Cambiar varios a la vez</summary>
+   <div class="bulkrow">Poner <b id="bulkCount">0</b> elementos que se ven en
+    <select id="bulkStatus"><option value="C">Consolidado</option><option value="EP">En proceso</option><option value="P">Proyección</option><option value="NA">No adquirido</option></select>
+    <button class="btn" type="button" onclick="applyBulk()">Aplicar</button></div>
+  </details>
+ </section>
+ <section class="card" id="list"></section>
+ <p class="foot" style="color:#9fb0c3;font-size:13px;text-align:center;margin:6px 0 20px">Cada cambio se guarda solo en la nube. Lo ven al momento los demás entrenadores.</p>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script>
 
 const firebaseConfig={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
@@ -86,19 +162,38 @@ function applyLocalOverridesIfCurrent(){}
 function setupLogo(){const box=document.getElementById("logoBox"),img=new Image();img.onload=()=>{box.innerHTML="";box.appendChild(img);img.className="logo";img.style.cssText="width:100%;height:100%;object-fit:contain;padding:0;border:0;background:transparent"};img.src="../../cliente/logo.png"}
 function setupIdentity(){if(window.CLIENTE){document.title="Normativos · "+(CLIENTE.nombre||"Gimnasio");document.querySelectorAll("[data-cliente-name]").forEach(e=>e.textContent=CLIENTE.nombre||"GIMNASIO");document.querySelectorAll("[data-cliente-subtitle]").forEach(e=>e.textContent=CLIENTE.subtitulo||"GIMNASIA ARTÍSTICA");}}
 function setSync(c,t){document.getElementById("syncDot").className="dot "+c;document.getElementById("syncText").textContent=t}
-function renderAll(){if(!db)return;renderAthletes();const current=document.getElementById("athlete").value||db.athletes[0]?.name||"";selectAthlete(current)}
-function renderAthletes(){const s=document.getElementById("athlete"),current=s.value;s.innerHTML=db.athletes.map(a=>`<option>${esc(a.name)}</option>`).join("");if(db.athletes.some(a=>a.name===current))s.value=current;s.onchange=()=>selectAthlete(s.value)}
-function selectAthlete(name){if(!db)return;document.getElementById("athlete").value=name;const a=db.athletes.find(x=>x.name===name)||{};document.getElementById("athleteName").textContent=name||"—";document.getElementById("group").textContent=a.group||"Sin grupo";document.getElementById("level").textContent=[a.level,a.category].filter(Boolean).join(" / ")||"Sin nivel";renderApps();renderClassifications();renderSummary();renderTable()}
-function renderApps(){document.getElementById("apparatus").innerHTML=APPS.map(a=>`<button class="${a===currentApp?'active':''}" onclick="setApp('${a}')">${appLabels[a]}</button>`).join("")}
-function setApp(a){currentApp=a;renderApps();renderClassifications();renderSummary();renderTable()}
-function renderClassifications(){const s=document.getElementById("classification"),cats=[...new Set(db.items.filter(x=>x.apparatus===currentApp).map(x=>x.classification).filter(Boolean))];const prev=s.value;s.innerHTML='<option value="ALL">Todos los bloques</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");if(prev&&cats.includes(prev))s.value=prev;s.onchange=renderTable}
-function itemsVisible(){const cat=document.getElementById("classification").value,q=document.getElementById("search").value.toLowerCase().trim(),f=document.getElementById("showFilter").value,a=document.getElementById("athlete").value;return db.items.filter(x=>x.apparatus===currentApp&&(cat==="ALL"||x.classification===cat)&&(!q||x.element.toLowerCase().includes(q)||x.classification.toLowerCase().includes(q))&&!(f==="pending"&&((x.status[a]||"NA")==="C"))&&(!["C","EP","P","NA"].includes(f)||(x.status[a]||"NA")===f))}
-function renderTable(){if(!db)return;const body=document.getElementById("tbody"),items=itemsVisible(),a=document.getElementById("athlete").value;document.getElementById("appTitle").textContent=appLabels[currentApp];document.getElementById("countText").textContent=items.length+" normativos visibles";if(!items.length){body.innerHTML='<tr><td colspan="3" class="empty">No hay normativos para los filtros seleccionados.</td></tr>';return}let last="";body.innerHTML=items.map(x=>{const st=x.status[a]||"NA";let group="";if(x.classification!==last){last=x.classification;group=`<tr class="group"><td colspan="3">${esc(x.classification||"Sin clasificación")}</td></tr>`}return group+`<tr class="row-${st.toLowerCase()}"><td>${esc(x.element)}</td><td>${esc(x.classification)}</td><td><select class="status" onchange="setStatus('${esc(x.id)}',this.value)">${opt(st,"C","C — Consolidado")}${opt(st,"EP","EP — En proceso")}${opt(st,"P","P — Proyección")}${opt(st,"NA","NA — No adquirido")}</select></td></tr>`}).join("")}
-function opt(st,v,t){return `<option value="${v}" ${st===v?"selected":""}>${t}</option>`}
-async function setStatus(id,val){const item=db.items.find(x=>x.id===id);if(!item)return;const athlete=document.getElementById("athlete").value;item.status[athlete]=val;renderTable();renderSummary();await saveCloud([{id,athlete,val}])}
-function renderSummary(){const a=document.getElementById("athlete").value,items=db.items.filter(x=>x.apparatus===currentApp),cnt={C:0,EP:0,P:0,NA:0};items.forEach(x=>cnt[x.status[a]||"NA"]++);const total=items.length,pct=total?Math.round(cnt.C/total*100):0;document.getElementById("pct").textContent=pct+"%";document.getElementById("bar").style.width=pct+"%";document.getElementById("stats").innerHTML=`<div class="stat c"><div class="num">${cnt.C}</div><div class="lbl">Consolidado</div></div><div class="stat ep"><div class="num">${cnt.EP}</div><div class="lbl">En proceso</div></div><div class="stat p"><div class="num">${cnt.P}</div><div class="lbl">Proyección</div></div><div class="stat na"><div class="num">${cnt.NA}</div><div class="lbl">No adquirido</div></div>`}
-async function applyBulk(){const val=document.getElementById("bulkStatus").value,a=document.getElementById("athlete").value;const lista=itemsVisible();lista.forEach(x=>x.status[a]=val);renderTable();renderSummary();await saveCloud(lista.map(x=>({id:x.id,athlete:a,val})))}
-function resetFilters(){document.getElementById("classification").value="ALL";document.getElementById("showFilter").value="all";document.getElementById("search").value="";renderTable()}
+const ESTADOS=[["C","Consolidado"],["EP","En proceso"],["P","Proyección"],["NA","No adquirido"]];
+let filtroEstado="all";
+const $id=i=>document.getElementById(i);
+function renderAll(){if(!db)return;renderAthletes();const current=$id("athlete").value||db.athletes[0]?.name||"";selectAthlete(current)}
+function renderAthletes(){const s=$id("athlete"),current=s.value;s.innerHTML=db.athletes.map(a=>`<option>${esc(a.name)}</option>`).join("");if(db.athletes.some(a=>a.name===current))s.value=current;s.onchange=()=>selectAthlete(s.value)}
+function selectAthlete(name){if(!db)return;$id("athlete").value=name;renderApps();renderClassifications();renderSummary();renderTable()}
+function conteo(app,a){const cnt={C:0,EP:0,P:0,NA:0};db.items.filter(x=>x.apparatus===app).forEach(x=>cnt[x.status[a]||"NA"]++);cnt.total=cnt.C+cnt.EP+cnt.P+cnt.NA;return cnt}
+function renderApps(){const a=$id("athlete").value;$id("apparatus").innerHTML=APPS.map(ap=>{const c=conteo(ap,a),pct=c.total?Math.round(c.C/c.total*100):0;return `<button type="button" class="tab" role="tab" aria-selected="${ap===currentApp}" onclick="setApp('${ap}')"><b>${appLabels[ap]}</b><small>${pct}% consolidado</small></button>`}).join("")}
+function setApp(a){currentApp=a;filtroEstado="all";renderApps();renderClassifications();renderSummary();renderTable()}
+function renderClassifications(){const s=$id("classification"),cats=[...new Set(db.items.filter(x=>x.apparatus===currentApp).map(x=>x.classification).filter(Boolean))];const prev=s.value;s.innerHTML='<option value="ALL">Todos los bloques</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");if(prev&&cats.includes(prev))s.value=prev;s.onchange=renderTable}
+function itemsVisible(){const cat=$id("classification").value,q=normName($id("search").value),a=$id("athlete").value;return db.items.filter(x=>x.apparatus===currentApp&&(cat==="ALL"||x.classification===cat)&&(!q||normName(x.element).includes(q)||normName(x.classification).includes(q))&&(filtroEstado==="all"||(x.status[a]||"NA")===filtroEstado))}
+function renderSummary(){const a=$id("athlete").value,c=conteo(currentApp,a),pct=c.total?Math.round(c.C/c.total*100):0;
+ $id("appTitle").textContent=appLabels[currentApp]+" · "+(a||"—");
+ $id("printTitle").textContent="Normativos · "+(a||"")+" · "+appLabels[currentApp];
+ $id("sumText").innerHTML=`<b>${c.C} de ${c.total}</b> consolidados (${pct}%)`;
+ $id("stack").innerHTML=ESTADOS.map(([k])=>c[k]?`<i class="${k.toLowerCase()}" style="width:${c[k]/c.total*100}%"></i>`:"").join("");
+ const col={C:"var(--c)",EP:"#d4a017",P:"var(--p)",NA:"var(--na)"};
+ $id("chips").innerHTML=`<button type="button" class="chip" aria-pressed="${filtroEstado==="all"}" onclick="setFiltro('all')">Todos · ${c.total}</button>`+ESTADOS.map(([k,t])=>`<button type="button" class="chip" aria-pressed="${filtroEstado===k}" onclick="setFiltro('${k}')"><i class="sw" style="background:${col[k]}"></i>${t} · ${c[k]}</button>`).join("")}
+function setFiltro(f){filtroEstado=f;renderSummary();renderTable()}
+function renderTable(){if(!db)return;const list=$id("list"),items=itemsVisible(),a=$id("athlete").value;
+ $id("countText").textContent=items.length===1?"Se ve 1 elemento.":"Se ven "+items.length+" elementos.";$id("bulkCount").textContent=items.length;
+ if(!items.length){list.innerHTML='<div class="empty">No hay elementos con estos filtros. Toca «Quitar filtros».</div>';return}
+ let last=null;list.innerHTML=items.map(x=>{const st=x.status[a]||"NA";let g="";if(x.classification!==last){last=x.classification;g=`<div class="group">${esc(x.classification||"Sin bloque")}</div>`}
+  return g+`<div class="row st-${st}"><div class="name">${esc(x.element)}</div><div class="seg" role="group" aria-label="${esc(x.element)}">${ESTADOS.map(([k,t])=>`<button type="button" class="sb ${k}" data-id="${esc(x.id)}" data-v="${k}" aria-pressed="${st===k}">${t}</button>`).join("")}</div></div>`}).join("");
+ list.onclick=e=>{const b=e.target.closest("button.sb");if(b)setStatus(b.dataset.id,b.dataset.v)}}
+async function setStatus(id,val){const item=db.items.find(x=>x.id===id);if(!item)return;const athlete=$id("athlete").value;if((item.status[athlete]||"NA")===val)return;item.status[athlete]=val;renderTable();renderSummary();renderApps();
+ const b=document.querySelector(`button.sb[data-id="${CSS.escape(id)}"][data-v="${val}"]`);if(b)b.focus({preventScroll:true});
+ await saveCloud([{id,athlete,val}])}
+async function applyBulk(){const val=$id("bulkStatus").value,a=$id("athlete").value,lista=itemsVisible();if(!lista.length)return toast("No hay elementos visibles");
+ const t=(ESTADOS.find(e=>e[0]===val)||[])[1];if(!confirm(`¿Poner ${lista.length} elemento(s) de ${a} en «${t}»?`))return;
+ lista.forEach(x=>x.status[a]=val);renderTable();renderSummary();renderApps();await saveCloud(lista.map(x=>({id:x.id,athlete:a,val})))}
+function resetFilters(){$id("classification").value="ALL";$id("search").value="";filtroEstado="all";renderSummary();renderTable()}
 // Guarda en la nube SOLO los cambios indicados ({id, athlete, val}). Lee la versión más reciente
 // dentro de una transacción y aplica encima, para no pisar lo que otra persona haya guardado.
 async function saveCloud(cambios){
