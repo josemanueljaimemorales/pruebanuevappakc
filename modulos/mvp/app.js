@@ -31,26 +31,57 @@ function mergeData(raw){
   data={...clone(defaultData),...x,scores:x.scores||{},photos:{...clone(defaultData.photos),...(x.photos||{})}};
 }
 function saveLocal(){try{localStorage.setItem(localKey,JSON.stringify(data));}catch(e){}}
+let photoRefs={}, cloudWarned=false;
+function cloudFail(e){
+  console.warn("MVP: no se pudo guardar en nube",e);
+  if(!cloudWarned){cloudWarned=true;alert("No se pudo guardar en la nube. Revisa tu conexión: este registro solo quedó en este equipo.");}
+}
 async function initCloud(){
   try{
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.firestore(); ref=db.collection(COLLECTION).doc(DOC);
+    photoRefs={1:db.collection(COLLECTION).doc("foto1"),2:db.collection(COLLECTION).doc("foto2")};
     const snap=await ref.get();
     if(snap.exists){mergeData(snap.data());}
-    else {mergeData({}); await ref.set({...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+    else {mergeData({}); await ref.set({scores:{},updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+    await migratePhotos(snap.exists?snap.data():{});
     renderAll();
-    ref.onSnapshot(s=>{if(s.exists){mergeData(s.data());saveLocal();renderAll();}});
+    ref.onSnapshot(s=>{if(s.exists){const p=data.photos;const x=s.data();data.scores=x.scores||{};data.photos=p;saveLocal();renderRecords();renderScores();}});
+    [1,2].forEach(n=>photoRefs[n].onSnapshot(s=>{if(s.exists){data.photos[n]=s.data().src||"";saveLocal();renderPhotos();}}));
   }catch(e){
     console.warn("MVP: nube no disponible",e);
     try{mergeData(JSON.parse(localStorage.getItem(localKey)||"{}"));}catch(_){}
     renderAll();
+    ref=null; setTimeout(initCloud,8000);
   }
+}
+// Las fotos van en documentos separados para que el documento de registros no rebase el límite de Firestore.
+async function migratePhotos(raw){
+  const legacy=(raw&&raw.photos)||{};
+  for(const n of [1,2]){
+    const s=await photoRefs[n].get();
+    if(s.exists){data.photos[n]=s.data().src||"";}
+    else if(legacy[n]){data.photos[n]=legacy[n];await photoRefs[n].set({src:legacy[n],updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+  }
+  if(raw&&raw.photos){await ref.update({photos:firebase.firestore.FieldValue.delete()});}
 }
 async function saveCloud(){
   saveLocal();
   if(!ref)return;
-  try{await ref.set({...data,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
-  catch(e){console.warn("MVP: no se pudo guardar en nube",e);}
+  try{await ref.update({scores:data.scores,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+  catch(e){cloudFail(e);}
+}
+async function saveScoreCloud(name,day){
+  saveLocal();
+  if(!ref){cloudFail("sin conexión");return;}
+  try{await ref.update(new firebase.firestore.FieldPath("scores",name,day),firebase.firestore.FieldValue.increment(1),"updatedAt",firebase.firestore.FieldValue.serverTimestamp());}
+  catch(e){cloudFail(e);}
+}
+async function savePhotoCloud(n){
+  saveLocal();
+  if(!ref){cloudFail("sin conexión");return;}
+  try{await photoRefs[n].set({src:data.photos[n]||"",updatedAt:firebase.firestore.FieldValue.serverTimestamp()});}
+  catch(e){cloudFail(e);}
 }
 function scoreFor(name,day){
   return Number((data.scores[name]||{})[day]||0);
@@ -150,7 +181,7 @@ async function addScore(name,day,delta=1,registrar=true){
   if(!data.scores[name])data.scores[name]={};
   data.scores[name][day]=nuevo;
   renderRecords();renderScores();saveLocal();
-  if(!ref)return;
+  if(!ref){cloudFail("sin conexión");return;}
   try{
     const campo=new firebase.firestore.FieldPath("scores",name,day);
     await db.runTransaction(async t=>{
@@ -158,7 +189,7 @@ async function addScore(name,day,delta=1,registrar=true){
       const actual=Number(((snap.data()||{}).scores||{})[name]?.[day]||0);
       t.update(ref,campo,Math.max(0,actual+delta),"updatedAt",firebase.firestore.FieldValue.serverTimestamp());
     });
-  }catch(e){console.warn("MVP: no se pudo guardar en nube",e);alert("No se pudo guardar en la nube. Revisa la conexión e inténtalo de nuevo.");}
+  }catch(e){cloudFail(e);}
 }
 function confirmReset(){
   if(!confirm("¿Reiniciar todos los registros de MVP de la semana? Las fotos no se borrarán."))return;
@@ -167,7 +198,7 @@ function confirmReset(){
 function uploadPhoto(block,input){
   const file=input.files?.[0]; if(!file)return;
   const status=document.getElementById("uploadStatus"+block);status.textContent="Procesando…";
-  compressImage(file).then(src=>{data.photos[block]=src;renderPhotos();saveCloud();status.textContent="Foto guardada.";input.value="";})
+  compressImage(file).then(src=>{data.photos[block]=src;renderPhotos();savePhotoCloud(block);status.textContent="Foto guardada.";input.value="";})
   .catch(()=>status.textContent="No se pudo procesar la imagen.");
 }
 function compressImage(file){
