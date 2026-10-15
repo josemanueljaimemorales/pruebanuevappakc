@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MVP · Águilas KC</title>
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 <script src="../../cliente/fuentes.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script><script src="../../cliente/fuentes.js"></script>
@@ -55,11 +55,12 @@
         <div>
           <div class="eyebrow">ADMINISTRACIÓN</div>
           <h2>Registros de MVP</h2>
-          <p>Cada clic suma 1 selección y se guarda inmediatamente.</p>
+          <p>Elige el día y toca <b>+1</b> en cada atleta. Se guarda al instante; <b>−</b> corrige un error.</p>
         </div>
         <button class="close-panel" onclick="hidePanel('records')">Cerrar</button>
       </div>
       <div class="week-note">Semana: <strong id="weekLabel"></strong></div>
+      <div class="day-bar"><div class="day-picker" id="dayPicker" aria-label="Día que registras"></div><div class="day-now">Registrando: <strong id="dayNow"></strong></div></div>
       <div id="recordContent"></div>
       <div class="reset-zone">
         <button class="reset-btn" onclick="confirmReset()">🔒 REINICIAR CONTEO</button>
@@ -105,6 +106,6 @@
   </div>
 </div>
 
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

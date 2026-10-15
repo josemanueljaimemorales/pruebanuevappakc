@@ -56,20 +56,35 @@ function scoreFor(name,day){
   return Number((data.scores[name]||{})[day]||0);
 }
 function totalFor(name){return DAYS.reduce((a,d)=>a+scoreFor(name,d),0);}
+const DAY_NAMES={L:"Lunes",M:"Martes",X:"Miércoles",J:"Jueves",V:"Viernes",S:"Sábado"};
+// Día que se está registrando: por defecto hoy (domingo -> lunes). Se conserva al actualizar la pantalla.
+let selDay=DAYS[Math.min(5,Math.max(0,new Date().getDay()-1))];
+function escHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function dayTotal(d){return ATHLETES.reduce((a,x)=>a+scoreFor(x.name,d),0);}
+function renderDayPicker(){
+  document.getElementById("dayPicker").innerHTML=DAYS.map(d=>`<button type="button" class="day-btn" data-day="${d}" aria-pressed="${d===selDay}"><b>${DAY_NAMES[d]}</b><small>${dayTotal(d)} MVP</small></button>`).join("");
+  document.getElementById("dayNow").textContent=DAY_NAMES[selDay];
+}
+function setDay(d){selDay=d;renderRecords();}
 function groupHtml(block){
   const groups=GROUPS.filter(g=>g.block===block);
   let html=`<div class="block-title">${block==="Bloque 1"?"🟦":"🟩"} ${block} <span>${block==="Bloque 1"?"GAV 4 + GAV 5":"GAV 6 + GAV 9 + GAV FIG"}</span></div>`;
   groups.forEach(g=>{
-    html+=`<div class="group-title">${g.title}</div><div class="table-wrap"><table><thead><tr><th>Atleta</th>${DAYS.map(d=>`<th>${d}</th>`).join("")}<th>TOTAL</th></tr></thead><tbody>`;
+    html+=`<div class="group-title">${g.title}</div><div class="rec-list">`;
     g.athletes.forEach(name=>{
-      html+=`<tr><td>${name}</td>${DAYS.map(d=>`<td><button class="count-btn" onclick="addScore('${esc(name)}','${d}')" title="Agregar MVP">${scoreFor(name,d)}</button></td>`).join("")}<td class="total">${totalFor(name)}</td></tr>`;
+      const n=scoreFor(name,selDay),e=escHtml(name);
+      html+=`<div class="rec-row${n?" has":""}"><div class="rec-name">${e}<small>Semana: ${totalFor(name)}</small></div>`+
+        `<button type="button" class="rec-minus" data-name="${e}" data-delta="-1" aria-label="Quitar 1 MVP a ${e}" ${n?"":"disabled"}>−</button>`+
+        `<div class="rec-count" aria-label="${n} MVP el ${DAY_NAMES[selDay]}">${n}</div>`+
+        `<button type="button" class="rec-plus" data-name="${e}" data-delta="1" aria-label="Sumar 1 MVP a ${e}">+1</button></div>`;
     });
-    html+="</tbody></table></div>";
+    html+="</div>";
   });
   return html;
 }
 function esc(s){return s.replace(/\\/g,"\\\\").replace(/'/g,"\\'");}
 function renderRecords(){
+  renderDayPicker();
   document.getElementById("recordContent").innerHTML=groupHtml("Bloque 1")+groupHtml("Bloque 2");
   document.getElementById("weekLabel").textContent=weekLabel();
 }
@@ -109,10 +124,21 @@ function checkPassword(){
   if(action==="records"){document.getElementById("records").classList.remove("hidden");renderRecords();document.getElementById("records").scrollIntoView({behavior:"smooth"});}
   if(action==="upload"){document.getElementById("upload").classList.remove("hidden");document.getElementById("upload").scrollIntoView({behavior:"smooth"});}
 }
-async function addScore(name,day){
+async function addScore(name,day,delta=1){
+  const nuevo=Math.max(0,scoreFor(name,day)+delta);
+  if(nuevo===scoreFor(name,day))return;
   if(!data.scores[name])data.scores[name]={};
-  data.scores[name][day]=scoreFor(name,day)+1;
-  renderRecords();renderScores();saveLocal();await saveCloud();
+  data.scores[name][day]=nuevo;
+  renderRecords();renderScores();saveLocal();
+  if(!ref)return;
+  try{
+    const campo=new firebase.firestore.FieldPath("scores",name,day);
+    await db.runTransaction(async t=>{
+      const snap=await t.get(ref);
+      const actual=Number(((snap.data()||{}).scores||{})[name]?.[day]||0);
+      t.update(ref,campo,Math.max(0,actual+delta),"updatedAt",firebase.firestore.FieldValue.serverTimestamp());
+    });
+  }catch(e){console.warn("MVP: no se pudo guardar en nube",e);alert("No se pudo guardar en la nube. Revisa la conexión e inténtalo de nuevo.");}
 }
 function confirmReset(){
   if(!confirm("¿Reiniciar todos los registros de MVP de la semana? Las fotos no se borrarán."))return;
@@ -136,4 +162,8 @@ function compressImage(file){
 }
 function goBack(){if(window.parent!==window){window.parent.goHome?.();}else history.back();}
 document.addEventListener("keydown",e=>{if(!document.getElementById("passwordModal").classList.contains("hidden")){if(e.key==="Enter")checkPassword();if(e.key==="Escape")closePassword();}});
+document.addEventListener("click",e=>{
+  const d=e.target.closest(".day-btn");if(d){setDay(d.dataset.day);return;}
+  const b=e.target.closest(".rec-plus,.rec-minus");if(b&&!b.disabled)addScore(b.dataset.name,selDay,Number(b.dataset.delta));
+});
 window.addEventListener("load",initCloud);

@@ -25,3 +25,23 @@ body{min-height:100dvh;padding:16px}
 .reset-zone{display:flex;justify-content:flex-end;margin-top:22px}.reset-btn{border:1px solid rgba(255,100,90,.28);background:#32191a;color:#ffb0aa;border-radius:10px;padding:10px 14px;cursor:pointer}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.76);backdrop-filter:blur(10px);display:grid;place-items:center;padding:20px;z-index:100}.password-box{width:min(400px,100%);background:#091827;border:1px solid var(--line);border-radius:22px;padding:25px;text-align:center;box-shadow:0 25px 80px #000}.lock{font-size:32px}.password-box h2{margin:7px 0}.password-box p{color:var(--muted);font-size:13px}.password-box input{width:100%;padding:13px;border-radius:11px;border:1px solid #40556a;background:#030a12;color:#fff;font-size:16px}.password-box input:focus{outline:none;border-color:var(--blue)}#passwordError{height:22px;color:#ffaaa7;font-size:12px;padding-top:5px}.password-actions{display:flex;gap:10px}.password-actions button{flex:1;border:0;border-radius:10px;padding:11px;background:#24394e;color:#fff;cursor:pointer}.password-actions .enter{background:#117edc}
 @media(max-width:720px){body{padding:10px}.hero-grid{grid-template-columns:1fr}.photo-frame{aspect-ratio:4/5;min-height:360px}.upload-grid{grid-template-columns:1fr}.topbar{padding-bottom:15px}.panel{padding:13px}.rank-row{grid-template-columns:30px 1fr auto 38px}.public-actions{margin-bottom:20px}}
+
+/* ===== Registro de MVP: día fijo + lista con +1 / − ===== */
+.day-bar{position:sticky;top:0;z-index:5;margin:12px -18px 6px;padding:10px 18px;background:rgba(6,15,25,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
+.day-picker{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.day-btn{border:2px solid var(--line);background:#0d1c2c;color:#dfe9f3;border-radius:12px;padding:8px 4px;cursor:pointer;text-align:center;min-height:52px}
+.day-btn b{display:block;font-size:14px}.day-btn small{display:block;font-size:11px;color:var(--muted)}
+.day-btn[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1b1404}.day-btn[aria-pressed="true"] small{color:#3b2f12}
+.day-now{margin-top:8px;font-size:14px;color:var(--muted)}.day-now strong{color:#fff;font-size:16px}
+.rec-list{display:grid;gap:6px;margin-bottom:6px}
+.rec-row{display:grid;grid-template-columns:1fr 44px 46px 64px;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#0b1828}
+.rec-row.has{border-color:rgba(201,170,98,.45)}
+.rec-name{font-size:15px;font-weight:700;min-width:0}.rec-name small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.rec-count{text-align:center;font-size:22px;font-weight:900}
+.rec-row.has .rec-count{color:var(--gold)}
+.rec-plus,.rec-minus{height:44px;border-radius:12px;font-weight:900;cursor:pointer;border:2px solid transparent}
+.rec-plus{background:var(--blue);color:#fff;font-size:17px}
+.rec-minus{background:transparent;border-color:var(--line);color:#dfe9f3;font-size:20px}
+.rec-minus:disabled{opacity:.3;cursor:default}
+.rec-plus:active,.rec-minus:active{transform:scale(.95)}
+@media(max-width:720px){.day-bar{margin:12px -13px 6px;padding:8px 13px}}@media(max-width:520px){.day-picker{grid-template-columns:repeat(3,minmax(0,1fr))}.rec-row{grid-template-columns:1fr 40px 38px 58px;gap:6px;padding:8px}}
