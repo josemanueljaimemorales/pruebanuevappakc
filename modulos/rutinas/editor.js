@@ -316,7 +316,10 @@ function compute(ap,rows,nivel,plantada,opt){
       if(nivel==='FIG'){const last=rows[rows.length-1];if(!last||!multi(last)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple como último elemento (sénior): -0.3 del jurado D.');}}
       else if(!rows.some(multi)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple en la rutina: -0.3 del jurado D.');}
     }
-    if(!rows.some(r=>r.k==='PISO|1|61'||r.k==='PISO|1|62')&&!(opt&&opt.balPiso)){res.nd=r1(res.nd+.3);res.notes.push('Sin balanza en una pierna (I.61 o I.62): -0.3 del jurado D. Agrégala como elemento (cuente o no entre los 8) o marca que la tiene en la coreografía.');}
+    // Balanza en una pierna: la cubren las planchas I.61/I.62 o cualquier elemento llamado arabesca,
+    // flick facial o salto con giro a facial (cuente o no entre los 8). Si no hay, se puede marcar en la coreografía.
+    const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|ck|k)( flac)? facial|salto( con)?( [a-z0-9/]+)? giro a facial) /.test(' '+nk(r.n)+' ');
+    if(!rows.some(esBalanza)&&!(opt&&opt.balPiso)){res.nd=r1(res.nd+.3);res.notes.push('Sin balanza en una pierna (arabesca, flick facial, salto con giro a facial o plancha I.61/I.62): -0.3 del jurado D. Agrégala como elemento (cuente o no entre los 8) o marca que la tiene en la coreografía.');}
   }
   if(ap==='ANILLOS'&&!usagN&&rows.length){
     if(!rows.some(r=>r.g===1&&/ (apoyo invertido|ap inv|sost|sostenido|a manos) /.test(descOf(r)))){res.nd=r1(res.nd+.3);res.notes.push('Sin impulso al apoyo invertido: -0.3 del jurado D.');}
