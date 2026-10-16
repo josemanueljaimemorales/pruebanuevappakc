@@ -238,15 +238,15 @@ function cvPair(a,b,ap,nivel){
     if(a.grp===4&&b.grp===4)return 0;
     if(va>=.4&&vb>=.4)return .2;
     if((va>=.4&&(vb===.2||vb===.3))||(vb>=.4&&(va===.2||va===.3)))return .1;
-    // N8 (vigente, criterio de Manu): B+C, C+B y C+C también dan 0.1, además de las conexiones FIG.
-    if(nivel==='N8'&&[.2,.3].includes(va)&&[.2,.3].includes(vb)&&!(va===.2&&vb===.2))return .1;
+    // N7 y N8 (vigente, criterio de Manu): B+C, C+B y C+C también dan 0.1, además de las conexiones FIG.
+    if((nivel==='N7'||nivel==='N8')&&[.2,.3].includes(va)&&[.2,.3].includes(vb)&&!(va===.2&&vb===.2))return .1;
     return 0;
   }
   if(ap==='FIJA'){
     const ra=a.grp===2,rb=b.grp===2;
     if(ra&&rb){const lo=Math.min(va,vb),hi=Math.max(va,vb);
       if(lo>=.4&&hi>=.5)return .2; if((lo===.3&&hi>=.4)||(lo===.4&&hi===.4))return .1;
-      if(nivel==='N8'&&lo===.3&&hi===.3)return .1; return 0;}
+      if((nivel==='N7'||nivel==='N8')&&lo===.3&&hi===.3)return .1; return 0;}
     if(ra!==rb){const rel=ra?va:vb, oth=ra?vb:va, og=ra?b.grp:a.grp;
       if((og===1||og===3)&&oth>=.4){if(rel>=.5)return .2;if(rel===.4)return .1;}}
   }
@@ -421,8 +421,8 @@ function compute(ap,rows,nivel,plantada,opt){
   }
   // Conexiones
   res.pot={};
-  if(!n7&&(ap==='PISO'||ap==='FIJA'))for(let i=0;i+1<rows.length;i++)if(res.counted.has(i)&&res.counted.has(i+1))res.pot[i]=cvPair(items[i],items[i+1],ap,nivel);
-  if(!n7&&(ap==='PISO'||ap==='FIJA')){
+  if((ap==='PISO'||ap==='FIJA'))for(let i=0;i+1<rows.length;i++)if(res.counted.has(i)&&res.counted.has(i+1))res.pot[i]=cvPair(items[i],items[i+1],ap,nivel);
+  if((ap==='PISO'||ap==='FIJA')){
     rows.forEach((r,i)=>{if(!r.c||i+1>=rows.length)return;
       if(!res.counted.has(i)||!res.counted.has(i+1)){res.notes.push(`Conexión ${i+1}-${i+2}: uno de los dos no cuenta.`);return;}
       let v=(r.cv!=null&&r.cv!=='')?+r.cv:cvPair(items[i],items[i+1],ap,nivel);
@@ -587,7 +587,7 @@ function renderAthlete(){
     h+=`</div>`;}
   h+=`</div><div class="list">`;
   if(!rows.length)h+=`<div class="empty">Sin elementos. Escribe abajo el primero.</div>`;
-  const canLink=(ui.ap==='PISO'||ui.ap==='FIJA')&&a.nivel!=='N7';
+  const canLink=(ui.ap==='PISO'||ui.ap==='FIJA');
   rows.forEach((r,i)=>{
     h+=`<div class="row ${res.counted.has(i)||ui.ap==='SALTO'?'':'off'}"><span class="num">${i+1}</span><div><button class="nm" data-act="edit" data-i="${i}">${esc(r.n)}</button><div class="meta">${metaLine(r,res,i)}</div></div>
       <div class="ctl"><button data-act="up" data-i="${i}" aria-label="Subir">↑</button><button data-act="down" data-i="${i}" aria-label="Bajar">↓</button><button data-act="del" data-i="${i}" aria-label="Quitar" class="${ui.del===i?'sure':''}">${ui.del===i?'Quitar':'✕'}</button></div></div>`;
@@ -615,7 +615,7 @@ function editPanel(r,i,a){
   // Piso: la conexión manual solo se ofrece si es viable (grupos II, III o IV, misma dirección, sin giro con giro).
   const pisoViable=()=>{const x={r,grp:grpOf(r,'PISO',a.nivel)},y={r:rowsA[i+1],grp:grpOf(rowsA[i+1],'PISO',a.nivel)};
     return [2,3,4].includes(x.grp)&&[2,3,4].includes(y.grp)&&!pisoConexionInvalida(x,y);};
-  if((ui.ap==='PISO'||ui.ap==='FIJA')&&a.nivel!=='N7'&&i<rowsA.length-1&&(ui.ap!=='PISO'||r.c||pisoViable())){const cur=(r.c&&r.cv!=null&&r.cv!=='')?String(r.cv):'';
+  if((ui.ap==='PISO'||ui.ap==='FIJA')&&i<rowsA.length-1&&(ui.ap!=='PISO'||r.c||pisoViable())){const cur=(r.c&&r.cv!=null&&r.cv!=='')?String(r.cv):'';
     h+=`<label>Conexión manual con "${esc(rowsA[i+1].n)}"<select data-f="cvm" data-i="${i}"><option value="" ${cur===''?'selected':''}>No, solo según reglas</option><option value="0.1" ${cur==='0.1'?'selected':''}>Sí, 0.1</option><option value="0.2" ${cur==='0.2'?'selected':''}>Sí, 0.2</option></select></label>`;}
   if(ui.ap==='PARALELAS'&&llegaAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
