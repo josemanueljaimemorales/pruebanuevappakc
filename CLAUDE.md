@@ -39,11 +39,13 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 
 ## MACRO y ASIGNACION DE COMPETENCIAS (convenciones para editarlos)
 - Los edita Claude con openpyxl a partir de la versión vigente en Drive (descargarla y comparar antes); conservar formato, colores, celdas combinadas y área de impresión; revisar la impresión (PDF) y probar Plan Anual y Calendario con los archivos nuevos antes de entregarlos.
-- MACRO, hoja "macro gral": fila 9 = unidad por día (CH O R D C E V), fila 10 = descripción. Competencia = unidad C + descripción en rojo; evento = unidad E.
+- MACRO, hoja "macro gral": fila 9 = unidad por día (CH choque, O ordinaria, R recuperación, D descanso, C competencia, E evento, V vacaciones; confirmado por Manu), fila 10 = descripción. Competencia = unidad C + descripción en rojo; evento = unidad E.
 - Dos cosas el mismo día: descripción "A / B" y unidad "C/E" (misma cantidad y orden). P. ej. "COPA PANAMERICANA GUATEMALA 26 / CAMPAMENTO…".
 - Descanso solo para algunos: "DESCANSO PARA PARTICIPANTES DE <competencia>"; la app no lista nombres de descansos.
 - ASIGNACION: una columna por competencia o evento, en orden de fecha; fila 1 = nombre **idéntico** al del MACRO, fila 2 = "SEDE\n<lugar>"; valores SI / NO (podría ir pero no va) / No aplica (no le corresponde por nivel o categoría); PARTICIPACION = COUNTIF(SI)/número de SI de la fila. Los eventos (campamentos) se ligan solo por nombre exacto.
 - Patrones del ciclo 26-27: copas para todos los niveles (Pablo Mares, FIG, solo va a Mikulak, selectivos, Estatal y Nacional); Copa CDI solo niveles 3–8; selectivos nacionales solo 9, 10 y FIG; Estatal GUEM y Nacional FMG desde nivel 4; Juegos CONADE / Olimpiada Nacional depende de la categoría por edad, no del nivel (preguntar a Manu quién entra).
+
+- La app para crear macrociclos nuevos vive en el repo `AKC_PRO_MASTER` (https://josemanueljaimemorales.github.io/AKC_PRO_MASTER/); sus criterios están en su CLAUDE.md.
 
 ## Rutinas (criterios de Manu)
 - N7 y N8 usan la estructura de rutinas USAG; elementos del mismo cuadro del Código dan valor cada uno sin contar como repetición.
