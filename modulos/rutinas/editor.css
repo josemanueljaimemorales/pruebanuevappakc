@@ -217,3 +217,11 @@ button{cursor:pointer}
   #printArea .dsheet{break-after:page;page-break-after:always}
   #printArea .dsheet:last-child{break-after:auto;page-break-after:auto}
 }
+
+/* El editor define sus propios colores: se pide al navegador que no aplique su "modo oscuro" automático
+   (Android lo aplicaba al imprimir y dejaba la hoja de división en negro). */
+:root{color-scheme:only light}
+@media print{:root,html,body{color-scheme:only light!important;forced-color-adjust:none}}
+#printArea{color-scheme:only light;forced-color-adjust:none}
+/* WebView (Android 13+) no oscurece páginas que atienden prefers-color-scheme; aquí solo se reafirma que la impresión es clara. */
+@media (prefers-color-scheme:dark){#printArea{color-scheme:only light}}
