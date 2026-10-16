@@ -179,9 +179,9 @@ function readCalendar(wb){
   };
 
   const forceForColumn = col => {
-    // Las cargas están en las filas 15 y 16 y también están combinadas
-    // horizontalmente por bloques.
-    for(const row of [15,16]){
+    // Las cargas están en las filas 15 (60-80 %), 16 (45-60 %) y 17 (35-45 %)
+    // y también están combinadas horizontalmente por bloques.
+    for(const row of [15,16,17]){
       const value=mergedValueAt(row,col);
       if(value) return value;
     }
