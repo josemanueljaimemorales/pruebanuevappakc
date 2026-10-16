@@ -217,7 +217,7 @@ function medioGiros(r){const t=' '+nk(r.n)+' ';
 // - Sin conexión en contrasaltos: el segundo elemento debe salir en la dirección con la que termina el primero
 //   (un medio giro impar invierte la dirección: 1½ o 2½ giros atrás terminan hacia adelante).
 // - Sin conexión entre dos mortales simples con giros.
-// - Después de un mortal múltiple que termina hacia atrás (doble atrás) no hay conexión.
+// - Atrás con atrás sí conecta (p. ej. doble atrás + giro atrás).
 // La dirección sale primero del nombre que usa el entrenador, luego del Código y al final del grupo.
 function pisoMov(it){const r=it.r,c=r.k&&CAT[r.k];const t=' '+nk(r.n)+' ', td=' '+nk(c?c.d:'')+' ';
   const dirDe=x=>/ (adelante|ade|adel|al frente|frente|ad) /.test(x)?'ad':/ (atras|atr|at) /.test(x)?'at':'';
@@ -229,7 +229,6 @@ function pisoMov(it){const r=it.r,c=r.k&&CAT[r.k];const t=' '+nk(r.n)+' ', td=' 
 function pisoConexionInvalida(a,b){const A=pisoMov(a),B=pisoMov(b);
   if(A.giros&&!A.multi&&B.giros&&!B.multi)return 'dos mortales simples con giros (Código FIG)';
   if(A.sale&&B.dir&&A.sale!==B.dir)return 'contramovimiento: cambia de dirección (Código FIG, contrasaltos)';
-  if(A.multi&&A.sale==='at')return 'después de un mortal múltiple hacia atrás no hay conexión';
   return '';}
 function cvPair(a,b,ap,nivel){
   const va=a.val,vb=b.val;
