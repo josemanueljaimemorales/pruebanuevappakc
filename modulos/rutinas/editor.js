@@ -164,9 +164,22 @@ function readLevels(){
 function valOf(r,nivel){if(r.t==='JA')return (nivel==='N7'||nivel==='N8')?.1:0;if(r.v!=null&&!r.l)return r.v;return LV[r.l]||0;}
 function grpOf(r,ap,nivel){
   if(r.t==='JA'||!r.g)return null;
-  if(nivel==='N8'){if(r.gx)return r.gx;if(ap==='ANILLOS'&&r.g===3)return 2;}
+  // En Anillos N8 el grupo III solo lo da la parada de manos (un "III" marcado a mano en otro elemento ya no aplica).
+  if(nivel==='N8'&&ap==='ANILLOS'){if(n8ParadaAnillos(r))return 3;if(r.gx&&r.gx!==3)return r.gx;return r.g===3?2:r.g;}
+  if(nivel==='N8'){if(r.gx)return r.gx;
+    if(ap==='FIJA'&&r.g===3&&n8FijaAdelante(r))return 2;}
   return r.g;
 }
+// Tabla de grupos de USAG para nivel 8 (MDP, "Table of Element Groups and Rules for Level 8 Competition"):
+// Anillos: grupo III = parada de manos sostenida 2 s (llegue a fuerza o con impulso); cualquier otro elemento FIG II o III cubre el grupo II.
+// Barra fija: grupo II = cualquier soltada o elemento en la barra hacia adelante / toma cubital (Endo, Adler, Weiler…);
+// grupo III = elementos en la barra hacia atrás con toma palmar (Stalder, giro libre atrás…).
+function n8ParadaAnillos(r){const en=(r.k&&CAT[r.k]?.en)||'';
+  if(en)return /\bto (hdst|handstand)/i.test(en)&&!/\b(through|thr\.)/i.test(en);
+  const t=' '+nk(r.n)+' ';return / (parada de manos|apoyo invertido|ap inv|pdm|a manos) /.test(t)&&!/ (desde|por el|por la) /.test(t);}
+function n8FijaAdelante(r){const c=r.k&&CAT[r.k], t=' '+nk(r.n+' '+(c?(c.en||'')+' '+c.d:''))+' ';
+  if(/ stalder /.test(t))return false;
+  return / (fwd|endo|adler|weiler|whaler|el grip|ungr|steineman|koste|carballo|quintero|fuentes|baldauf|adelante|al frente|cubital) /.test(t);}
 function dirOf(it){if(it.grp===2)return'ad';if(it.grp===3)return'at';
   const t=' '+nk((it.r.k&&CAT[it.r.k]?CAT[it.r.k].d:'')+' '+it.r.n)+' ';
   if(/ (adelante|ad|frente|ade|adel) /.test(t))return'ad'; if(/ (atras|at|atr) /.test(t))return'at'; return'';}
