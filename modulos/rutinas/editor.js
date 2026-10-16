@@ -200,11 +200,29 @@ function n8FijaAdelante(r){const c=r.k&&CAT[r.k], t=' '+nk(r.n+' '+(c?(c.en||'')
 function dirOf(it){if(it.grp===2)return'ad';if(it.grp===3)return'at';
   const t=' '+nk((it.r.k&&CAT[it.r.k]?CAT[it.r.k].d:'')+' '+it.r.n)+' ';
   if(/ (adelante|ad|frente|ade|adel) /.test(t))return'ad'; if(/ (atras|at|atr) /.test(t))return'at'; return'';}
+// Número de medios giros (twist) de un elemento de piso: por el nombre que usa el entrenador o, si no lo dice,
+// por el Código cuando la casilla es de un solo elemento.
+function medioGiros(r){const t=' '+nk(r.n)+' ';
+  const y=/ y medio /.test(t)?1:0;
+  if(/ (triple giro|tres giros) /.test(t))return 6+y;
+  if(/ (doble giro|dos giros) /.test(t))return 4+y;
+  let m=t.match(/ (\d)\/(\d) (g|giro|giros|t|twist) /); if(m)return Math.round(2*m[1]/m[2]);
+  if(/ giro y medio /.test(t))return 3;
+  if(/ (medio giro|1\/2 giro|1\/2 g) /.test(t))return 1;
+  if(/ (giro|giros|twist) /.test(t))return 2;
+  const en=' '+nk((r.k&&CAT[r.k]?.en)||'')+' ';
+  if(/ (also|or) /.test(en))return 0;
+  m=en.match(/ (\d)\/(\d) (t|turn|twist) /); return m?Math.round(2*m[1]/m[2]):0;}
 function cvPair(a,b,ap,nivel){
   const va=a.val,vb=b.val;
   if(ap==='PISO'){
     if(![2,3,4].includes(a.grp)||![2,3,4].includes(b.grp))return 0;
-    {const da=dirOf(a),db=dirOf(b);if(da&&db&&da!==db)return 0;}
+    if(nivel==='N8'){
+      // N8 (criterio de Manu): no se conectan giros con giros, y el segundo elemento debe seguir la dirección
+      // con la que sale el primero (un medio giro impar invierte la dirección: 2½ giros atrás sale hacia adelante).
+      const ha=medioGiros(a.r),hb=medioGiros(b.r); if(ha>0&&hb>0)return 0;
+      let da=dirOf(a);const db=dirOf(b); if(da&&ha%2===1)da=da==='ad'?'at':'ad'; if(da&&db&&da!==db)return 0;
+    }else{const da=dirOf(a),db=dirOf(b);if(da&&db&&da!==db)return 0;}
     if(a.grp===4&&b.grp===4)return 0;
     if(va>=.4&&vb>=.4)return .2;
     if((va>=.4&&(vb===.2||vb===.3))||(vb>=.4&&(va===.2||va===.3)))return .1;
