@@ -208,6 +208,8 @@ function cvPair(a,b,ap,nivel){
     if(a.grp===4&&b.grp===4)return 0;
     if(va>=.4&&vb>=.4)return .2;
     if((va>=.4&&(vb===.2||vb===.3))||(vb>=.4&&(va===.2||va===.3)))return .1;
+    // N8 (vigente, criterio de Manu): B+C, C+B y C+C también dan 0.1, además de las conexiones FIG.
+    if(nivel==='N8'&&[.2,.3].includes(va)&&[.2,.3].includes(vb)&&!(va===.2&&vb===.2))return .1;
     return 0;
   }
   if(ap==='FIJA'){
