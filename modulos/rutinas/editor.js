@@ -22,7 +22,9 @@ function nk(s){return String(s??'').replace(/½/g,' 1/2 ').replace(/¼/g,' 1/4 '
 // Piso: elementos que cubren la balanza en una pierna (planchas I.61/I.62, arabesca, flick facial o salto con giro a facial).
 const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|ck|k)( flac)? facial|salto( con)?( [a-z0-9/]+)? giro a facial) /.test(' '+nk(r.n)+' ');
 // Paralelas: elementos que llegan a manos balanceando atrás, y lo que puede seguir sin valor en la misma dirección.
-const llegaAManos=r=>r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(' '+nk(r.n)+' ');
+// Paralelas: elementos que terminan balanceando atrás. La braquial subida de pecho, si no lleva corte adelante,
+// termina por naturaleza con un vuelo atrás (criterio de Manu).
+const llegaAManos=r=>{const t=' '+nk(r.n)+' ';return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||(/ braq(uial)? subida de pecho /.test(t)&&!/ corte /.test(t));};
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
@@ -266,7 +268,8 @@ function compute(ap,rows,nivel,plantada,opt){
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
     const nb=' '+nk(b.n)+' ';
     const aManos=llegaAManos(a)&&!a.pv;
-    const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb);
+    // La salida hacia atrás (último elemento) también va en contra del balanceo.
+    const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb)||(i+1===rows.length-1&&/ atras /.test(nb)&&!/ adelante /.test(nb));
     if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza). Si después del vuelo hace un cambio, giro, Healy o Gatson sin capturarlo, márcalo en el elemento.`);});
   const valued=items.filter(x=>x.val>0);
   const n7=nivel==='N7', n8=nivel==='N8', usag=n7||n8;
