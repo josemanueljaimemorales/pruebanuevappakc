@@ -213,16 +213,29 @@ function medioGiros(r){const t=' '+nk(r.n)+' ';
   const en=' '+nk((r.k&&CAT[r.k]?.en)||'')+' ';
   if(/ (also|or) /.test(en))return 0;
   m=en.match(/ (\d)\/(\d) (t|turn|twist) /); return m?Math.round(2*m[1]/m[2]):0;}
+// Piso, todos los niveles (Código FIG 2025-2028, art. 10.2.2 punto 5, y criterio de Manu):
+// - Sin conexión en contrasaltos: el segundo elemento debe salir en la dirección con la que termina el primero
+//   (un medio giro impar invierte la dirección: 1½ o 2½ giros atrás terminan hacia adelante).
+// - Sin conexión entre dos mortales simples con giros.
+// - Después de un mortal múltiple que termina hacia atrás (doble atrás) no hay conexión.
+// La dirección sale primero del nombre que usa el entrenador, luego del Código y al final del grupo.
+function pisoMov(it){const r=it.r,c=r.k&&CAT[r.k];const t=' '+nk(r.n)+' ', td=' '+nk(c?c.d:'')+' ';
+  const dirDe=x=>/ (adelante|ade|adel|al frente|frente|ad) /.test(x)?'ad':/ (atras|atr|at) /.test(x)?'at':'';
+  const dir=dirDe(t)||(/ (adelante|ad) /.test(td)&&/ (atras|at) /.test(td)?'':dirDe(td))||(it.grp===2?'ad':it.grp===3?'at':'');
+  const multi=!/ (doble|triple) giro/.test(t)&&(/ (doble|triple|dbl) (mortal|salto|atras|at|adelante|ad|ade|al|en|agrupado|agr|carpa|extendido|ext) /.test(t)
+    ||(!/ (doble|triple|dobl|tripl)/.test(t)&&/ (doble|triple) mortal /.test(td)&&!/ tambien /.test(td)));
+  const mg=medioGiros(r); let sale=dir; if(sale&&mg%2===1)sale=sale==='ad'?'at':'ad';
+  return {dir,sale,multi,giros:mg>0};}
+function pisoConexionInvalida(a,b){const A=pisoMov(a),B=pisoMov(b);
+  if(A.giros&&!A.multi&&B.giros&&!B.multi)return 'dos mortales simples con giros (Código FIG)';
+  if(A.sale&&B.dir&&A.sale!==B.dir)return 'contramovimiento: cambia de dirección (Código FIG, contrasaltos)';
+  if(A.multi&&A.sale==='at')return 'después de un mortal múltiple hacia atrás no hay conexión';
+  return '';}
 function cvPair(a,b,ap,nivel){
   const va=a.val,vb=b.val;
   if(ap==='PISO'){
     if(![2,3,4].includes(a.grp)||![2,3,4].includes(b.grp))return 0;
-    if(nivel==='N8'){
-      // N8 (criterio de Manu): no se conectan giros con giros, y el segundo elemento debe seguir la dirección
-      // con la que sale el primero (un medio giro impar invierte la dirección: 2½ giros atrás sale hacia adelante).
-      const ha=medioGiros(a.r),hb=medioGiros(b.r); if(ha>0&&hb>0)return 0;
-      let da=dirOf(a);const db=dirOf(b); if(da&&ha%2===1)da=da==='ad'?'at':'ad'; if(da&&db&&da!==db)return 0;
-    }else{const da=dirOf(a),db=dirOf(b);if(da&&db&&da!==db)return 0;}
+    if(pisoConexionInvalida(a,b))return 0;
     if(a.grp===4&&b.grp===4)return 0;
     if(va>=.4&&vb>=.4)return .2;
     if((va>=.4&&(vb===.2||vb===.3))||(vb>=.4&&(va===.2||va===.3)))return .1;
@@ -377,7 +390,7 @@ function compute(ap,rows,nivel,plantada,opt){
     rows.forEach((r,i)=>{if(!r.c||i+1>=rows.length)return;
       if(!res.counted.has(i)||!res.counted.has(i+1)){res.notes.push(`Conexión ${i+1}-${i+2}: uno de los dos no cuenta.`);return;}
       const v=(r.cv!=null&&r.cv!=='')?+r.cv:cvPair(items[i],items[i+1],ap,nivel);
-      
+      if(ap==='PISO'){const m=pisoConexionInvalida(items[i],items[i+1]);if(m)res.notes.push(`Conexión ${i+1}-${i+2} ("${rows[i].n}" y "${rows[i+1].n}"): no vale, ${m}.`);}
       res.cv+=v;});
     res.cv=r1(res.cv);
   }
