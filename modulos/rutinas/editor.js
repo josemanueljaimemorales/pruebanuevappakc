@@ -8,7 +8,7 @@ const LV={A:.1,B:.2,C:.3,D:.4,E:.5,F:.6,G:.7,H:.8,I:.9,J:1};
 const ROM=['','I','II','III','IV'];
 // Saltos en N7 y N8: valores propios de USAG (tabla de modificaciones del MDP y boletines #4 y #5); los demás saltos
 // llevan el valor FIG. En N7 y N8 el valor no se escribe a mano: sale de esta tabla.
-const VAULT_USAG={'3|307':2.2,'3|308':2.4,'3|313':3.2,'5|507':2.2,'5|509':2.4,'5|510':3.2,'2|207':2.4,'2|213':3.2,'1|107':3.6,'2|219':4.0,'1|113':4.2,'1|119':2.8};
+const VAULT_USAG={'3|307':2.2,'3|308':2.4,'3|313':3.2,'5|507':2.2,'5|509':2.4,'5|510':3.2,'2|207':2.4,'2|213':3.2,'1|107':3.6,'2|219':4.0,'1|113':4.2,'1|114':4.2,'1|119':2.8};
 function vaultUSAG(r){if(!r.k||!CAT[r.k])return r.v||0;const p=r.k.split('|');const v=VAULT_USAG[p[1]+'|'+p[2]];
   if(v!=null)return v;const t=' '+nk(r.n)+' ';
   if(/ kasamatsu /.test(t)&&/ (agrupado|agr|en c|tucked) /.test(t)&&!/ (ext|extendido|carpa|giro) /.test(t))return 2.8;
