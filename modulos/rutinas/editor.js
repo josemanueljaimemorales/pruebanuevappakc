@@ -266,6 +266,42 @@ function finalPos(d){
   if(!hits.length)return null; hits.sort((x,y)=>x[0]-y[0]); const c=hits[hits.length-1][1]; return c==='hs'?null:c;
 }
 const POS_TXT={cristo:'cristo',cristoinv:'cristo invertido',hir:'hirondelle',hirinv:'hirondelle invertida',dorsal:'plancha dorsal',facial:'suspensión facial',plancha:'plancha',V:'ángulo piernas verticales',L:'ángulo'};
+// Arzón: repeticiones especiales del Código FIG 2025-2028 (art. 11.2.2, punto 3). En caso de repetición especial
+// cuentan primero la salida y luego los elementos de mayor valor (art. 7, punto 8). N8 no las aplica (USAG).
+const ARZ_REP={
+  cruz:['3|33','3|34','3|35','3|39','3|40','3|41'],            // a) máx. 2 recorridos 3/3 en apoyo transversal
+  rusaRec:['3|57','3|58','3|59','3|64','3|65','3|70'],         // d) máx. 2 recorridos 3/3 en rusas
+  spindleRec:['3|17','3|22','3|23','3|29'],                    // e) máx. 2 recorridos 3/3 con spindle
+  spindle:['2|28','2|29','2|30','2|34','2|35','2|36'],         // f) máx. 2 spindles completos
+  sohn:['2|56','2|57','2|58','2|69','2|71'],                   // g) máx. 2 tipo Sohn / Bezugo
+  rusaEntre:['2|110','2|111','2|112','2|113','4|10'],          // b) rusa en un arzón o entre arzones
+  rusaPunta:['2|85','2|91','2|92','2|93','2|97','2|103','2|104','2|105','4|1','4|7','4|8','4|9'], // b) rusa en la punta (con salida)
+  famRusa:['3|64','3|65','3|70'], famTongFei:['3|57','3|58','3|59']};                             // j) una sola variante por familia
+function arzonRepeticiones(items,res,kill){
+  const id=it=>it.r.k&&/^ARZON\|/.test(it.r.k)?it.r.k.slice(6):null;
+  const en=it=>' '+nk(it.r.n+' '+((it.r.k&&CAT[it.r.k]?.en)||''))+' ';
+  const vivos=items.filter(it=>it.val>0&&id(it)).sort((a,b)=>((b.grp===4)-(a.grp===4))||(b.val-a.val));
+  const tope=(lista,max,why)=>{let n=0;vivos.forEach(it=>{if(it.val>0&&lista.includes(id(it))){n++;if(n>max)kill(it,why);}});};
+  tope(ARZ_REP.cruz,2,'Máximo 2 recorridos 3/3 en apoyo transversal (Magyar, Sivado, Driggs…) por rutina');
+  tope(ARZ_REP.rusaRec,2,'Máximo 2 recorridos 3/3 en rusas por rutina');
+  tope(ARZ_REP.spindleRec,2,'Máximo 2 recorridos 3/3 con spindle por rutina');
+  tope(ARZ_REP.spindle,2,'Máximo 2 spindles completos (1/1) por rutina');
+  tope(ARZ_REP.sohn,2,'Máximo 2 elementos tipo Sohn o Bezugo por rutina');
+  tope(ARZ_REP.famRusa,1,'Misma familia que otro recorrido en rusas (Roth, Wu Guonian, 3/3 con 630°): solo vale uno');
+  tope(ARZ_REP.famTongFei,1,'Misma familia que otro recorrido tipo Tong Fei (Tong Fei, Vammen): solo vale uno');
+  {let n=0;vivos.forEach(it=>{if(it.val>0&&(id(it)==='3|22'||id(it)==='3|23')){if(/ nin reyes /.test(' '+nk(it.r.n)+' ')){n++;if(n>1)kill(it,'Nin Reyes y Nin Reyes 2: solo vale uno (con Titov o Keikha 4 sí valen los dos)');}}});}
+  // b) Rusas: máximo 2 en la rutina (con la salida) y no más de una en la punta ni más de una entre arzones.
+  {let punta=0,entre=0,total=0;vivos.forEach(it=>{if(!(it.val>0))return;const k=id(it);
+    const p=ARZ_REP.rusaPunta.includes(k)||(it.grp===4&&/ (rusa|russian) /.test(en(it))&&!ARZ_REP.rusaEntre.includes(k)), e=ARZ_REP.rusaEntre.includes(k);
+    if(!p&&!e)return; total++;
+    if(p&&++punta>1)return kill(it,'Segunda rusa en la punta (incluye la salida): repetición especial');
+    if(e&&++entre>1)return kill(it,'Segunda rusa entre arzones o en un arzón: repetición especial');
+    if(total>2)kill(it,'Máximo 2 rusas por rutina, contando la salida');});}
+  // c) Máximo 2 elementos a parada de manos desde círculos, flairs o tijeras (sin contar la salida).
+  {let n=0;vivos.forEach(it=>{if(it.val>0&&it.grp!==4&&/ (handstand|hdst) /.test(en(it))){n++;if(n>2)kill(it,'Máximo 2 elementos a parada de manos por rutina (sin contar la salida)');}});}
+  // h) Máximo 4 elementos en flairs (sin contar la salida).
+  {let n=0;vivos.forEach(it=>{if(it.val>0&&it.grp!==4&&/ flairs? /.test(' '+nk(it.r.n)+' ')){n++;if(n>4)kill(it,'Máximo 4 elementos en flairs por rutina (sin contar la salida)');}});}
+}
 function applySpecial(ap,items,res,nivel){
   const kill=(it,why)=>{if(it.val>0){it.val=0;res.rep.add(it.i);res.why[it.i]=why;}};
   const id=it=>it.r.t==='C'&&it.r.k?it.r.k.split('|'):null;
@@ -286,6 +322,7 @@ function applySpecial(ap,items,res,nivel){
     for(const [k,arr] of Object.entries(best)){if(arr.length<2)continue;arr.sort((a,b)=>b.val-a.val);
       arr.slice(1).forEach(it=>kill(it,`Misma posición final (${POS_TXT[it.pos]}) que "${arr[0].r.n}" en el grupo ${ROM[it.r.g]}`));}
   }
+  if(ap==='ARZON'&&nivel!=='N8')arzonRepeticiones(items,res,kill);
   if(ap==='PISO'){
     // Máximo 1 elemento de fuerza y 1 de molinos/flairs/rusas (10.2 7a/7b)
     const fuerza=[],molinos=[];
