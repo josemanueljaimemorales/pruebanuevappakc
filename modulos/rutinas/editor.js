@@ -24,6 +24,11 @@ const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|
 // Paralelas: elementos que llegan a manos balanceando atrás, y lo que puede seguir sin valor en la misma dirección.
 const llegaAManos=r=>r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(' '+nk(r.n)+' ');
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
+// Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
+const FV_OPC={cs:'Cambio sencillo'};
+const PV_TXT=v=>PV_OPC[v]||FV_OPC[v]||'';
+const kipAManos=r=>{const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?CAT[r.k].d:''))+' ';
+  return / (alemana|kip|kipe|kippe|dominacion at(ras)?) /.test(t)&&/ (a manos|apoyo invertido|ap inv) /.test(t);};
 const nameKey=v=>String(v??'').toUpperCase().replace(/\s+/g,'');
 function normLevel(v){v=String(v||'').toUpperCase().replace(/\s+/g,'');if(v==='NFIG'||v==='FIG')return'FIG';const m=v.match(/^N?(7|8|9|10)$/);return m?'N'+m[1]:'FIG';}
 function table(ap,nivel){return nivel==='N8'&&ap==='ARZON'?'N8ARZON':'FIG';}
@@ -249,9 +254,9 @@ function compute(ap,rows,nivel,plantada,opt){
   applySpecial(ap,items,res,nivel);
   Object.entries(res.why).forEach(([i,w])=>res.notes.push(`${rows[i].n}: ${w}.`));
   res.enotes=res.enotes||[];
-  if(ap==='FIJA'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
-    const ta=' '+nk(a.n+' '+(a.k&&CAT[a.k]?CAT[a.k].d:''))+' ', tb=' '+nk(b.n+' '+(b.k&&CAT[b.k]?CAT[b.k].d:''))+' ';
-    const kipHS=/ (alemana|kip|kipe|kippe|dominacion at(ras)?) /.test(ta)&&/ (a manos|apoyo invertido|ap inv) /.test(ta);
+  if(ap==='FIJA'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct||FV_OPC[a.pv])return;
+    const tb=' '+nk(b.n+' '+(b.k&&CAT[b.k]?CAT[b.k].d:''))+' ';
+    const kipHS=kipAManos(a);
     const atras=/ (gigante|molino at(ras)?|stalder|quinta|salvada) /.test(tb)||/ 1\/2 g .*cubital/.test(tb);
     if(kipHS&&atras&&!/ (molino ad(elante)?|endo) /.test(tb))res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". Error de composición -0.30 (jurado E) si van seguidos.`);});
   // Paralelas (FIG, N9 y N10): después de llegar a manos balanceando atrás (vuelo o impulso a manos),
@@ -443,7 +448,7 @@ function metaLine(r,res,i){
   if(r.t==='JA'&&a.nivel!=='N7'&&a.nivel!=='N8')b+='<span class="badge b">Juvenil A: sin valor en '+a.nivel+'</span>';
   if(r.ct)b+='<span class="badge i">A cambio de toma</span>';
   if(r.gig)b+=`<span class="badge i">Cae a ${r.gig}</span>`;
-  if(r.pv&&PV_OPC[r.pv])b+=`<span class="badge i">Luego: ${PV_OPC[r.pv]} (sin valor)</span>`;
+  if(PV_TXT(r.pv))b+=`<span class="badge i">Luego: ${PV_TXT(r.pv)} (sin valor)</span>`;
   if(r.nf)b+='<span class="badge b">No está en el Código 2025: revisa ID</span>';
   if(r.ex)b+=`<span class="badge w">${esc(r.ex)}</span>`;
   return esc(m)+(b?'<div>'+b+'</div>':'');
@@ -495,6 +500,7 @@ function editPanel(r,i,a){
     h+=`<label>Conexión manual con "${esc(rowsA[i+1].n)}"<select data-f="cvm" data-i="${i}"><option value="" ${cur===''?'selected':''}>No, solo según reglas</option><option value="0.1" ${cur==='0.1'?'selected':''}>Sí, 0.1</option><option value="0.2" ${cur==='0.2'?'selected':''}>Sí, 0.2</option></select></label>`;}
   if(ui.ap==='PARALELAS'&&llegaAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
+  if(ui.ap==='FIJA'&&kipAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(FV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t} y sigue a gigante</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA')h+=`<label class="opt"><input type="checkbox" data-f="ct" data-i="${i}" ${r.ct?'checked':''}> Después de este elemento hay cambio de toma (sin valor)</label>`;
   if(r.k&&CAT[r.k])h+=`<small style="color:var(--muted)">${esc(CAT[r.k].d)}${CAT[r.k].en&&CAT[r.k].en!==CAT[r.k].d?`<br><i>Código en inglés: ${esc(CAT[r.k].en)}</i>`:''}${CAT[r.k].corr?'<br>Traducción corregida con el Código en inglés.':''}</small>`;
   return h+`</div>`;
@@ -709,7 +715,7 @@ function printAll(build,pref){
         h+=`<div class="pm">Dificultad ${f1(c.dv)} · Grupos ${f1(c.eg)} · Conexión ${f1(c.cv)}${c.bon?` · Bonos ${f1(c.bon)}`:''}${c.nd?` · Ded. neutral -${f1(c.nd)}`:''}</div>`;
         h+=`<table><tr><th>Elemento</th><th>ID</th><th>Grupo</th><th>Valor</th><th>VD</th></tr>`;
         rows.forEach((r,i)=>{const vd=c.rep.has(i)?0:valOf(r,a.nivel);
-          h+=`<tr class="${res_off(c,i,vd)?'off':''}"><td>${esc(r.n)}${r.pv&&PV_OPC[r.pv]?' → '+esc(PV_OPC[r.pv]):''}${r.c&&i<rows.length-1?' <span class="cx">↔</span>':''}</td><td>${r.t==='JA'?'EV':esc(r.id||'')}</td><td>${r.t==='JA'?'X':(r.g?ROM[r.g]:'')}</td><td>${r.t==='JA'?'A':esc(r.l||'')}</td><td>${vd.toFixed(1)}</td></tr>`;});
+          h+=`<tr class="${res_off(c,i,vd)?'off':''}"><td>${esc(r.n)}${PV_TXT(r.pv)?' → '+esc(PV_TXT(r.pv)):''}${r.c&&i<rows.length-1?' <span class="cx">↔</span>':''}</td><td>${r.t==='JA'?'EV':esc(r.id||'')}</td><td>${r.t==='JA'?'X':(r.g?ROM[r.g]:'')}</td><td>${r.t==='JA'?'A':esc(r.l||'')}</td><td>${vd.toFixed(1)}</td></tr>`;});
       }
       if(!rows.length)h+=`<tr><td colspan="5">Sin elementos</td></tr>`;
       h+=`</table></article>`;}
