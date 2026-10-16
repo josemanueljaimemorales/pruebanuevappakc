@@ -427,7 +427,7 @@ function renderList(){
     h+=`<button class="card" data-act="open" data-v="${esc(n)}"><span><b>${esc(n)}</b><span class="lv">${esc(a.nivel)}</span></span><span class="aa">${f1(t.aa)}${APS.reduce((x,[k])=>x+nAv(t[k]),0)?`<small class="warn"> ⚠${APS.reduce((x,[k])=>x+nAv(t[k]),0)}</small>`:''}</span></button>`;}
   h+=`</div><div class="actions"><button class="btn" data-act="export">Descargar Excel actualizado</button></div>`;
   h+=`<div class="actions printbar"><button class="btn" data-act="print">Imprimir rutinas</button><small>Una hoja tamaño carta horizontal por atleta. En el diálogo elige "Guardar como PDF".</small></div>`;
-  h+=`<div class="actions printbar"><button class="btn" data-act="dprint">Imprimir división (grupal)</button><small>Para que los atletas aprendan su rutina: por nivel, hasta 6 atletas por hoja, con 1er enlace, 2do enlace y enlace a salir.</small></div>`;
+  h+=`<div class="actions printbar"><button class="btn" data-act="dprint">Descargar división en PDF (grupal)</button><small>Para que los atletas aprendan su rutina: por nivel, hasta 6 atletas por hoja, con 1er enlace, 2do enlace y enlace a salir.</small></div>`;
   root.innerHTML=h;
 }
 function metaLine(r,res,i){
@@ -719,6 +719,7 @@ function printAll(build,pref){
   Promise.all(imgs.map(im=>im.complete?1:new Promise(r=>{im.onload=im.onerror=r;}))).then(()=>{
     fitOblSheets(area);fitDivSheets(area);
     const prev=document.title, d=new Date(); document.title=`${PRINT_PREF} ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+    if(area.querySelector('.dsheet')){const t=document.title;document.title=prev;return divDescargarPDF(area,t);}
     window.print(); setTimeout(()=>{document.title=prev;},1000);});
 }
 /* Libres y obligatorios: acomoda los 6 aparatos en 3 columnas (opción A o B, la que deje letra más grande) y elige por atleta
@@ -781,6 +782,47 @@ function fitDivSheets(area){
     for(let k=0;k<12;k++){const mid=(lo+hi)/2;sh.style.setProperty('--fs',mid+'px');if(sh.getBoundingClientRect().height<=alto)lo=mid;else hi=mid;}
     sh.style.setProperty('--fs',lo+'px');while(sh.getBoundingClientRect().height>alto&&lo>5){lo-=.25;sh.style.setProperty('--fs',lo+'px');}});
   area.classList.remove('measuring');
+}
+/* La división se entrega como PDF hecho aquí mismo y no con el diálogo de impresión: en Android el "tema oscuro para sitios"
+   ponía negros los fondos de colores al imprimir o guardar como PDF. Cada hoja se dibuja como imagen con sus colores reales. */
+const JSPDF_URL='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+function cargarJsPDF(){
+  if(window.jspdf)return Promise.resolve();
+  return new Promise((ok,no)=>{const s=document.createElement('script');s.src=JSPDF_URL;s.onload=ok;
+    s.onerror=()=>no(new Error('No se pudo cargar el generador de PDF. Revisa tu conexión a internet.'));document.head.appendChild(s);});
+}
+function divHojaAImagen(sh,css,escala){
+  const w=Math.ceil(sh.offsetWidth),h=Math.ceil(sh.offsetHeight);
+  const marco=document.createElement('div');marco.id='printArea';marco.setAttribute('style',`display:block;background:#fff;width:${w}px`);
+  const st=document.createElement('style');st.textContent=css;marco.appendChild(st);
+  const cl=sh.cloneNode(true);const orig=sh.querySelectorAll('img');
+  cl.querySelectorAll('img').forEach((im,i)=>{const o=orig[i];try{const c=document.createElement('canvas');c.width=o.naturalWidth;c.height=o.naturalHeight;c.getContext('2d').drawImage(o,0,0);im.src=c.toDataURL('image/png');}catch(e){im.remove();}});
+  marco.appendChild(cl);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w*escala}" height="${h*escala}" viewBox="0 0 ${w} ${h}"><foreignObject x="0" y="0" width="${w}" height="${h}">${new XMLSerializer().serializeToString(marco)}</foreignObject></svg>`;
+  return new Promise((ok,no)=>{const im=new Image();
+    im.onload=()=>{const c=document.createElement('canvas');c.width=w*escala;c.height=h*escala;const g=c.getContext('2d');
+      g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
+      try{ok({url:c.toDataURL('image/jpeg',0.92),w,h});}catch(e){no(e);}};
+    im.onerror=()=>no(new Error('No se pudo dibujar la hoja.'));
+    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);});
+}
+async function divDescargarPDF(area,nombre){
+  const btn=document.querySelector('[data-act="dprint"]'),txt=btn&&btn.textContent;
+  if(btn){btn.disabled=true;btn.textContent='Generando PDF…';}
+  area.classList.add('measuring');
+  try{
+    await cargarJsPDF();
+    let css='*{box-sizing:border-box}\n';for(const ss of document.styleSheets){let rs;try{rs=ss.cssRules;}catch(e){continue;}
+      for(const r of rs)if(r.selectorText&&r.selectorText.includes('.dsheet'))css+=r.cssText+'\n';}
+    const pxmm=96/25.4, doc=new window.jspdf.jsPDF({unit:'mm',format:'letter',orientation:'portrait'});
+    const hojas=[...area.querySelectorAll('.dsheet')];
+    for(let i=0;i<hojas.length;i++){const r=await divHojaAImagen(hojas[i],css,3);
+      if(i)doc.addPage('letter','portrait');
+      doc.addImage(r.url,'JPEG',8,8,r.w/pxmm,r.h/pxmm);}
+    const a=document.createElement('a');a.href=URL.createObjectURL(doc.output('blob'));a.download=nombre.normalize('NFD').replace(/[\u0300-\u036f]/g,'')+'.pdf';
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);
+  }catch(e){alert(e.message||'No se pudo generar el PDF.');}
+  finally{area.classList.remove('measuring');if(btn){btn.disabled=false;btn.textContent=txt;}}
 }
 function oblPrintHTML(fecha){
   let h='';
