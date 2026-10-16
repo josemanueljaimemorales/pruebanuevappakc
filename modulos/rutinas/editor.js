@@ -756,12 +756,18 @@ const DIV_AP={PISO:'PISO',ARZON:'ARZONES',ANILLOS:'ANILLOS',SALTO:'SALTO DE CABA
 // Con 8 elementos: 1er enlace 1-3, 2do enlace 3-6, enlace a salir 6-8 (con otro número se ajusta igual).
 function divBloques(n){if(n<4)return[];const b=[['1er enlace',1,3,'d1']];if(n-2>3)b.push(['2do enlace',3,n-2,'d2']);b.push(['Enlace a salir',n-2,n,'d3']);return b;}
 function divPrintHTML(fecha){
-  let h='';
+  // Hojas de hasta 6 atletas. Si un grupo cabe completo en la hoja del grupo anterior, va en la misma hoja (p. ej. Nivel 10 y FIG).
+  const POR=6, hojas=[];
   for(const [titulo,niveles] of DIV_GRUPOS){
-    const at=ORDER.filter(n=>S.atletas[n]&&niveles.includes(S.atletas[n].nivel));
-    const POR=6;for(let p=0;p<at.length;p+=POR){const grupo=at.slice(p,p+POR);
-      h+=`<section class="sheet dsheet"><header class="dh"><img src="logo.png" alt=""><div><h1>División de rutinas · ${esc(titulo)}</h1><p>${esc(fecha)}${at.length>POR?` · hoja ${p/POR+1} de ${Math.ceil(at.length/POR)}`:''}</p></div></header><div class="dgrid" style="grid-template-columns:repeat(${Math.max(4,grupo.length)},minmax(0,1fr))">`;
-      for(const n of grupo){const a=S.atletas[n];
+    const at=ORDER.filter(n=>S.atletas[n]&&niveles.includes(S.atletas[n].nivel));if(!at.length)continue;
+    const ult=hojas[hojas.length-1];
+    if(ult&&!ult.parte&&ult.at.length+at.length<=POR){ult.titulos.push(titulo);ult.at.push(...at);continue;}
+    for(let p=0;p<at.length;p+=POR)hojas.push({titulos:[titulo],at:at.slice(p,p+POR),parte:at.length>POR?`hoja ${p/POR+1} de ${Math.ceil(at.length/POR)}`:''});
+  }
+  let h='';
+  for(const hj of hojas){const titulo=hj.titulos.length>1?hj.titulos.slice(0,-1).join(', ')+' y '+hj.titulos[hj.titulos.length-1]:hj.titulos[0];
+      h+=`<section class="sheet dsheet"><header class="dh"><img src="logo.png" alt=""><div><h1>División de rutinas · ${esc(titulo)}</h1><p>${esc(fecha)}${hj.parte?` · ${hj.parte}`:''}</p></div></header><div class="dgrid" style="grid-template-columns:repeat(${Math.max(4,hj.at.length)},minmax(0,1fr))">`;
+      for(const n of hj.at){const a=S.atletas[n];
         h+=`<div class="dcol"><div class="dname">${esc(n)}</div>`;
         for(const [ap] of APS){const rows=(a.r[ap]||[]).map(r=>r.n);const salto=ap==='SALTO';
           h+=`<div class="dap"><div class="dt">${DIV_AP[ap]}</div><div class="dhd${salto?' solo':''}"><span>NOMBRE</span>${salto?'':'<span>DIVISIÓN</span>'}</div><div class="dbody${salto?' solo':''}">`;
@@ -769,7 +775,7 @@ function divPrintHTML(fecha){
           if(!salto)divBloques(rows.length).forEach(([t,x,y,c])=>{h+=`<div class="db ${c}" style="grid-row:${x}/${y+1}"><span>${t}</span></div>`;});
           h+=`</div></div>`;}
         h+=`</div>`;}
-      h+=`</div></section>`;}
+      h+=`</div></section>`;
   }
   return h||'<section class="sheet dsheet"><p>No hay atletas.</p></section>';
 }
@@ -784,27 +790,66 @@ function fitDivSheets(area){
   area.classList.remove('measuring');
 }
 /* La división se entrega como PDF hecho aquí mismo y no con el diálogo de impresión: en Android el "tema oscuro para sitios"
-   ponía negros los fondos de colores al imprimir o guardar como PDF. Cada hoja se dibuja como imagen con sus colores reales. */
+   oscurece lo que dibuja el navegador (al imprimir y aun dentro de imágenes). Por eso el PDF se dibuja directo con jsPDF:
+   cada fondo, borde y texto se copia de la hoja ya acomodada en pantalla, con sus colores reales. */
 const JSPDF_URL='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 function cargarJsPDF(){
   if(window.jspdf)return Promise.resolve();
   return new Promise((ok,no)=>{const s=document.createElement('script');s.src=JSPDF_URL;s.onload=ok;
     s.onerror=()=>no(new Error('No se pudo cargar el generador de PDF. Revisa tu conexión a internet.'));document.head.appendChild(s);});
 }
-function divHojaAImagen(sh,css,escala){
-  const w=Math.ceil(sh.offsetWidth),h=Math.ceil(sh.offsetHeight);
-  const marco=document.createElement('div');marco.id='printArea';marco.setAttribute('style',`display:block;background:#fff;width:${w}px`);
-  const st=document.createElement('style');st.textContent=css;marco.appendChild(st);
-  const cl=sh.cloneNode(true);const orig=sh.querySelectorAll('img');
-  cl.querySelectorAll('img').forEach((im,i)=>{const o=orig[i];try{const c=document.createElement('canvas');c.width=o.naturalWidth;c.height=o.naturalHeight;c.getContext('2d').drawImage(o,0,0);im.src=c.toDataURL('image/png');}catch(e){im.remove();}});
-  marco.appendChild(cl);
-  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w*escala}" height="${h*escala}" viewBox="0 0 ${w} ${h}"><foreignObject x="0" y="0" width="${w}" height="${h}">${new XMLSerializer().serializeToString(marco)}</foreignObject></svg>`;
-  return new Promise((ok,no)=>{const im=new Image();
-    im.onload=()=>{const c=document.createElement('canvas');c.width=w*escala;c.height=h*escala;const g=c.getContext('2d');
-      g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);
-      try{ok({url:c.toDataURL('image/jpeg',0.92),w,h});}catch(e){no(e);}};
-    im.onerror=()=>no(new Error('No se pudo dibujar la hoja.'));
-    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);});
+function pdfColor(c){const m=/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(c||'');
+  if(!m||(m[4]!==undefined&&+m[4]===0))return null;return[+m[1],+m[2],+m[3]];}
+// Las letras estándar del PDF no traen todos los signos: se cambian por el más parecido.
+function pdfTexto(t){return t.replace(/[″“”]/g,'"').replace(/[′‘’]/g,"'").replace(/[–—]/g,'-').replace(/…/g,'...').replace(/[^\x20-\xff]/g,'');}
+async function divLogo(sh){
+  const im=sh.querySelector('img');if(!im)return null;
+  try{const r=await fetch(im.src);return new Uint8Array(await r.arrayBuffer());}catch(e){return null;}
+}
+function divHojaAPDF(doc,sh,logo){
+  const pxmm=96/25.4, M=8, o=sh.getBoundingClientRect();
+  const X=v=>M+(v-o.left)/pxmm, Y=v=>M+(v-o.top)/pxmm, L=v=>v/pxmm;
+  // Fondos y bordes
+  for(const el of sh.querySelectorAll('*')){
+    const cs=getComputedStyle(el), r=el.getBoundingClientRect();if(!r.width||!r.height)continue;
+    const bg=pdfColor(cs.backgroundColor);if(bg){doc.setFillColor(...bg);doc.rect(X(r.left),Y(r.top),L(r.width),L(r.height),'F');}
+    for(const [lado,x,y,w,h] of [['Top',r.left,r.top,r.width,0],['Bottom',r.left,r.bottom,r.width,0],['Left',r.left,r.top,0,r.height],['Right',r.right,r.top,0,r.height]]){
+      const bw=parseFloat(cs['border'+lado+'Width']);if(!bw||cs['border'+lado+'Style']==='none')continue;
+      const bc=pdfColor(cs['border'+lado+'Color']);if(!bc)continue;doc.setFillColor(...bc);
+      const ex=(lado==='Right')?-bw:0, ey=(lado==='Bottom')?-bw:0;
+      doc.rect(X(x+ex),Y(y+ey),L(w||bw),L(h||bw),'F');}
+  }
+  const im=sh.querySelector('img');if(logo&&im){const r=im.getBoundingClientRect();try{doc.addImage(logo,'PNG',X(r.left),Y(r.top),L(r.width),L(r.height),'logo');}catch(e){}}
+  // Textos
+  const tw=document.createTreeWalker(sh,NodeFilter.SHOW_TEXT);let nd;
+  while((nd=tw.nextNode())){
+    const t=nd.textContent;if(!t.trim())continue;
+    const cs=getComputedStyle(nd.parentElement), fs=parseFloat(cs.fontSize)*0.75;
+    const bold=(parseInt(cs.fontWeight)||400)>=600, ital=cs.fontStyle==='italic';
+    doc.setFont('helvetica',bold&&ital?'bolditalic':bold?'bold':ital?'italic':'normal');
+    doc.setTextColor(...(pdfColor(cs.color)||[17,17,17]));
+    const rg=document.createRange();
+    if(cs.writingMode.startsWith('vertical')){
+      rg.selectNodeContents(nd);const r=rg.getBoundingClientRect(), cel=nd.parentElement.closest('.db')||nd.parentElement, cr=cel.getBoundingClientRect();
+      const txt=pdfTexto(t.trim());let f=fs;doc.setFontSize(f);
+      const maxW=L(cr.height)*0.94;if(doc.getTextWidth(txt)>maxW){f=f*maxW/doc.getTextWidth(txt);doc.setFontSize(f);}
+      const w=doc.getTextWidth(txt), cx=X((r.left+r.right)/2), cy=Y((cr.top+cr.bottom)/2);
+      doc.text(txt,cx+f*0.3528*0.35,cy+w/2,{angle:90});
+      continue;}
+    // Renglones tal como quedaron en pantalla (palabra por palabra)
+    const lineas=[];const re=/\S+/g;let m;
+    while((m=re.exec(t))){rg.setStart(nd,m.index);rg.setEnd(nd,m.index+m[0].length);const r=rg.getBoundingClientRect();
+      const ln=lineas.find(z=>Math.abs(z.cy-(r.top+r.bottom)/2)<r.height*0.4);
+      if(ln){ln.ps.push(m[0]);ln.l=Math.min(ln.l,r.left);ln.r=Math.max(ln.r,r.right);}else lineas.push({cy:(r.top+r.bottom)/2,l:r.left,r:r.right,ps:[m[0]]});}
+    const cel=nd.parentElement.getBoundingClientRect(), centro=cs.textAlign==='center';
+    for(const ln of lineas){
+      const txt=pdfTexto(ln.ps.join(' '));let f=fs;doc.setFontSize(f);
+      const maxW=centro?L(cel.width)*0.96:L(ln.r-ln.l)*1.08;
+      if(doc.getTextWidth(txt)>maxW){f=f*maxW/doc.getTextWidth(txt);doc.setFontSize(f);}
+      const y=Y(ln.cy)+f*0.3528*0.35;
+      if(centro)doc.text(txt,X((cel.left+cel.right)/2),y,{align:'center'});else doc.text(txt,X(ln.l),y);
+    }
+  }
 }
 async function divDescargarPDF(area,nombre){
   const btn=document.querySelector('[data-act="dprint"]'),txt=btn&&btn.textContent;
@@ -812,14 +857,10 @@ async function divDescargarPDF(area,nombre){
   area.classList.add('measuring');
   try{
     await cargarJsPDF();
-    let css='*{box-sizing:border-box}\n';for(const ss of document.styleSheets){let rs;try{rs=ss.cssRules;}catch(e){continue;}
-      for(const r of rs)if(r.selectorText&&r.selectorText.includes('.dsheet'))css+=r.cssText+'\n';}
-    const pxmm=96/25.4, doc=new window.jspdf.jsPDF({unit:'mm',format:'letter',orientation:'portrait'});
-    const hojas=[...area.querySelectorAll('.dsheet')];
-    for(let i=0;i<hojas.length;i++){const r=await divHojaAImagen(hojas[i],css,3);
-      if(i)doc.addPage('letter','portrait');
-      doc.addImage(r.url,'JPEG',8,8,r.w/pxmm,r.h/pxmm);}
-    const a=document.createElement('a');a.href=URL.createObjectURL(doc.output('blob'));a.download=nombre.normalize('NFD').replace(/[\u0300-\u036f]/g,'')+'.pdf';
+    const doc=new window.jspdf.jsPDF({unit:'mm',format:'letter',orientation:'portrait'});
+    const hojas=[...area.querySelectorAll('.dsheet')], logo=hojas.length?await divLogo(hojas[0]):null;
+    hojas.forEach((sh,i)=>{if(i)doc.addPage('letter','portrait');divHojaAPDF(doc,sh,logo);});
+    const a=document.createElement('a');a.href=URL.createObjectURL(doc.output('blob'));a.download=nombre.normalize('NFD').replace(/[̀-ͯ]/g,'')+'.pdf';
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000);
   }catch(e){alert(e.message||'No se pudo generar el PDF.');}
   finally{area.classList.remove('measuring');if(btn){btn.disabled=false;btn.textContent=txt;}}
