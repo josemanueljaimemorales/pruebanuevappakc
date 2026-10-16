@@ -325,9 +325,9 @@ function compute(ap,rows,nivel,plantada,opt){
   }
   // Bonos
   if(n8&&dis&&dis.val>=.3)res.bon+=dis.val>=.5?.4:dis.val>=.4?.3:.2;
-  if(plantada&&!n7){
-    if(n8){if(dis)res.bon+=dis.val>=.4?.4:dis.val>=.3?.3:dis.val>=.2?.2:0;}
-    else if(ap!=='ARZON'){const last=ap==='PISO'?items.filter(x=>res.counted.has(x.i)).pop():dis;
+  // N8: el bono por plantar la salida no se calcula aquí; lo deciden los jueces en el momento (criterio de Manu).
+  if(plantada&&!usag){
+    if(ap!=='ARZON'){const last=ap==='PISO'?items.filter(x=>res.counted.has(x.i)).pop():dis;
       if(last&&last.val>=.3)res.bon+=.1; else res.notes.push('Bono por plantar requiere salida C o mayor.');}
   }
   // N8 Barra fija: cada soltada (grupo II) de valor C o mayor que cuenta da +0.3 (USAG MDP 2025-2028, boletines #2-#4).
@@ -468,7 +468,7 @@ function renderAthlete(){
   if(ui.ap!=='SALTO'){
     h+=`<div class="metrics"><div><b>${f1(res.dv)}</b><small>Dificultad</small></div><div><b>${f1(res.eg)}</b><small>Grupos</small></div><div><b>${f1(res.cv)}</b><small>Conexión</small></div><div><b>${f1(res.bon)}</b><small>Bonos</small></div><div><b>${res.nd?'-'+f1(res.nd):'0.0'}</b><small>Ded. jurado D</small></div></div>`;
     h+=`<div class="chips">${res.egDet.map(d=>`<span class="chip ${d.hit?'hit':'miss'}">${d.sal?'Salida':'Grupo '+ROM[d.g]}${d.v!=null?' '+d.v.toFixed(1):''}</span>`).join('')}</div>`;
-    if(a.nivel!=='N7')h+=`<label class="opt"><input type="checkbox" data-act="plant" ${a.p?.[ui.ap]?'checked':''}> Salida plantada (bono)</label>`;
+    if(a.nivel!=='N7'&&a.nivel!=='N8')h+=`<label class="opt"><input type="checkbox" data-act="plant" ${a.p?.[ui.ap]?'checked':''}> Salida plantada (bono)</label>`;
     // La casilla solo se muestra si la rutina no tiene ya un elemento de balanza.
     if(ui.ap==='PISO'&&!(a.r.PISO||[]).some(esBalanza))h+=`<label class="opt"><input type="checkbox" data-act="balpiso" ${a.p?.balPiso?'checked':''}> Tiene balanza en una pierna en la coreografía (fuera de los 8)</label>`;
   }else h+=`<div class="metrics"><div><b>${res.vaults[0]?res.vaults[0].v.toFixed(1):'-'}</b><small>Salto 1</small></div><div><b>${res.vaults[1]?res.vaults[1].v.toFixed(1):'-'}</b><small>Salto 2</small></div>${res.avg!=null?`<div><b>${f1(res.avg)}</b><small>Promedio final</small></div>`:''}</div>`;
