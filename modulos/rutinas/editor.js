@@ -330,6 +330,9 @@ function compute(ap,rows,nivel,plantada,opt){
     else if(ap!=='ARZON'){const last=ap==='PISO'?items.filter(x=>res.counted.has(x.i)).pop():dis;
       if(last&&last.val>=.3)res.bon+=.1; else res.notes.push('Bono por plantar requiere salida C o mayor.');}
   }
+  // N8 Barra fija: cada soltada (grupo II) de valor C o mayor que cuenta da +0.3 (USAG MDP 2025-2028, boletines #2-#4).
+  if(n8&&ap==='FIJA'){const sol=chosen.filter(x=>x.r.g===2&&x.val>=.3);
+    if(sol.length){res.bon+=.3*sol.length;res.notes.push(`Bono N8 por soltada C o mayor: +0.3 × ${sol.length} (${sol.map(x=>x.r.n).join(', ')}).`);}}
   res.bon=r1(res.bon);
   // Deducción neutral
   const nEl=valued.length;
