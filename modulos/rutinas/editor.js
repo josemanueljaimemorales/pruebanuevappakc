@@ -425,8 +425,9 @@ function compute(ap,rows,nivel,plantada,opt){
   if(!n7&&(ap==='PISO'||ap==='FIJA')){
     rows.forEach((r,i)=>{if(!r.c||i+1>=rows.length)return;
       if(!res.counted.has(i)||!res.counted.has(i+1)){res.notes.push(`Conexión ${i+1}-${i+2}: uno de los dos no cuenta.`);return;}
-      const v=(r.cv!=null&&r.cv!=='')?+r.cv:cvPair(items[i],items[i+1],ap,nivel);
-      if(ap==='PISO'){const m=pisoConexionInvalida(items[i],items[i+1]);if(m)res.notes.push(`Conexión ${i+1}-${i+2} ("${rows[i].n}" y "${rows[i+1].n}"): no vale, ${m}.`);}
+      let v=(r.cv!=null&&r.cv!=='')?+r.cv:cvPair(items[i],items[i+1],ap,nivel);
+      // Piso: una conexión no permitida (contrasalto, giro con giro) no vale aunque se haya puesto a mano.
+      if(ap==='PISO'){const m=pisoConexionInvalida(items[i],items[i+1]);if(m){v=0;res.notes.push(`Conexión no permitida ${i+1}-${i+2} ("${rows[i].n}" y "${rows[i+1].n}"): ${m}. No suma; quítala.`);}}
       res.cv+=v;});
     res.cv=r1(res.cv);
   }
@@ -593,8 +594,9 @@ function renderAthlete(){
     if(ui.open===i)h+=editPanel(r,i,a);
     if(i<rows.length-1){const pot=res.pot[i]||0;
       if(canLink&&(r.c||pot>0)){
-        const val=r.c?((r.cv!=null&&r.cv!=='')?+r.cv:pot):pot;
-        const lbl=r.c?(val>0?`Conectados +${val.toFixed(1)}${(r.cv!=null&&r.cv!=='')?' (manual)':''}`:'Conectados 0.0: no cumple, toca para quitar'):(ui.ap==='PISO'?`Posible conexión con "${esc(rows[i+1].n)}": toca para conectar (+${pot.toFixed(1)})`:`Conectar +${pot.toFixed(1)}`);
+        const mal=ui.ap==='PISO'&&r.c&&pisoConexionInvalida({r,grp:grpOf(r,'PISO',a.nivel)},{r:rows[i+1],grp:grpOf(rows[i+1],'PISO',a.nivel)});
+        const val=mal?0:r.c?((r.cv!=null&&r.cv!=='')?+r.cv:pot):pot;
+        const lbl=mal?`No permitida: ${mal}. Toca para quitar`:r.c?(val>0?`Conectados +${val.toFixed(1)}${(r.cv!=null&&r.cv!=='')?' (manual)':''}`:'Conectados 0.0: no cumple, toca para quitar'):(ui.ap==='PISO'?`Posible conexión con "${esc(rows[i+1].n)}": toca para conectar (+${pot.toFixed(1)})`:`Conectar +${pot.toFixed(1)}`);
         h+=`<div class="link"><button class="${r.c?(val>0?'on':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button></div>`;}
       else h+='<div class="gap"></div>';}
   });
