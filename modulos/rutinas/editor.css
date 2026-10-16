@@ -225,3 +225,4 @@ button{cursor:pointer}
 #printArea{color-scheme:only light;forced-color-adjust:none}
 /* WebView (Android 13+) no oscurece páginas que atienden prefers-color-scheme; aquí solo se reafirma que la impresión es clara. */
 @media (prefers-color-scheme:dark){#printArea{color-scheme:only light}}
+.link button.pos{border-color:var(--warn);color:var(--warn)}
