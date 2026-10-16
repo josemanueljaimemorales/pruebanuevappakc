@@ -6,7 +6,9 @@ const NP_COL={PISO:'PISO',ARZON:'ARZON',ANILLOS:'ANILLO',SALTO:'SALTO',PARALELAS
 const NIVELES=['N7','N8','N9','N10','FIG'];
 const LV={A:.1,B:.2,C:.3,D:.4,E:.5,F:.6,G:.7,H:.8,I:.9,J:1};
 const ROM=['','I','II','III','IV'];
-const VAULT_N78={'3|307':2.2,'4|407':2.2,'3|308':2.4,'4|413':2.4,'3|313':3.2,'4|414':3.2,'2|213':3.2,'2|219':4.0};
+const VAULT_N78={'3|307':2.2,'4|407':2.2,'3|308':2.4,'4|413':2.4,'3|313':3.2,'4|414':3.2,'2|213':3.2,'2|219':4.0,'2|207':2.4,'1|107':3.6,'1|113':4.2};
+// Valores USAG agregados en el ciclo 2025-2028 (boletines MDP #4 y #5); se aplican también a saltos ya capturados.
+const VAULT_N78_NUEVOS={'2|207':2.4,'1|107':3.6,'1|113':4.2};
 
 let OBL={rut:{},salto:{},omit:{}}, CAT={}, ALIAS={}, FIX={}, EXCEL=null, WB=null, ORDER=[];
 let S={atletas:{},alias:{},bajas:[],obl:{atletas:{},orden:[],bajas:[]}};
@@ -34,6 +36,9 @@ const kipAManos=r=>{const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?CAT[r.k].d:''))+' ';
 const nameKey=v=>String(v??'').toUpperCase().replace(/\s+/g,'');
 function normLevel(v){v=String(v||'').toUpperCase().replace(/\s+/g,'');if(v==='NFIG'||v==='FIG')return'FIG';const m=v.match(/^N?(7|8|9|10)$/);return m?'N'+m[1]:'FIG';}
 function table(ap,nivel){return nivel==='N8'&&ap==='ARZON'?'N8ARZON':'FIG';}
+// Arzón N8 (boletines MDP): los recorridos con spindle del Código FIG que no estén en la tabla de nivel 8 se reconocen
+// con su valor FIG, excepto Nin Reyes 2 (III.23).
+function n8RecorridoSpindle(k){return /^ARZON\|3\|/.test(k)&&k!=='ARZON|3|23'&&/spindle|eichorn/i.test(CAT[k]?.en||'');}
 
 /* ---------- búsqueda ---------- */
 const STOP=new Set(['con','en','de','del','la','el','a','al','o','y','tambien','por','desde','lc','las','los','un','una','s']);
@@ -68,7 +73,7 @@ function search(q,ap,nivel){
   const idm=qn.match(/^(?:([1-4])[ .])?(\d{1,3})$/);
   const pref=tab==='N8ARZON'?'N8ARZON|':ap+'|';
   for(const it of INDEX){
-    if(!it.k.startsWith(pref))continue;
+    if(!it.k.startsWith(pref)&&!(tab==='N8ARZON'&&n8RecorridoSpindle(it.k)))continue;
     if(idm){const [,g,id]=it.k.split('|');if(id===idm[2]&&(!idm[1]||g===idm[1]))add(it.k,2.2);continue;}
     const hit=qt.filter(t=>it.toks.some(a=>a.startsWith(t))).length;
     if(hit&&hit>=Math.max(1,qt.length-1)){
@@ -161,7 +166,19 @@ function readLevels(){
 }
 
 /* ---------- cálculo de NP ---------- */
-function valOf(r,nivel){if(r.t==='JA')return (nivel==='N7'||nivel==='N8')?.1:0;if(r.v!=null&&!r.l)return r.v;return LV[r.l]||0;}
+function valOf(r,nivel,ap){if(r.t==='JA')return (nivel==='N7'||nivel==='N8')?.1:0;if(r.v!=null&&!r.l)return r.v;
+  let v=LV[r.l]||0; if(nivel==='N7'||nivel==='N8'){const x=usagValor(r,nivel,ap||(r.k||'').split('|')[0],v);if(x!=null)v=x;} return v;}
+// Excepciones de valor de USAG (MDP 2025-2028):
+// - Anillos N7-N8: plancha abierta, plancha y elementos de grupo II/III que terminan en ellas suben una letra
+//   (II.19, II.9, III.56, III.58, III.68, III.70, III.82; boletines MDP #2-#6).
+// - Paralelas N8: Stutz o gigante al apoyo valen B y cubren grupo (tabla de nivel 8).
+const USAG_ANILLOS_SUBE=new Set(['ANILLOS|2|19','ANILLOS|2|9','ANILLOS|3|56','ANILLOS|3|58','ANILLOS|3|68','ANILLOS|3|70','ANILLOS|3|82']);
+function n8StutzGigante(r){const c=r.k&&CAT[r.k], t=' '+nk(r.n+' '+(c?(c.en||'')+' '+c.d:''))+' ';
+  return / (stutz|stuts|stutzkehr|stuetzkehr|gigante|giant) /.test(t)&&/ (apoyo|support|sup) /.test(t)&&!/ (apoyo invertido|ap inv|parada de manos|handstand|hdst|a manos) /.test(t);}
+function usagValor(r,nivel,ap,v){
+  if(r.k&&USAG_ANILLOS_SUBE.has(r.k)&&v>0)return r1(v+.1);
+  if(nivel==='N8'&&ap==='PARALELAS'&&v<.2&&n8StutzGigante(r))return .2;
+  return null;}
 function grpOf(r,ap,nivel){
   if(r.t==='JA'||!r.g)return null;
   // En Anillos N8 el grupo III solo lo da la parada de manos (un "III" marcado a mano en otro elemento ya no aplica).
@@ -191,7 +208,6 @@ function cvPair(a,b,ap,nivel){
     if(a.grp===4&&b.grp===4)return 0;
     if(va>=.4&&vb>=.4)return .2;
     if((va>=.4&&(vb===.2||vb===.3))||(vb>=.4&&(va===.2||va===.3)))return .1;
-    if(nivel==='N8'&&[.2,.3].includes(va)&&[.2,.3].includes(vb)&&!(va===.2&&vb===.2))return .1;
     return 0;
   }
   if(ap==='FIJA'){
@@ -251,7 +267,14 @@ function applySpecial(ap,items,res,nivel){
 function compute(ap,rows,nivel,plantada,opt){
   const res={dv:0,eg:0,cv:0,bon:0,nd:0,np:0,egDet:[],counted:new Set(),rep:new Set(),why:{},up:{},notes:[],dIdx:-1,vaults:[]};
   if(ap==='SALTO'){
-    rows.forEach((r,i)=>{const v=r.v||0;res.vaults.push({i,v,np:r1(10+v)});});
+    rows.forEach((r,i)=>{let v=r.v||0;
+      if(nivel==='N7'||nivel==='N8'){const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?(CAT[r.k].en||'')+' '+CAT[r.k].d:''))+' ';
+        const nuevo=r.t==='C'&&VAULT_N78_NUEVOS[`${r.g}|${r.id}`];if(nuevo)v=nuevo;
+        // Kasamatsu agrupado: 2.8 en N7-N9 (boletín MDP #5)
+        if(/ kasamatsu /.test(t)&&/ (t|agrupado|agr|tucked|tuck) /.test(t)&&!/ (str|ext|extendido|p|carpa|piked|giro|1\/2|1\/1|3\/2|2\/1) /.test(t))v=2.8;
+        // Saltos con mortal múltiple no permitidos en N7-N8 (tabla de niveles USAG)
+        if(/ (dbl|double|doble|roche|dragulescu|blanik|yeo|lu yu fu|ri se gwang) /.test(t)){v=0;res.notes.push(`${r.n}: saltos con mortal múltiple no permitidos en ${nivel} (USAG).`);}}
+      res.vaults.push({i,v,np:r1(10+v)});});
     if(!res.vaults.length){res.notes.push('Agrega al menos un salto.');return res;}
     if(res.vaults.length>1){const a1=rows[res.vaults[0].i],a2=rows[res.vaults[1].i],v2=res.vaults[1];
       if(a1.id&&a2.id&&String(a1.id)===String(a2.id)){v2.np=0;res.notes.push('El 2º salto repite el 1º: nota 0.00 para ese salto (final de aparato).');}
@@ -260,7 +283,7 @@ function compute(ap,rows,nivel,plantada,opt){
     if(res.vaults.length>1)res.avg=r1(res.vaults.reduce((s,x)=>s+x.np,0)/res.vaults.length);
     return res;
   }
-  const items=rows.map((r,i)=>({i,r,val:valOf(r,nivel),grp:grpOf(r,ap,nivel)}));
+  const items=rows.map((r,i)=>({i,r,val:valOf(r,nivel,ap),grp:grpOf(r,ap,nivel)}));
   const seen=new Set();
   for(const it of items){const virt=(nivel==='N7'||nivel==='N8')&&ap==='PISO';
     let key=it.r.k||(it.r.t==='M'&&it.r.g&&/^\d+$/.test(String(it.r.id))?`${it.r.g}|${it.r.id}`:null);
@@ -296,8 +319,10 @@ function compute(ap,rows,nivel,plantada,opt){
     const rest=[...pool];
     while(chosen.length<lim&&rest.length){
       rest.sort((a,b)=>b.val-a.val||((cnt[a.grp]?1:0)-(cnt[b.grp]?1:0)));
-      const ix=rest.findIndex(x=>x.grp==null||(cnt[x.grp]||0)<4); if(ix<0)break;
-      const x=rest.splice(ix,1)[0]; if(x.grp!=null)cnt[x.grp]=(cnt[x.grp]||0)+1; chosen.push(x);
+      // Arzón N8: se permiten más de 4 recorridos (grupo III) si los extras son en flairs (boletín MDP #4).
+      const flairN8=x=>nivel==='N8'&&ap==='ARZON'&&x.grp===3&&/ flair/.test(' '+nk(x.r.n+' '+(x.r.k&&CAT[x.r.k]?CAT[x.r.k].d:'')));
+      const ix=rest.findIndex(x=>x.grp==null||(cnt[x.grp]||0)<4||flairN8(x)); if(ix<0)break;
+      const x=rest.splice(ix,1)[0]; if(x.grp!=null&&!flairN8(x))cnt[x.grp]=(cnt[x.grp]||0)+1; chosen.push(x);
     }
     if(dis)chosen.push(dis);
   }
@@ -427,7 +452,7 @@ function buildVista(n){
     v[ap]={np:c.np,d:ap==='SALTO'?c.dv:r1(c.dv+c.cv),eg:ap==='SALTO'?0:c.eg,
       rows:rows.map((r,i)=>ap==='SALTO'
         ?{n:r.n,id:r.id||'',g:r.g||'',l:((c.vaults.find(x=>x.i===i)||{}).v??r.v??0).toFixed(1),vd:''}
-        :{n:r.n,id:r.t==='JA'?'EV':(r.id||''),g:r.t==='JA'?'X':(r.g||''),l:r.t==='JA'?'A':(r.l||''),vd:(c.rep.has(i)?0:valOf(r,a.nivel)).toFixed(1)})};}
+        :{n:r.n,id:r.t==='JA'?'EV':(r.id||''),g:r.t==='JA'?'X':(r.g||''),l:r.t==='JA'?'A':(r.l||''),vd:(c.rep.has(i)?0:valOf(r,a.nivel,ap)).toFixed(1)})};}
   return v;
 }
 /* ---------- vistas ---------- */
@@ -462,7 +487,8 @@ function metaLine(r,res,i){
   let b='';
   if(res.rep.has(i))b+=`<span class="badge b">${esc(res.why[i]||'Repetido')}</span>`;
   if(res.up[i]!=null)b+='<span class="badge i">+1 letra: directo a impulso al apoyo invertido</span>';
-  else if(!res.counted.has(i)&&valOf(r,a.nivel)>0)b+=`<span class="badge w">${esc(res.nc?.[i]||'No cuenta')}</span>`;
+  if((a.nivel==='N7'||a.nivel==='N8')&&r.t!=='JA'&&r.l&&usagValor(r,a.nivel,ui.ap,LV[r.l]||0)!=null)b+=`<span class="badge i">Valor USAG ${a.nivel}: ${valOf(r,a.nivel,ui.ap).toFixed(1)}</span>`;
+  else if(!res.counted.has(i)&&valOf(r,a.nivel,ui.ap)>0)b+=`<span class="badge w">${esc(res.nc?.[i]||'No cuenta')}</span>`;
   if(i===res.dIdx)b+='<span class="badge i">Salida</span>';
   if(r.t==='JA'&&a.nivel!=='N7'&&a.nivel!=='N8')b+='<span class="badge b">Juvenil A: sin valor en '+a.nivel+'</span>';
   if(r.ct)b+='<span class="badge i">A cambio de toma</span>';
@@ -733,7 +759,7 @@ function printAll(build,pref){
       }else{
         h+=`<div class="pm">Dificultad ${f1(c.dv)} · Grupos ${f1(c.eg)} · Conexión ${f1(c.cv)}${c.bon?` · Bonos ${f1(c.bon)}`:''}${c.nd?` · Ded. neutral -${f1(c.nd)}`:''}</div>`;
         h+=`<table><tr><th>Elemento</th><th>ID</th><th>Grupo</th><th>Valor</th><th>VD</th></tr>`;
-        rows.forEach((r,i)=>{const vd=c.rep.has(i)?0:valOf(r,a.nivel);
+        rows.forEach((r,i)=>{const vd=c.rep.has(i)?0:valOf(r,a.nivel,ap);
           h+=`<tr class="${res_off(c,i,vd)?'off':''}"><td>${esc(r.n)}${PV_TXT(r.pv)?' → '+esc(PV_TXT(r.pv)):''}${r.c&&i<rows.length-1?' <span class="cx">↔</span>':''}</td><td>${r.t==='JA'?'EV':esc(r.id||'')}</td><td>${r.t==='JA'?'X':(r.g?ROM[r.g]:'')}</td><td>${r.t==='JA'?'A':esc(r.l||'')}</td><td>${vd.toFixed(1)}</td></tr>`;});
       }
       if(!rows.length)h+=`<tr><td colspan="5">Sin elementos</td></tr>`;
@@ -918,7 +944,7 @@ function exportExcel(){
     for(const [ap] of APS){const rows=a.r[ap]||[];const c=t[ap];
       rows.forEach((r,i)=>{
         if(ap==='SALTO'){const vv=c.vaults.find(x=>x.i===i);base.push([n,ap,r.n,r.id||'',r.g||'',vv?vv.v:r.v||0,0]);return;}
-        const val=c.rep.has(i)?0:valOf(r,a.nivel);
+        const val=c.rep.has(i)?0:valOf(r,a.nivel,ap);
         base.push([n,ap,r.n+(r.gig?' A '+r.gig.toUpperCase():'')+(r.ct?' A CAMBIO DE TOMA':'')+(r.c?' CONECTADO A':''),r.t==='JA'?'EV':r.id,r.t==='JA'?'X':r.g,r.t==='JA'?'A':r.l,r1(val)]);});}
     const old=oldNP[nameKey(n)];const label=old?old[0]:n;
     npR.push([label,...APS.map(([ap])=>t[ap].np),old?old[7]??'':'']);
