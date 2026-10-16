@@ -6,9 +6,13 @@ const NP_COL={PISO:'PISO',ARZON:'ARZON',ANILLOS:'ANILLO',SALTO:'SALTO',PARALELAS
 const NIVELES=['N7','N8','N9','N10','FIG'];
 const LV={A:.1,B:.2,C:.3,D:.4,E:.5,F:.6,G:.7,H:.8,I:.9,J:1};
 const ROM=['','I','II','III','IV'];
-const VAULT_N78={'3|307':2.2,'4|407':2.2,'3|308':2.4,'4|413':2.4,'3|313':3.2,'4|414':3.2,'2|213':3.2,'2|219':4.0,'2|207':2.4,'1|107':3.6,'1|113':4.2};
-// Valores USAG agregados en el ciclo 2025-2028 (boletines MDP #4 y #5); se aplican también a saltos ya capturados.
-const VAULT_N78_NUEVOS={'2|207':2.4,'1|107':3.6,'1|113':4.2};
+// Saltos en N7 y N8: valores propios de USAG (tabla de modificaciones del MDP y boletines #4 y #5); los demás saltos
+// llevan el valor FIG. En N7 y N8 el valor no se escribe a mano: sale de esta tabla.
+const VAULT_USAG={'3|307':2.2,'3|308':2.4,'3|313':3.2,'5|507':2.2,'5|509':2.4,'5|510':3.2,'2|207':2.4,'2|213':3.2,'1|107':3.6,'2|219':4.0,'1|113':4.2,'1|119':2.8};
+function vaultUSAG(r){if(!r.k||!CAT[r.k])return r.v||0;const p=r.k.split('|');const v=VAULT_USAG[p[1]+'|'+p[2]];
+  if(v!=null)return v;const t=' '+nk(r.n)+' ';
+  if(/ kasamatsu /.test(t)&&/ (agrupado|agr|en c|tucked) /.test(t)&&!/ (ext|extendido|carpa|giro) /.test(t))return 2.8;
+  return CAT[r.k].v??r.v??0;}
 
 let OBL={rut:{},salto:{},omit:{}}, CAT={}, ALIAS={}, FIX={}, EXCEL=null, WB=null, ORDER=[];
 let S={atletas:{},alias:{},bajas:[],obl:{atletas:{},orden:[],bajas:[]}};
@@ -82,12 +86,14 @@ function search(q,ap,nivel){
       if(extra.some(a=>a==='dob'||a==='tri'))sc-=.5;
       add(it.k,sc);}
   }
+  // N7 y N8: elementos juveniles / virtuales de USAG (valen A 0.1). Escribir "juvenil" o "virtual" los muestra todos.
   if(nivel==='N7'||nivel==='N8')for(const it of INDEX){
     if(!it.k.startsWith('JA|'+ap+'|'))continue;
+    if(/^(juv|virt|ja$)/.test(qn)){add(it.k,3);continue;}
     const hit=qt.filter(t=>it.toks.some(a=>a.startsWith(t))).length;
-    if(hit===qt.length&&hit)add(it.k,1.4);
+    if(hit===qt.length&&hit)add(it.k,2.5); else if(hit&&hit>=qt.length-1)add(it.k,1.2);
   }
-  return [...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,8);
+  return [...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:8);
 }
 
 /* ---------- filas ---------- */
@@ -101,7 +107,7 @@ function rowFromKey(k,name){
   name=name||apodoDe(k);
   if(p[0]==='JA')return{n:name||e.d,k,t:'JA',l:'A',g:null,id:'JA'};
   const g=+p[1], id=p[2];
-  if(p[0]==='SALTO'){const lvl=ui.atleta&&S.atletas[ui.atleta]?.nivel;const ov=(lvl==='N7'||lvl==='N8')?VAULT_N78[`${g}|${id}`]:null;return{n:name||e.d,k,t:'C',g,id,v:ov??e.v??0};}
+  if(p[0]==='SALTO'){const lvl=ui.atleta&&S.atletas[ui.atleta]?.nivel;const ov=(lvl==='N7'||lvl==='N8')?vaultUSAG({k,n:name||e.d}):null;return{n:name||e.d,k,t:'C',g,id,v:ov??e.v??0};}
   return{n:name||e.d,k,t:'C',l:e.l,g:g||null,id};
 }
 function keyLabel(r){
@@ -248,7 +254,7 @@ function cvPair(a,b,ap,nivel){
       if(lo>=.4&&hi>=.5)return .2; if((lo===.3&&hi>=.4)||(lo===.4&&hi===.4))return .1;
       if((nivel==='N7'||nivel==='N8')&&lo===.3&&hi===.3)return .1; return 0;}
     if(ra!==rb){const rel=ra?va:vb, oth=ra?vb:va, og=ra?b.grp:a.grp;
-      if((og===1||og===3)&&oth>=.4){if(rel>=.5)return .2;if(rel===.4)return .1;}}
+      if((og===1||og===3)&&oth>=.4&&rel>=.4)return (oth>=.5||rel>=.5)?.2:.1;}
   }
   return 0;
 }
@@ -302,6 +308,35 @@ function arzonRepeticiones(items,res,kill){
   // h) Máximo 4 elementos en flairs (sin contar la salida).
   {let n=0;vivos.forEach(it=>{if(it.val>0&&it.grp!==4&&/ flairs? /.test(' '+nk(it.r.n)+' ')){n++;if(n>4)kill(it,'Máximo 4 elementos en flairs por rutina (sin contar la salida)');}});}
 }
+// Paralelas (Código FIG art. 14.2.2 punto 4) y Barra fija (art. 15.2.2 punto 5): repeticiones especiales.
+// Cuentan primero los de mayor valor (art. 7.4 punto 8).
+const PAR_REP=[
+  {ids:['3|21','3|22','3|29','3|30','3|42','3|46','3|48'],max:2,why:'Máximo 2 gigantes por el apoyo invertido por rutina'},
+  {ids:['3|106','3|107','3|108','3|114','3|119','3|120','3|130','3|131','3|137'],max:2,why:'Máximo 2 Felge por el apoyo invertido por rutina'},
+  {ids:['1|5','1|6','1|11','1|12','1|15','1|17','1|18'],max:2,why:'Máximo 2 dominaciones adelante por el apoyo invertido por rutina'},
+  {ids:['1|59','1|60'],max:1,why:'Solo una variante (posición o toma) del mismo mortal: Pakhniuk'},
+  {ids:['3|70','3|71','3|77','3|83'],max:1,why:'Solo una variante (posición o toma) del mismo mortal: Matsunaga / Solis / Torres / Fokin'},
+  {ids:['3|72','3|78'],max:1,why:'Solo una variante (posición o toma) del mismo mortal: Tanaka / Esparza'}];
+const FIJA_REP=[
+  {ids:['3|63','3|64','3|65','3|70','3|76'],max:2,why:'Máximo 2 elementos tipo Adler por rutina'},
+  {ids:['2|15','2|16','2|18','2|21','2|23','2|28','2|29','2|34','2|36','2|51'],max:2,why:'Máximo 2 soltadas tipo Tkatchev / Piatti por rutina'},
+  {ids:['2|88','2|89','2|90','2|95','2|96','2|102','2|108'],max:2,why:'Máximo 2 soltadas tipo Kovacs por rutina'},
+  {ids:['2|58','2|60'],max:2,why:'Máximo 2 soltadas tipo Gienger por rutina'},
+  {ids:['2|39','2|40','2|41','2|42','2|48'],max:2,why:'Máximo 2 soltadas tipo Jäger (mortal adelante) por rutina'},
+  {ids:['2|3','2|6','2|9'],max:2,why:'Máximo 2 soltadas tipo Markelov por rutina'},
+  {ids:['2|65','2|66','2|72','2|78','2|82','2|83','2|84'],max:2,why:'Máximo 2 soltadas con mortal sobre la barra (Gaylord / Pegan) por rutina'},
+  {nombre:/ rybalko /,max:1,why:'Solo una variante de toma del mismo elemento con giro (Rybalko)'}];
+function familiasRep(items,kill,reglas,ap){
+  const id=it=>it.r.k&&it.r.k.startsWith(ap+'|')?it.r.k.slice(ap.length+1):null;
+  const vivos=items.filter(it=>it.val>0).sort((a,b)=>b.val-a.val);
+  for(const f of reglas){let n=0;vivos.forEach(it=>{if(!(it.val>0))return;
+    const ok=f.ids?f.ids.includes(id(it)):f.nombre.test(' '+nk(it.r.n+' '+((it.r.k&&CAT[it.r.k]?.en)||''))+' ');
+    if(ok&&++n>f.max)kill(it,f.why);});}}
+// Barra fija: la 5ª soltada solo vale si hay al menos dos soltadas conectadas (mínimo C+C) (art. 15.2.2 punto 6).
+function fijaQuintaSoltada(items,kill){
+  const sol=items.filter(it=>it.r.g===2&&it.r.t!=='JA'&&it.val>0);if(sol.length<=4)return;
+  const con=items.some((it,i)=>it.r.c&&it.r.g===2&&items[i+1]&&items[i+1].r.g===2&&it.val>=.3&&items[i+1].val>=.3);
+  if(!con)sol.slice(4).forEach(it=>kill(it,'5ª soltada: solo vale si hay al menos dos soltadas conectadas (mínimo C+C)'));}
 function applySpecial(ap,items,res,nivel){
   const kill=(it,why)=>{if(it.val>0){it.val=0;res.rep.add(it.i);res.why[it.i]=why;}};
   const id=it=>it.r.t==='C'&&it.r.k?it.r.k.split('|'):null;
@@ -323,6 +358,8 @@ function applySpecial(ap,items,res,nivel){
       arr.slice(1).forEach(it=>kill(it,`Misma posición final (${POS_TXT[it.pos]}) que "${arr[0].r.n}" en el grupo ${ROM[it.r.g]}`));}
   }
   if(ap==='ARZON'&&nivel!=='N8')arzonRepeticiones(items,res,kill);
+  if(ap==='PARALELAS')familiasRep(items,kill,PAR_REP,'PARALELAS');
+  if(ap==='FIJA'){familiasRep(items,kill,FIJA_REP,'FIJA');fijaQuintaSoltada(items,kill);}
   if(ap==='PISO'){
     // Máximo 1 elemento de fuerza y 1 de molinos/flairs/rusas (10.2 7a/7b)
     const fuerza=[],molinos=[];
@@ -338,11 +375,12 @@ function compute(ap,rows,nivel,plantada,opt){
   if(ap==='SALTO'){
     rows.forEach((r,i)=>{let v=r.v||0;
       if(nivel==='N7'||nivel==='N8'){const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?(CAT[r.k].en||'')+' '+CAT[r.k].d:''))+' ';
-        const nuevo=r.t==='C'&&VAULT_N78_NUEVOS[`${r.g}|${r.id}`];if(nuevo)v=nuevo;
-        // Kasamatsu agrupado: 2.8 en N7-N9 (boletín MDP #5)
-        if(/ kasamatsu /.test(t)&&/ (t|agrupado|agr|tucked|tuck) /.test(t)&&!/ (str|ext|extendido|p|carpa|piked|giro|1\/2|1\/1|3\/2|2\/1) /.test(t))v=2.8;
+        if(r.k)v=vaultUSAG(r);
         // Saltos con mortal múltiple no permitidos en N7-N8 (tabla de niveles USAG)
-        if(/ (dbl|double|doble|roche|dragulescu|blanik|yeo|lu yu fu|ri se gwang) /.test(t)){v=0;res.notes.push(`${r.n}: saltos con mortal múltiple no permitidos en ${nivel} (USAG).`);}}
+        if(/ (dbl|double|doble|roche|dragulescu|blanik|yeo|lu yu fu|ri se gwang) /.test(t)){v=0;res.notes.push(`${r.n}: saltos con mortal múltiple no permitidos en ${nivel} (USAG).`);}
+        // N7: Yurchenko con giro no permitido (tabla de niveles USAG)
+        else if(nivel==='N7'&&(/^SALTO\|4\|40\d$/.test(r.k||'')||(/ yurchenko /.test(' '+nk(r.n)+' ')&&/ (giro|giros|1\/2|1\/1|3\/2|2\/1|5\/2) /.test(' '+nk(r.n)+' ')))){v=0;res.notes.push(`${r.n}: en N7 no se permite Yurchenko con giro (USAG).`);}}
+      else if(plantada&&i===0&&!/^(2\|20[1-6]|3\|30[1-3])$/.test(`${r.g}|${r.id}`)&&v>0){v=r1(v+.1);res.bon=.1;}
       res.vaults.push({i,v,np:r1(10+v)});});
     if(!res.vaults.length){res.notes.push('Agrega al menos un salto.');return res;}
     if(res.vaults.length>1){const a1=rows[res.vaults[0].i],a2=rows[res.vaults[1].i],v2=res.vaults[1];
@@ -361,6 +399,14 @@ function compute(ap,rows,nivel,plantada,opt){
   applySpecial(ap,items,res,nivel);
   Object.entries(res.why).forEach(([i,w])=>res.notes.push(`${rows[i].n}: ${w}.`));
   res.enotes=res.enotes||[];
+  // Paralelas: elemento a una barra seguido de Healy sube una letra (y el Healy también) (art. 14.2.2 punto 3b-d).
+  if(ap==='PARALELAS')rows.forEach((a,i)=>{const b=rows[i+1];if(!b)return;
+    const ta=' '+nk(a.n)+' ', ca=' '+nk((a.k&&CAT[a.k]?.en)||'')+' ', tb=' '+nk(b.n+' '+((b.k&&CAT[b.k]?.en)||''))+' ';
+    if(/ (una barra|1 barra|una banda|1 banda|one rail) /.test(ta)&&!/ tambien /.test(ta)&&/ healy /.test(tb)&&!/ (tippelt|arican|abiertas|abierto) /.test(ta+ca)&&!/ connected to healy /.test(ca))
+      res.notes.push(`"${a.n}" a una barra seguido de Healy: el Código da una letra más a los dos. Elige la versión "conectado a Healy" del elemento y el Healy después de una barra.`);});
+  // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
+  if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=' '+nk((r.k&&CAT[r.k]?.en)||'')+' ';
+    if(r.g!==4&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": si compite como junior FIG, los mortales atrás en suspensión no están permitidos.`);});
   if(ap==='FIJA'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct||FV_OPC[a.pv])return;
     const tb=' '+nk(b.n+' '+(b.k&&CAT[b.k]?CAT[b.k].d:''))+' ';
     const kipHS=kipAManos(a);
@@ -581,6 +627,7 @@ function renderAthlete(){
     // La casilla solo se muestra si la rutina no tiene ya un elemento de balanza.
     if(ui.ap==='PISO'&&!(a.r.PISO||[]).some(esBalanza))h+=`<label class="opt"><input type="checkbox" data-act="balpiso" ${a.p?.balPiso?'checked':''}> Tiene balanza en una pierna en la coreografía (fuera de los 8)</label>`;
   }else h+=`<div class="metrics"><div><b>${res.vaults[0]?res.vaults[0].v.toFixed(1):'-'}</b><small>Salto 1</small></div><div><b>${res.vaults[1]?res.vaults[1].v.toFixed(1):'-'}</b><small>Salto 2</small></div>${res.avg!=null?`<div><b>${f1(res.avg)}</b><small>Promedio final</small></div>`:''}</div>`;
+  if(ui.ap==='SALTO'&&a.nivel!=='N7'&&a.nivel!=='N8')h+=`<label class="opt"><input type="checkbox" data-act="plant" ${a.p?.SALTO?'checked':''}> Salto 1 plantado (bono +0.1, saltos con mortal)</label>`;
   if(res.notes.length||res.enotes?.length){h+=`<div class="avisos"><b>Avisos (${(new Set(res.notes)).size+(res.enotes?.length||0)})</b>`;
     if(res.notes.length)h+=`<ul class="notes">${[...new Set(res.notes)].map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`;
     if(res.enotes?.length)h+=`<ul class="notes enotes">${res.enotes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul><small class="ehelp">Los avisos de ejecución no cambian la nota de partida.</small>`;
@@ -608,7 +655,8 @@ function renderAthlete(){
 function editPanel(r,i,a){
   let h=`<div class="edit"><label>Nombre como lo llaman<input data-f="n" data-i="${i}" value="${esc(r.n)}"></label>`;
   h+=`<label>Cambiar elemento del Código<input id="rq" data-i="${i}" placeholder="Busca para reemplazar" value="${esc(ui.replace===i?ui.q:'')}" autocomplete="off"></label><div id="rsug"></div>`;
-  if(ui.ap==='SALTO')h+=`<label>Valor del salto<input data-f="v" data-i="${i}" type="number" step="0.1" value="${r.v??''}"></label>`;
+  if(ui.ap==='SALTO'&&(a.nivel==='N7'||a.nivel==='N8')&&r.k)h+=`<div class="two"><small style="color:var(--muted)">Valor USAG ${a.nivel}: <b>${vaultUSAG(r).toFixed(1)}</b> (no se cambia a mano; el Código FIG no aplica en ${a.nivel})</small></div>`;
+  else if(ui.ap==='SALTO')h+=`<label>Valor del salto<input data-f="v" data-i="${i}" type="number" step="0.1" value="${r.v??''}"></label>`;
   else if(r.t==='M')h+=`<div class="two"><label>Grupo<select data-f="g" data-i="${i}">${[1,2,3,4].map(g=>`<option value="${g}" ${r.g===g?'selected':''}>${ROM[g]}</option>`).join('')}</select></label><label>Valor<select data-f="l" data-i="${i}">${Object.keys(LV).map(l=>`<option ${r.l===l?'selected':''}>${l}</option>`).join('')}</select></label></div>`;
   if(a.nivel==='N8'&&r.t!=='JA'&&(ui.ap==='ANILLOS'||ui.ap==='FIJA'))h+=`<label>Grupo para N8<select data-f="gx" data-i="${i}"><option value="">Según Código</option>${[1,2,3,4].map(g=>`<option value="${g}" ${r.gx===g?'selected':''}>${ROM[g]}</option>`).join('')}</select></label>`;
   const rowsA=a.r[ui.ap]||[];
@@ -630,7 +678,7 @@ function renderSug(q,target){
   const res=search(q,ui.ap,a.nivel);
   let h='<div class="sug">';
   for(const s of res){const e=CAT[s.k];const r=rowFromKey(s.k);
-    const tag=r.t==='JA'?'Juvenil A · 0.1':ui.ap==='SALTO'?`${keyLabel(r)} · ${e.v??'-'}`:`${keyLabel(r)} · ${r.l} ${(LV[r.l]||0).toFixed(1)}`;
+    const tag=r.t==='JA'?'Juvenil / virtual USAG · A 0.1':ui.ap==='SALTO'?`${keyLabel(r)} · ${(a.nivel==='N7'||a.nivel==='N8')?'valor USAG '+r.v.toFixed(1):(e.v??'-')}`:`${keyLabel(r)} · ${r.l} ${(LV[r.l]||0).toFixed(1)}`;
     h+=`<button data-act="pick" data-k="${esc(s.k)}"><b>${esc(s.name?s.name.replace(/^./,c=>c.toUpperCase()):e.d)}</b><small><span class="k">${esc(tag)}</span> · ${esc(e.d)}${e.en&&e.en!==e.d?`<br><i>EN: ${esc(e.en)}</i>`:''}</small></button>`;}
   h+=`<button data-act="manual"><b>Agregar "${esc(q)}" a mano</b><small>Tú indicas grupo y valor</small></button></div>`;
   box.innerHTML=h;
