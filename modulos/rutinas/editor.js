@@ -427,8 +427,12 @@ function compute(ap,rows,nivel,plantada,opt){
   // si no, hay un balanceo vacío ("vuelo perdido"): -0.3 del jurado E (Código FIG, balanceos vacíos e intermedios).
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8'&&rows.length>1){const u=rows[rows.length-1],pr=rows[rows.length-2];
     const tu=txt(u), tp=txt(pr);
-    if(/ (double salto fwd|doble mortal (adelante|ade|adel|al frente|ad)|doble (adelante|ade|al frente)) /.test(tu)&&!/ (braq|braquial|upper arm|healy|moy) /.test(tp))
-      res.enotes.push(`Vuelo perdido: la salida de doble mortal adelante ("${u.n}") debe venir de un impulso braquial, un Healy o un Moy directo; después de "${pr.n}" queda un balanceo vacío. -0.30 del jurado E.`);}
+    // También las de mortal adelante (con o sin giros): salen del mismo balanceo atrás. Un Moy al ap. inv. (Tippelt) no cuenta como Moy directo.
+    const dobleAd=/ (double salto fwd|doble mortal (adelante|ade|adel|al frente|ad)|doble (adelante|ade|al frente)) /.test(tu);
+    const mortalAd=dobleAd||(/ (mortal (adelante|ade|adel|al frente|ad)|salto fwd) /.test(tu)&&!/ (atras|bwd) /.test(tu));
+    const vieneAtras=llegaAManos(pr)||/ (braq|braquial|upper arm|healy) /.test(tp)||(/ moy /.test(tp)&&!/ (ap inv|apoyo invertido|handstand|hdst|tippelt) /.test(tp));
+    if(mortalAd&&!vieneAtras)
+      res.enotes.push(`Vuelo perdido: la salida de ${dobleAd?'doble ':''}mortal adelante ("${u.n}") debe venir de un impulso braquial, un Healy o un Moy directo; después de "${pr.n}" queda un balanceo vacío. -0.30 del jurado E.`);}
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
     const nb=txt(b);
     const aManos=llegaAManos(a)&&!a.pv;
