@@ -438,7 +438,10 @@ function compute(ap,rows,nivel,plantada,opt){
     const aManos=llegaAManos(a)&&!a.pv;
     // La salida hacia atrás (último elemento) también va en contra del balanceo.
     const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb)||(i+1===rows.length-1&&/ atras /.test(nb)&&!/ adelante /.test(nb));
-    if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza). Si después del vuelo hace un cambio, giro, Healy o Gatson sin capturarlo, márcalo en el elemento.`);});
+    // Con solo apodo (sin elemento del Código), "doble en C/V" en paralelas es la salida atrás.
+    const salidaAtras=i+1===rows.length-1&&(/ atras /.test(nb)||(!b.k&&/ doble (en c|en v|c|v|agrup|agrupado|carpa|ext|extendido) /.test(nb)))&&!/ (adelante|ade|adel|al frente) /.test(nb);
+    if(aManos&&salidaAtras)res.enotes.push(`Vuelo perdido / contrabalanceo: después de "${a.n}" (llega a manos balanceando atrás) sale "${b.n}" hacia atrás, en contra del balanceo. Tendría que haber un cambio antes (½ giro, giro, Healy o Gatson; márcalo en "Después hace"). -0.30 del jurado E.`);
+    else if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza). Si después del vuelo hace un cambio, giro, Healy o Gatson sin capturarlo, márcalo en el elemento.`);});
   const valued=items.filter(x=>x.val>0);
   const n7=nivel==='N7', n8=nivel==='N8', usag=n7||n8;
   let dis=null;
@@ -655,13 +658,14 @@ function renderAthlete(){
   rows.forEach((r,i)=>{
     h+=`<div class="row ${res.counted.has(i)||ui.ap==='SALTO'?'':'off'}"><span class="num">${i+1}</span><div><button class="nm" data-act="edit" data-i="${i}">${esc(r.n)}</button><div class="meta">${metaLine(r,res,i)}</div></div>
       <div class="ctl"><button data-act="up" data-i="${i}" aria-label="Subir">↑</button><button data-act="down" data-i="${i}" aria-label="Bajar">↓</button><button data-act="del" data-i="${i}" aria-label="Quitar" class="${ui.del===i?'sure':''}">${ui.del===i?'Quitar':'✕'}</button></div></div>`;
-    if(ui.open===i)h+=editPanel(r,i,a);
+    if(ui.open===i)h+=editPanel(r,i,a,(res.pot||{})[i]||0);
     if(i<rows.length-1){const pot=(res.pot||{})[i]||0;
-      if(canLink&&(r.c||pot>0)){
+      // Posible conexión descartada con la X (r.nc): ya no se muestra aquí, pero sigue en el panel del elemento.
+      if(canLink&&(r.c||(pot>0&&!r.nc))){
         const mal=ui.ap==='PISO'&&r.c&&pisoConexionInvalida({r,grp:grpOf(r,'PISO',a.nivel)},{r:rows[i+1],grp:grpOf(rows[i+1],'PISO',a.nivel)});
         const val=mal?0:r.c?((r.cv!=null&&r.cv!=='')?+r.cv:pot):pot;
         const lbl=mal?`No permitida: ${mal}. Toca para quitar`:r.c?(val>0?`Conectados +${val.toFixed(1)}${(r.cv!=null&&r.cv!=='')?' (manual)':''}`:'Conectados 0.0: no cumple, toca para quitar'):(ui.ap==='PISO'?`Posible conexión con "${esc(rows[i+1].n)}": toca para conectar (+${pot.toFixed(1)})`:`Conectar +${pot.toFixed(1)}`);
-        h+=`<div class="link"><button class="${r.c?(val>0?'on':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button></div>`;}
+        h+=`<div class="link"><button class="${r.c?(val>0?'on':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button>${r.c?'':`<button class="nox" data-act="nolink" data-i="${i}" aria-label="No usar esta conexión" title="No usar esta conexión">✕</button>`}</div>`;}
       else h+='<div class="gap"></div>';}
   });
   h+=`</div><div class="add"><input id="q" placeholder="Escribe un elemento: nombre, apodo o ID (ej. doble atrás, Cassina, 2.16)" value="${esc(ui.replace<0?ui.q:'')}" autocomplete="off"><div id="sug"></div></div>`;
@@ -669,7 +673,7 @@ function renderAthlete(){
   root.innerHTML=h;
   const q=document.getElementById('q'); if(ui.replace<0&&ui.q){q.focus();q.setSelectionRange(q.value.length,q.value.length);renderSug(ui.q,'sug');}
 }
-function editPanel(r,i,a){
+function editPanel(r,i,a,pot){
   let h=`<div class="edit"><label>Nombre como lo llaman<input data-f="n" data-i="${i}" value="${esc(r.n)}"></label>`;
   h+=`<label>Cambiar elemento del Código<input id="rq" data-i="${i}" placeholder="Busca para reemplazar" value="${esc(ui.replace===i?ui.q:'')}" autocomplete="off"></label><div id="rsug"></div>`;
   if(ui.ap==='SALTO'&&(a.nivel==='N7'||a.nivel==='N8')&&r.k)h+=`<div class="two"><small style="color:var(--muted)">Valor USAG ${a.nivel}: <b>${vaultUSAG(r).toFixed(1)}</b> (no se cambia a mano; el Código FIG no aplica en ${a.nivel})</small></div>`;
@@ -682,6 +686,7 @@ function editPanel(r,i,a){
     return [2,3,4].includes(x.grp)&&[2,3,4].includes(y.grp)&&!pisoConexionInvalida(x,y);};
   if((ui.ap==='PISO'||ui.ap==='FIJA')&&i<rowsA.length-1&&(ui.ap!=='PISO'||r.c||pisoViable())){const cur=(r.c&&r.cv!=null&&r.cv!=='')?String(r.cv):'';
     h+=`<label>Conexión manual con "${esc(rowsA[i+1].n)}"<select data-f="cvm" data-i="${i}"><option value="" ${cur===''?'selected':''}>No, solo según reglas</option><option value="0.1" ${cur==='0.1'?'selected':''}>Sí, 0.1</option><option value="0.2" ${cur==='0.2'?'selected':''}>Sí, 0.2</option></select></label>`;}
+  if((ui.ap==='PISO'||ui.ap==='FIJA')&&!r.c&&r.nc&&pot>0&&i<rowsA.length-1)h+=`<button class="btn ghost" data-act="relink" data-i="${i}">Conectar con "${esc(rowsA[i+1].n)}" (+${pot.toFixed(1)})</button>`;
   if(ui.ap==='PARALELAS'&&llegaAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
   if(ui.ap==='FIJA'&&kipAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(FV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t} y sigue a gigante</option>`).join('')}</select></label>`;
@@ -730,6 +735,8 @@ root.addEventListener('click',e=>{
   if(act==='down'&&i<rows.length-1){[rows[i+1],rows[i]]=[rows[i],rows[i+1]];ui.open=-1;save();return render();}
   if(act==='del'){if(ui.del!==i){ui.del=i;return render();}rows.splice(i,1);ui.del=-1;ui.open=-1;save();return render();}
   if(act==='link'){rows[i].c=!rows[i].c;save();return render();}
+  if(act==='nolink'){rows[i].nc=true;save();return render();}
+  if(act==='relink'){rows[i].c=true;delete rows[i].nc;save();return render();}
   if(act==='plant'){a.p=a.p||{};a.p[ui.ap]=el.checked;save();return render();}
   if(act==='balpiso'){a.p=a.p||{};a.p.balPiso=el.checked||undefined;save();return render();}
   if(act==='reseed'){if(!confirm(`Se reemplaza la rutina de ${ui.atleta} en todos los aparatos con la del Excel. ¿Continuar?`))return;
@@ -771,7 +778,7 @@ root.addEventListener('change',e=>{
     if(f==='gig')r.gig=t.value||undefined;
     if(f==='pv')r.pv=t.value||undefined;
     if(f==='cv')r.cv=t.value===''?undefined:t.value;
-    if(f==='cvm'){if(t.value){r.c=true;r.cv=t.value;}else{r.cv=undefined;r.c=false;}}
+    if(f==='cvm'){if(t.value){r.c=true;r.cv=t.value;delete r.nc;}else{r.cv=undefined;r.c=false;}}
     save();render();}
 });
 
