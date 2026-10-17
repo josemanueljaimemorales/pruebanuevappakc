@@ -10,7 +10,7 @@ const ROM=['','I','II','III','IV'];
 // llevan el valor FIG. En N7 y N8 el valor no se escribe a mano: sale de esta tabla.
 const VAULT_USAG={'3|307':2.2,'3|308':2.4,'3|313':3.2,'5|507':2.2,'5|509':2.4,'5|510':3.2,'2|207':2.4,'2|213':3.2,'1|107':3.6,'2|219':4.0,'1|113':4.2,'1|114':4.2,'1|119':2.8};
 function vaultUSAG(r){if(!r.k||!CAT[r.k])return r.v||0;const p=r.k.split('|');const v=VAULT_USAG[p[1]+'|'+p[2]];
-  if(v!=null)return v;const t=' '+nk(r.n)+' ';
+  if(v!=null)return v;const t=txt(r);
   if(/ kasamatsu /.test(t)&&/ (agrupado|agr|en c|tucked) /.test(t)&&!/ (ext|extendido|carpa|giro) /.test(t))return 2.8;
   return CAT[r.k].v??r.v??0;}
 
@@ -25,18 +25,21 @@ const r1=x=>Math.round(x*10+1e-9)/10;
 const f1=x=>(Math.round(x*10+1e-9)/10).toFixed(1);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function nk(s){return String(s??'').replace(/½/g,' 1/2 ').replace(/¼/g,' 1/4 ').replace(/¾/g,' 3/4 ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9/]+/g,' ').trim();}
+// Texto para las reglas: el apodo que escribió el entrenador + el elemento del Código seleccionado (español e inglés).
+// Así cada regla revisa las dos cosas (doble revisión).
+function txt(r){const c=r&&r.k&&CAT[r.k];return ' '+nk((r?.n||'')+' '+(c?c.d+' '+(c.en||''):''))+' ';}
 // Piso: elementos que cubren la balanza en una pierna (planchas I.61/I.62, arabesca, flick facial o salto con giro a facial).
-const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|ck|k)( flac)? facial|salto( con)?( [a-z0-9/]+)? giro a facial) /.test(' '+nk(r.n)+' ');
+const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|ck|k)( flac)? facial|salto( con)?( [a-z0-9/]+)? giro a facial) /.test(txt(r));
 // Paralelas: elementos que llegan a manos balanceando atrás, y lo que puede seguir sin valor en la misma dirección.
 // Paralelas: elementos que terminan balanceando atrás. La braquial subida de pecho, si no lleva corte adelante,
 // termina por naturaleza con un vuelo atrás (criterio de Manu).
-const llegaAManos=r=>{const t=' '+nk(r.n)+' ';return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||((/ (braq(uial)? subida de pecho|pechada) /.test(t)||r.k==='PARALELAS|1|1')&&!/ corte /.test(t));};
+const llegaAManos=r=>{const t=txt(r);return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||((/ (braq(uial)? subida de pecho|pechada) /.test(t)||r.k==='PARALELAS|1|1')&&!/ corte /.test(t));};
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
 const PV_TXT=v=>PV_OPC[v]||FV_OPC[v]||'';
 // Alemana / kip a parada de manos: por el nombre o por el elemento del Código (III.1, báscula de impulso al apoyo invertido).
-const kipAManos=r=>{if(r.k==='FIJA|3|1')return true;const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?CAT[r.k].d+' '+(CAT[r.k].en||''):''))+' ';
+const kipAManos=r=>{if(r.k==='FIJA|3|1')return true;const t=txt(r);
   // Con giro (p. ej. dominación atrás con ½ giro = cambio sencillo) ya cambia de dirección: no cuenta.
   return / (alemana|aleman|kip|kipe|kippe|bascula|dominacion at(ras)?) /.test(t)&&/ (a manos|apoyo invertido|ap inv|hdst|handstand) /.test(t)&&!/ (1\/2 g|1\/2 giro|1\/2 turn|1\/2 t|con giro|turn|cambio) /.test(t);};
 const nameKey=v=>String(v??'').toUpperCase().replace(/\s+/g,'');
@@ -181,7 +184,7 @@ function valOf(r,nivel,ap){if(r.t==='JA')return (nivel==='N7'||nivel==='N8')?.1:
 //   (II.19, II.9, III.56, III.58, III.68, III.70, III.82; boletines MDP #2-#6).
 // - Paralelas N8: Stutz o gigante al apoyo valen B y cubren grupo (tabla de nivel 8).
 const USAG_ANILLOS_SUBE=new Set(['ANILLOS|2|19','ANILLOS|2|9','ANILLOS|3|56','ANILLOS|3|58','ANILLOS|3|68','ANILLOS|3|70','ANILLOS|3|82']);
-function n8StutzGigante(r){const c=r.k&&CAT[r.k], t=' '+nk(r.n+' '+(c?(c.en||'')+' '+c.d:''))+' ';
+function n8StutzGigante(r){const t=txt(r);
   return / (stutz|stuts|stutzkehr|stuetzkehr|gigante|giant) /.test(t)&&/ (apoyo|support|sup) /.test(t)&&!/ (apoyo invertido|ap inv|parada de manos|handstand|hdst|a manos) /.test(t);}
 function usagValor(r,nivel,ap,v){
   if(r.k&&USAG_ANILLOS_SUBE.has(r.k)&&v>0)return r1(v+.1);
@@ -199,14 +202,15 @@ function grpOf(r,ap,nivel){
 // Anillos: grupo III = parada de manos sostenida 2 s (llegue a fuerza o con impulso); cualquier otro elemento FIG II o III cubre el grupo II.
 // Barra fija: grupo II = cualquier soltada o elemento en la barra hacia adelante / toma cubital (Endo, Adler, Weiler…);
 // grupo III = elementos en la barra hacia atrás con toma palmar (Stalder, giro libre atrás…).
-function n8ParadaAnillos(r){const en=(r.k&&CAT[r.k]?.en)||'';
-  if(en)return /\bto (hdst|handstand)/i.test(en)&&!/\b(through|thr\.)/i.test(en);
-  const t=' '+nk(r.n)+' ';return / (parada de manos|apoyo invertido|ap inv|pdm|a manos) /.test(t)&&!/ (desde|por el|por la) /.test(t);}
-function n8FijaAdelante(r){const c=r.k&&CAT[r.k], t=' '+nk(r.n+' '+(c?(c.en||'')+' '+c.d:''))+' ';
+function n8ParadaAnillos(r){const en=(r.k&&CAT[r.k]?.en)||'', t=' '+nk(r.n)+' ';
+  const porCodigo=!!en&&/\bto (hdst|handstand)/i.test(en)&&!/\b(through|thr\.)/i.test(en);
+  const porApodo=/ (parada de manos|apoyo invertido|ap inv|pdm|a manos) /.test(t)&&!/ (desde|por el|por la) /.test(t);
+  return porCodigo||porApodo;}
+function n8FijaAdelante(r){const t=txt(r);
   if(/ stalder /.test(t))return false;
   return / (fwd|endo|adler|weiler|whaler|el grip|ungr|steineman|koste|carballo|quintero|fuentes|baldauf|adelante|al frente|cubital) /.test(t);}
 function dirOf(it){if(it.grp===2)return'ad';if(it.grp===3)return'at';
-  const t=' '+nk((it.r.k&&CAT[it.r.k]?CAT[it.r.k].d:'')+' '+it.r.n)+' ';
+  const t=txt(it.r);
   if(/ (adelante|ad|frente|ade|adel) /.test(t))return'ad'; if(/ (atras|at|atr) /.test(t))return'at'; return'';}
 // Número de medios giros (twist) de un elemento de piso: por el nombre que usa el entrenador o, si no lo dice,
 // por el Código cuando la casilla es de un solo elemento.
@@ -287,7 +291,7 @@ const ARZ_REP={
   famRusa:['3|64','3|65','3|70'], famTongFei:['3|57','3|58','3|59']};                             // j) una sola variante por familia
 function arzonRepeticiones(items,res,kill){
   const id=it=>it.r.k&&/^ARZON\|/.test(it.r.k)?it.r.k.slice(6):null;
-  const en=it=>' '+nk(it.r.n+' '+((it.r.k&&CAT[it.r.k]?.en)||''))+' ';
+  const en=it=>txt(it.r);
   const vivos=items.filter(it=>it.val>0&&id(it)).sort((a,b)=>((b.grp===4)-(a.grp===4))||(b.val-a.val));
   const tope=(lista,max,why)=>{let n=0;vivos.forEach(it=>{if(it.val>0&&lista.includes(id(it))){n++;if(n>max)kill(it,why);}});};
   tope(ARZ_REP.cruz,2,'Máximo 2 recorridos 3/3 en apoyo transversal (Magyar, Sivado, Driggs…) por rutina');
@@ -308,7 +312,7 @@ function arzonRepeticiones(items,res,kill){
   // c) Máximo 2 elementos a parada de manos desde círculos, flairs o tijeras (sin contar la salida).
   {let n=0;vivos.forEach(it=>{if(it.val>0&&it.grp!==4&&/ (handstand|hdst) /.test(en(it))){n++;if(n>2)kill(it,'Máximo 2 elementos a parada de manos por rutina (sin contar la salida)');}});}
   // h) Máximo 4 elementos en flairs (sin contar la salida).
-  {let n=0;vivos.forEach(it=>{if(it.val>0&&it.grp!==4&&/ flairs? /.test(' '+nk(it.r.n)+' ')){n++;if(n>4)kill(it,'Máximo 4 elementos en flairs por rutina (sin contar la salida)');}});}
+  {let n=0;vivos.forEach(it=>{if(it.val>0&&it.grp!==4&&(/ flairs? /.test(' '+nk(it.r.n)+' ')||/ en flairs /.test(' '+nk(CAT[it.r.k]?.d||'')+' '))){n++;if(n>4)kill(it,'Máximo 4 elementos en flairs por rutina (sin contar la salida)');}});}
 }
 // Paralelas (Código FIG art. 14.2.2 punto 4) y Barra fija (art. 15.2.2 punto 5): repeticiones especiales.
 // Cuentan primero los de mayor valor (art. 7.4 punto 8).
@@ -332,7 +336,7 @@ function familiasRep(items,kill,reglas,ap){
   const id=it=>it.r.k&&it.r.k.startsWith(ap+'|')?it.r.k.slice(ap.length+1):null;
   const vivos=items.filter(it=>it.val>0).sort((a,b)=>b.val-a.val);
   for(const f of reglas){let n=0;vivos.forEach(it=>{if(!(it.val>0))return;
-    const ok=f.ids?f.ids.includes(id(it)):f.nombre.test(' '+nk(it.r.n+' '+((it.r.k&&CAT[it.r.k]?.en)||''))+' ');
+    const ok=f.ids?f.ids.includes(id(it)):f.nombre.test(txt(it.r));
     if(ok&&++n>f.max)kill(it,f.why);});}}
 // Barra fija: la 5ª soltada solo vale si hay al menos dos soltadas conectadas (mínimo C+C) (art. 15.2.2 punto 6).
 function fijaQuintaSoltada(items,kill){
@@ -350,7 +354,7 @@ function applySpecial(ap,items,res,nivel){
     if(nivel!=='N7'&&nivel!=='N8'){let run=0;
       items.forEach(it=>{const g=it.r.g, p=id(it);
         if((g===2||g===3)&&it.r.t!=='JA'){run++; if(run>3)kill(it,'4º elemento seguido de grupo II/III sin impulso B del grupo I entre ellos');}
-        else if(g===1&&valOf(it.r,nivel)>=.2&&!(p&&['49','55','56','74'].includes(p[2]))&&!/kip|bascula/.test(nk(it.r.n)))run=0;});}
+        else if(g===1&&valOf(it.r,nivel)>=.2&&!(p&&['49','55','56','74'].includes(p[2]))&&!/kip|bascula/.test(txt(it.r)))run=0;});}
     // Una misma posición final de fuerza por grupo (12.2.2 4a/4b)
     const best={};
     items.filter(it=>(it.r.g===2||it.r.g===3)&&it.r.t==='C'&&it.val>0).forEach(it=>{
@@ -367,7 +371,7 @@ function applySpecial(ap,items,res,nivel){
     const fuerza=[],molinos=[];
     items.forEach(it=>{const p=id(it);if(!p||p[1]!=='1'||!(it.val>0))return;const n=+p[2];
       if(n>=1&&n<=48&&n!==19&&n!==31)fuerza.push(it);
-      else if(/molino|flair|rusa/.test(nk(CAT[it.r.k]?.d||'')))molinos.push(it);});
+      else if(/molino|flair|rusa/.test(txt(it.r)))molinos.push(it);});
     [[fuerza,'elemento de fuerza'],[molinos,'elemento de molinos, flairs o rusas']].forEach(([arr,t])=>{
       if(arr.length<2)return;arr.sort((a,b)=>b.val-a.val);arr.slice(1).forEach(it=>kill(it,`Solo vale 1 ${t} en suelo (ya cuenta "${arr[0].r.n}")`));});
   }
@@ -376,12 +380,12 @@ function compute(ap,rows,nivel,plantada,opt){
   const res={dv:0,eg:0,cv:0,bon:0,nd:0,np:0,egDet:[],counted:new Set(),rep:new Set(),why:{},up:{},notes:[],dIdx:-1,vaults:[]};
   if(ap==='SALTO'){
     rows.forEach((r,i)=>{let v=r.v||0;
-      if(nivel==='N7'||nivel==='N8'){const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?(CAT[r.k].en||'')+' '+CAT[r.k].d:''))+' ';
+      if(nivel==='N7'||nivel==='N8'){const t=txt(r);
         if(r.k)v=vaultUSAG(r);
         // Saltos con mortal múltiple no permitidos en N7-N8 (tabla de niveles USAG)
         if(/ (dbl|double|doble|roche|dragulescu|blanik|yeo|lu yu fu|ri se gwang) /.test(t)){v=0;res.notes.push(`${r.n}: saltos con mortal múltiple no permitidos en ${nivel} (USAG).`);}
         // N7: Yurchenko con giro no permitido (tabla de niveles USAG)
-        else if(nivel==='N7'&&(/^SALTO\|4\|40\d$/.test(r.k||'')||(/ yurchenko /.test(' '+nk(r.n)+' ')&&/ (giro|giros|1\/2|1\/1|3\/2|2\/1|5\/2) /.test(' '+nk(r.n)+' ')))){v=0;res.notes.push(`${r.n}: en N7 no se permite Yurchenko con giro (USAG).`);}}
+        else if(nivel==='N7'&&(/^SALTO\|4\|40\d$/.test(r.k||'')||(/ yurchenko /.test(txt(r))&&/ (giro|giros|1\/2|1\/1|3\/2|2\/1|5\/2|twist) /.test(txt(r))))){v=0;res.notes.push(`${r.n}: en N7 no se permite Yurchenko con giro (USAG).`);}}
       else if(plantada&&i===0&&!/^(2\|20[1-6]|3\|30[1-3])$/.test(`${r.g}|${r.id}`)&&v>0){v=r1(v+.1);res.bon=.1;}
       res.vaults.push({i,v,np:r1(10+v)});});
     if(!res.vaults.length){res.notes.push('Agrega al menos un salto.');return res;}
@@ -404,14 +408,14 @@ function compute(ap,rows,nivel,plantada,opt){
   res.enotes=res.enotes||[];
   // Paralelas: elemento a una barra seguido de Healy sube una letra (y el Healy también) (art. 14.2.2 punto 3b-d).
   if(ap==='PARALELAS')rows.forEach((a,i)=>{const b=rows[i+1];if(!b)return;
-    const ta=' '+nk(a.n)+' ', ca=' '+nk((a.k&&CAT[a.k]?.en)||'')+' ', tb=' '+nk(b.n+' '+((b.k&&CAT[b.k]?.en)||''))+' ';
+    const ta=' '+nk(a.n)+' ', ca=' '+nk((a.k&&CAT[a.k]?.en)||'')+' ', tb=txt(b);
     if(/ (una barra|1 barra|una banda|1 banda|one rail) /.test(ta)&&!/ tambien /.test(ta)&&/ healy /.test(tb)&&!/ (tippelt|arican|abiertas|abierto) /.test(ta+ca)&&!/ connected to healy /.test(ca))
       res.notes.push(`"${a.n}" a una barra seguido de Healy: el Código da una letra más a los dos. Elige la versión "conectado a Healy" del elemento y el Healy después de una barra.`);});
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
-  if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=' '+nk((r.k&&CAT[r.k]?.en)||'')+' ';
+  if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
     if(r.g!==4&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": si compite como junior FIG, los mortales atrás en suspensión no están permitidos.`);});
   if(ap==='FIJA'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct||FV_OPC[a.pv])return;
-    const tb=' '+nk(b.n+' '+(b.k&&CAT[b.k]?CAT[b.k].d:''))+' ';
+    const tb=txt(b);
     const kipHS=kipAManos(a);
     const atras=/ (gigante|molino at(ras)?|stalder|quinta|salvada) /.test(tb)||/ 1\/2 g .*cubital/.test(tb);
     if(kipHS&&atras&&!/ (molino ad(elante)?|endo) /.test(tb))res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". Error de composición -0.30 (jurado E) si van seguidos.`);});
@@ -422,11 +426,11 @@ function compute(ap,rows,nivel,plantada,opt){
   // Paralelas: la salida de doble mortal adelante debe venir de un impulso braquial, un Healy o un Moy directo;
   // si no, hay un balanceo vacío ("vuelo perdido"): -0.3 del jurado E (Código FIG, balanceos vacíos e intermedios).
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8'&&rows.length>1){const u=rows[rows.length-1],pr=rows[rows.length-2];
-    const tu=' '+nk(u.n+' '+((u.k&&CAT[u.k]?.en)||''))+' ', tp=' '+nk(pr.n+' '+((pr.k&&CAT[pr.k]?.en)||''))+' ';
+    const tu=txt(u), tp=txt(pr);
     if(/ (double salto fwd|doble mortal (adelante|ade|adel|al frente|ad)|doble (adelante|ade|al frente)) /.test(tu)&&!/ (braq|braquial|upper arm|healy|moy) /.test(tp))
       res.enotes.push(`Vuelo perdido: la salida de doble mortal adelante ("${u.n}") debe venir de un impulso braquial, un Healy o un Moy directo; después de "${pr.n}" queda un balanceo vacío. -0.30 del jurado E.`);}
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
-    const nb=' '+nk(b.n+' '+((b.k&&CAT[b.k]?.en)||''))+' ';
+    const nb=txt(b);
     const aManos=llegaAManos(a)&&!a.pv;
     // La salida hacia atrás (último elemento) también va en contra del balanceo.
     const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb)||(i+1===rows.length-1&&/ atras /.test(nb)&&!/ adelante /.test(nb));
@@ -503,7 +507,7 @@ function compute(ap,rows,nivel,plantada,opt){
   else{const t={5:3,4:4,3:5,2:6,1:7,0:10};if(nEl<6)res.nd=t[nEl];}
   res.rep.forEach(i=>{if(!res.why[i])res.notes.push(`${rows[i].n}: repetido (mismo elemento del Código), no suma valor.`);});
   // Deducciones del jurado D (neutrales) y avisos de jurado E propios de cada aparato
-  const descOf=r=>' '+nk((r.k&&CAT[r.k]?CAT[r.k].d:'')+' '+r.n)+' ';
+  const descOf=r=>txt(r);
   const usagN=nivel==='N7'||nivel==='N8';
   if(ap==='PISO'){
     const multi=r=>r.t==='C'&&(r.g===2||r.g===3)&&/ (doble|triple|dob|tri) /.test(descOf(r));
