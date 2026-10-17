@@ -35,8 +35,10 @@ const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
 const PV_TXT=v=>PV_OPC[v]||FV_OPC[v]||'';
-const kipAManos=r=>{const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?CAT[r.k].d:''))+' ';
-  return / (alemana|kip|kipe|kippe|dominacion at(ras)?) /.test(t)&&/ (a manos|apoyo invertido|ap inv) /.test(t);};
+// Alemana / kip a parada de manos: por el nombre o por el elemento del Código (III.1, báscula de impulso al apoyo invertido).
+const kipAManos=r=>{if(r.k==='FIJA|3|1')return true;const t=' '+nk(r.n+' '+(r.k&&CAT[r.k]?CAT[r.k].d+' '+(CAT[r.k].en||''):''))+' ';
+  // Con giro (p. ej. dominación atrás con ½ giro = cambio sencillo) ya cambia de dirección: no cuenta.
+  return / (alemana|aleman|kip|kipe|kippe|bascula|dominacion at(ras)?) /.test(t)&&/ (a manos|apoyo invertido|ap inv|hdst|handstand) /.test(t)&&!/ (1\/2 g|1\/2 giro|1\/2 turn|1\/2 t|con giro|turn|cambio) /.test(t);};
 const nameKey=v=>String(v??'').toUpperCase().replace(/\s+/g,'');
 function normLevel(v){v=String(v||'').toUpperCase().replace(/\s+/g,'');if(v==='NFIG'||v==='FIG')return'FIG';const m=v.match(/^N?(7|8|9|10)$/);return m?'N'+m[1]:'FIG';}
 function table(ap,nivel){return nivel==='N8'&&ap==='ARZON'?'N8ARZON':'FIG';}
