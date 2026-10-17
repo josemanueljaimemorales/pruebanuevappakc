@@ -33,7 +33,7 @@ const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|
 // Paralelas: elementos que llegan a manos balanceando atrás, y lo que puede seguir sin valor en la misma dirección.
 // Paralelas: elementos que terminan balanceando atrás. La braquial subida de pecho, si no lleva corte adelante,
 // termina por naturaleza con un vuelo atrás (criterio de Manu).
-const llegaAManos=r=>{const t=txt(r);return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||((/ (braq(uial)? subida de pecho|pechada) /.test(t)||r.k==='PARALELAS|1|1')&&!/ corte /.test(t));};
+const llegaAManos=r=>{const t=txt(r);return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||((/ (braq(uial)? subida de pecho|pechada) /.test(t)||r.k==='PARALELAS|1|1')&&!/ corte /.test(t))||(/ moy /.test(t)&&!/ (ap inv|apoyo invertido|handstand|hdst|braq|braquial|upper arm|mortal|salto|tippelt|nolet|giraldo) /.test(t));};
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
