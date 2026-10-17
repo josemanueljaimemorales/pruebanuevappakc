@@ -701,7 +701,7 @@ function renderSug(q,target){
   let h='<div class="sug">';
   for(const s of res){const e=CAT[s.k];const r=rowFromKey(s.k);
     const tag=r.t==='JA'?'Juvenil / virtual USAG · A 0.1':ui.ap==='SALTO'?`${keyLabel(r)} · ${(a.nivel==='N7'||a.nivel==='N8')?'valor USAG '+r.v.toFixed(1):(e.v??'-')}`:`${keyLabel(r)} · ${r.l} ${(LV[r.l]||0).toFixed(1)}`;
-    h+=`<button data-act="pick" data-k="${esc(s.k)}"><b>${esc(s.name?s.name.replace(/^./,c=>c.toUpperCase()):e.d)}</b><small><span class="k">${esc(tag)}</span> · ${esc(e.d)}${e.en&&e.en!==e.d?`<br><i>EN: ${esc(e.en)}</i>`:''}</small></button>`;}
+    h+=`<button data-act="pick" data-k="${esc(s.k)}" data-n="${esc(s.name?s.name.replace(/^./,c=>c.toUpperCase()):'')}"><b>${esc(s.name?s.name.replace(/^./,c=>c.toUpperCase()):e.d)}</b><small><span class="k">${esc(tag)}</span> · ${esc(e.d)}${e.en&&e.en!==e.d?`<br><i>EN: ${esc(e.en)}</i>`:''}</small></button>`;}
   h+=`<button data-act="manual"><b>Agregar "${esc(q)}" a mano</b><small>Tú indicas grupo y valor</small></button></div>`;
   box.innerHTML=h;
 }
@@ -746,8 +746,12 @@ root.addEventListener('click',e=>{
     let row;
     if(act==='pick'){const k=el.dataset.k;
       const isAlias=typed&&!/^\d/.test(typed);
-      row=rowFromKey(k,ui.replace>=0?rows[ui.replace].n:(isAlias?typed:''));
-      if(isAlias)learn(typed,ui.ap,a.nivel,k);}
+      // Si la sugerencia es un apodo (p. ej. escribes "wug" y eliges "Wugonian"), el apodo se completa con ese nombre; se puede editar después.
+      // Con la escritura que ya tenga en alguna rutina (mayúsculas, acentos); el fragmento escrito no se aprende como apodo.
+      let sn=isAlias&&el.dataset.n||'';
+      if(sn){const nn=nk(sn);for(const x of Object.values(S.atletas||{}))for(const rr of Object.values(x?.r||{}))for(const o of rr||[])if(o.k===k&&o.n&&nk(o.n)===nn)sn=o.n.trim();}
+      row=rowFromKey(k,sn||(ui.replace>=0?rows[ui.replace].n:(isAlias?typed:'')));
+      if(isAlias&&!sn)learn(typed,ui.ap,a.nivel,k);}
     else row={n:typed||'Elemento',k:null,t:'M',l:'A',g:1,id:'',v:ui.ap==='SALTO'?0:undefined};
     if(ui.replace>=0){row.c=rows[ui.replace].c;rows[ui.replace]=row;ui.open=ui.replace;}
     else{rows.push(row);ui.open=act==='manual'?rows.length-1:-1;}
