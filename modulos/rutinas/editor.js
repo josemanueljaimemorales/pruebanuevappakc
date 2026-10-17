@@ -242,6 +242,9 @@ function pisoConexionInvalida(a,b){const A=pisoMov(a),B=pisoMov(b);
   if(A.giros&&!A.multi&&B.giros&&!B.multi)return 'dos mortales simples con giros (Código FIG)';
   if(A.sale&&B.dir&&A.sale!==B.dir)return 'contramovimiento: cambia de dirección (Código FIG, contrasaltos)';
   return '';}
+// Piso: conexión permitida aunque el Código no le dé bonificación (grupos II, III o IV, misma dirección, sin giro con giro).
+function pisoViable(r1,r2,nivel){if(!r1||!r2)return false;const x={r:r1,grp:grpOf(r1,'PISO',nivel)},y={r:r2,grp:grpOf(r2,'PISO',nivel)};
+  return [2,3,4].includes(x.grp)&&[2,3,4].includes(y.grp)&&!pisoConexionInvalida(x,y);}
 function cvPair(a,b,ap,nivel){
   const va=a.val,vb=b.val;
   if(ap==='PISO'){
@@ -250,8 +253,9 @@ function cvPair(a,b,ap,nivel){
     if(a.grp===4&&b.grp===4)return 0;
     if(va>=.4&&vb>=.4)return .2;
     if((va>=.4&&(vb===.2||vb===.3))||(vb>=.4&&(va===.2||va===.3)))return .1;
-    // N7 a N10 (vigente, criterio de Manu): B+C, C+B y C+C también dan 0.1, además de las conexiones FIG.
-    if(nivel!=='FIG'&&[.2,.3].includes(va)&&[.2,.3].includes(vb)&&!(va===.2&&vb===.2))return .1;
+    // N7 y N8 (vigente, criterio de Manu): B+C, C+B y C+C también dan 0.1, además de las conexiones FIG.
+    // N9, N10 y FIG: solo las bonificaciones del Código FIG.
+    if((nivel==='N7'||nivel==='N8')&&[.2,.3].includes(va)&&[.2,.3].includes(vb)&&!(va===.2&&vb===.2))return .1;
     return 0;
   }
   if(ap==='FIJA'){
@@ -661,11 +665,12 @@ function renderAthlete(){
     if(ui.open===i)h+=editPanel(r,i,a,(res.pot||{})[i]||0);
     if(i<rows.length-1){const pot=(res.pot||{})[i]||0;
       // Posible conexión descartada con la X (r.nc): ya no se muestra aquí, pero sigue en el panel del elemento.
-      if(canLink&&(r.c||(pot>0&&!r.nc))){
+      const sinBono=ui.ap==='PISO'&&pot===0&&res.counted.has(i)&&res.counted.has(i+1)&&pisoViable(r,rows[i+1],a.nivel);
+      if(canLink&&(r.c||((pot>0||sinBono)&&!r.nc))){
         const mal=ui.ap==='PISO'&&r.c&&pisoConexionInvalida({r,grp:grpOf(r,'PISO',a.nivel)},{r:rows[i+1],grp:grpOf(rows[i+1],'PISO',a.nivel)});
         const val=mal?0:r.c?((r.cv!=null&&r.cv!=='')?+r.cv:pot):pot;
-        const lbl=mal?`No permitida: ${mal}. Toca para quitar`:r.c?(val>0?`Conectados +${val.toFixed(1)}${(r.cv!=null&&r.cv!=='')?' (manual)':''}`:'Conectados 0.0: no cumple, toca para quitar'):(ui.ap==='PISO'?`Posible conexión con "${esc(rows[i+1].n)}": toca para conectar (+${pot.toFixed(1)})`:`Conectar +${pot.toFixed(1)}`);
-        h+=`<div class="link"><button class="${r.c?(val>0?'on':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button>${r.c?'':`<button class="nox" data-act="nolink" data-i="${i}" aria-label="No usar esta conexión" title="No usar esta conexión">✕</button>`}</div>`;}
+        const lbl=mal?`No permitida: ${mal}. Toca para quitar`:r.c?(val>0?`Conectados +${val.toFixed(1)}${(r.cv!=null&&r.cv!=='')?' (manual)':''}`:sinBono?'Conectados (sin bonificación 0.0), toca para quitar':'Conectados 0.0: no cumple, toca para quitar'):(ui.ap==='PISO'?(sinBono?`Posible conexión con "${esc(rows[i+1].n)}" sin bonificación (0.0): toca para conectar`:`Posible conexión con "${esc(rows[i+1].n)}": toca para conectar (+${pot.toFixed(1)})`):`Conectar +${pot.toFixed(1)}`);
+        h+=`<div class="link"><button class="${r.c?(val>0?'on':sinBono?'':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button>${r.c?'':`<button class="nox" data-act="nolink" data-i="${i}" aria-label="No usar esta conexión" title="No usar esta conexión">✕</button>`}</div>`;}
       else h+='<div class="gap"></div>';}
   });
   h+=`</div><div class="add"><input id="q" placeholder="Escribe un elemento: nombre, apodo o ID (ej. doble atrás, Cassina, 2.16)" value="${esc(ui.replace<0?ui.q:'')}" autocomplete="off"><div id="sug"></div></div>`;
@@ -682,11 +687,10 @@ function editPanel(r,i,a,pot){
   if(a.nivel==='N8'&&r.t!=='JA'&&(ui.ap==='ANILLOS'||ui.ap==='FIJA'))h+=`<label>Grupo para N8<select data-f="gx" data-i="${i}"><option value="">Según Código</option>${[1,2,3,4].map(g=>`<option value="${g}" ${r.gx===g?'selected':''}>${ROM[g]}</option>`).join('')}</select></label>`;
   const rowsA=a.r[ui.ap]||[];
   // Piso: la conexión manual solo se ofrece si es viable (grupos II, III o IV, misma dirección, sin giro con giro).
-  const pisoViable=()=>{const x={r,grp:grpOf(r,'PISO',a.nivel)},y={r:rowsA[i+1],grp:grpOf(rowsA[i+1],'PISO',a.nivel)};
-    return [2,3,4].includes(x.grp)&&[2,3,4].includes(y.grp)&&!pisoConexionInvalida(x,y);};
-  if((ui.ap==='PISO'||ui.ap==='FIJA')&&i<rowsA.length-1&&(ui.ap!=='PISO'||r.c||pisoViable())){const cur=(r.c&&r.cv!=null&&r.cv!=='')?String(r.cv):'';
+  const viable=ui.ap==='PISO'&&pisoViable(r,rowsA[i+1],a.nivel);
+  if((ui.ap==='PISO'||ui.ap==='FIJA')&&i<rowsA.length-1&&(ui.ap!=='PISO'||r.c||viable)){const cur=(r.c&&r.cv!=null&&r.cv!=='')?String(r.cv):'';
     h+=`<label>Conexión manual con "${esc(rowsA[i+1].n)}"<select data-f="cvm" data-i="${i}"><option value="" ${cur===''?'selected':''}>No, solo según reglas</option><option value="0.1" ${cur==='0.1'?'selected':''}>Sí, 0.1</option><option value="0.2" ${cur==='0.2'?'selected':''}>Sí, 0.2</option></select></label>`;}
-  if((ui.ap==='PISO'||ui.ap==='FIJA')&&!r.c&&r.nc&&pot>0&&i<rowsA.length-1)h+=`<button class="btn ghost" data-act="relink" data-i="${i}">Conectar con "${esc(rowsA[i+1].n)}" (+${pot.toFixed(1)})</button>`;
+  if((ui.ap==='PISO'||ui.ap==='FIJA')&&!r.c&&r.nc&&(pot>0||viable)&&i<rowsA.length-1)h+=`<button class="btn ghost" data-act="relink" data-i="${i}">Conectar con "${esc(rowsA[i+1].n)}" (${pot>0?'+'+pot.toFixed(1):'sin bonificación'})</button>`;
   if(ui.ap==='PARALELAS'&&llegaAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
   if(ui.ap==='FIJA'&&kipAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(FV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t} y sigue a gigante</option>`).join('')}</select></label>`;
