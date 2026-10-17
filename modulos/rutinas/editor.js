@@ -30,7 +30,7 @@ const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|
 // Paralelas: elementos que llegan a manos balanceando atrás, y lo que puede seguir sin valor en la misma dirección.
 // Paralelas: elementos que terminan balanceando atrás. La braquial subida de pecho, si no lleva corte adelante,
 // termina por naturaleza con un vuelo atrás (criterio de Manu).
-const llegaAManos=r=>{const t=' '+nk(r.n)+' ';return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||(/ braq(uial)? subida de pecho /.test(t)&&!/ corte /.test(t));};
+const llegaAManos=r=>{const t=' '+nk(r.n)+' ';return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||((/ (braq(uial)? subida de pecho|pechada) /.test(t)||r.k==='PARALELAS|1|1')&&!/ corte /.test(t));};
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
@@ -386,6 +386,7 @@ function compute(ap,rows,nivel,plantada,opt){
     if(res.vaults.length>1){const a1=rows[res.vaults[0].i],a2=rows[res.vaults[1].i],v2=res.vaults[1];
       if(a1.id&&a2.id&&String(a1.id)===String(a2.id)){v2.np=0;res.notes.push('El 2º salto repite el 1º: nota 0.00 para ese salto (final de aparato).');}
       else if(a1.g&&a2.g&&a1.g===a2.g){v2.np=r1(Math.max(0,v2.np-2));res.notes.push('El 2º salto es del mismo grupo que el 1º: -2.0 al 2º salto (final de aparato).');}}
+    if(res.vaults.length>2)res.notes.push('Solo cuentan 2 saltos (final de aparato): los demás no se toman en cuenta.');
     res.dv=res.vaults[0].v; res.np=res.vaults[0].np;
     if(res.vaults.length>1)res.avg=r1(res.vaults.reduce((s,x)=>s+x.np,0)/res.vaults.length);
     return res;
@@ -416,8 +417,14 @@ function compute(ap,rows,nivel,plantada,opt){
   // el siguiente elemento no puede bajar hacia adelante (Moy, Tippelt, molino/gigante, Kenmotsu, Bhavsar, Diamidov,
   // Makuts, Felge, Peters): contrabalanceo, -0.30 del jurado E (Código FIG 2025-2028, art. 14.2.1 4.a y 4.b).
   // Si entre ellos hay un elemento de fuerza (L-sit, Kato…) ya no van seguidos y no aplica.
+  // Paralelas: la salida de doble mortal adelante debe venir de un impulso braquial, un Healy o un Moy directo;
+  // si no, hay un balanceo vacío ("vuelo perdido"): -0.3 del jurado E (Código FIG, balanceos vacíos e intermedios).
+  if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8'&&rows.length>1){const u=rows[rows.length-1],pr=rows[rows.length-2];
+    const tu=' '+nk(u.n+' '+((u.k&&CAT[u.k]?.en)||''))+' ', tp=' '+nk(pr.n+' '+((pr.k&&CAT[pr.k]?.en)||''))+' ';
+    if(/ (double salto fwd|doble mortal (adelante|ade|adel|al frente|ad)|doble (adelante|ade|al frente)) /.test(tu)&&!/ (braq|braquial|upper arm|healy|moy) /.test(tp))
+      res.enotes.push(`Vuelo perdido: la salida de doble mortal adelante ("${u.n}") debe venir de un impulso braquial, un Healy o un Moy directo; después de "${pr.n}" queda un balanceo vacío. -0.30 del jurado E.`);}
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
-    const nb=' '+nk(b.n)+' ';
+    const nb=' '+nk(b.n+' '+((b.k&&CAT[b.k]?.en)||''))+' ';
     const aManos=llegaAManos(a)&&!a.pv;
     // La salida hacia atrás (último elemento) también va en contra del balanceo.
     const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb)||(i+1===rows.length-1&&/ atras /.test(nb)&&!/ adelante /.test(nb));
@@ -639,7 +646,7 @@ function renderAthlete(){
     h+=`<div class="row ${res.counted.has(i)||ui.ap==='SALTO'?'':'off'}"><span class="num">${i+1}</span><div><button class="nm" data-act="edit" data-i="${i}">${esc(r.n)}</button><div class="meta">${metaLine(r,res,i)}</div></div>
       <div class="ctl"><button data-act="up" data-i="${i}" aria-label="Subir">↑</button><button data-act="down" data-i="${i}" aria-label="Bajar">↓</button><button data-act="del" data-i="${i}" aria-label="Quitar" class="${ui.del===i?'sure':''}">${ui.del===i?'Quitar':'✕'}</button></div></div>`;
     if(ui.open===i)h+=editPanel(r,i,a);
-    if(i<rows.length-1){const pot=res.pot[i]||0;
+    if(i<rows.length-1){const pot=(res.pot||{})[i]||0;
       if(canLink&&(r.c||pot>0)){
         const mal=ui.ap==='PISO'&&r.c&&pisoConexionInvalida({r,grp:grpOf(r,'PISO',a.nivel)},{r:rows[i+1],grp:grpOf(rows[i+1],'PISO',a.nivel)});
         const val=mal?0:r.c?((r.cv!=null&&r.cv!=='')?+r.cv:pot):pot;
