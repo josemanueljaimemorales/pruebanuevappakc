@@ -978,7 +978,7 @@ function divPrintHTML(fecha){
         h+=`<div class="dcol"><div class="dname">${esc(n)}</div>`;
         for(const [ap] of APS){const rows=(a.r[ap]||[]).map(r=>r.n);const salto=ap==='SALTO';
           h+=`<div class="dap"><div class="dt">${DIV_AP[ap]}</div><div class="dhd${salto?' solo':''}"><span>NOMBRE</span>${salto?'':'<span>PARTES</span><span>DIVISIÓN</span>'}</div><div class="dbody${salto?' solo':''}">`;
-          (rows.length?rows:['—']).forEach((nm,i)=>{h+=`<div class="de" style="grid-row:${i+1}">${esc(nm)}</div>`;});
+          (rows.length?rows:['—']).forEach((nm,i)=>{h+=`<div class="de${i%2?' alt':''}" style="grid-row:${i+1}">${esc(nm)}</div>`;});
           if(!salto)divMitades(rows.length).forEach(([t,x,y,c])=>{h+=`<div class="db ${c}" style="grid-row:${x}/${y+1}"><span>${t}</span></div>`;});
           if(!salto)divBloques(rows.length).forEach(([t,x,y,c])=>{h+=`<div class="db ${c}" style="grid-row:${x}/${y+1}"><span>${t}</span></div>`;});
           h+=`</div></div>`;}
