@@ -960,6 +960,8 @@ const DIV_GRUPOS=[['Nivel 7 y 8',['N7','N8']],['Nivel 9',['N9']],['Nivel 10',['N
 const DIV_AP={PISO:'PISO',ARZON:'ARZONES',ANILLOS:'ANILLOS',SALTO:'SALTO DE CABALLO',PARALELAS:'PARALELAS',FIJA:'FIJA'};
 // Con 8 elementos: 1er enlace 1-3, 2do enlace 3-6, enlace a salir 6-8 (con otro número se ajusta igual).
 function divBloques(n){if(n<4)return[];const b=[['1er enlace',1,3,'d1']];if(n-2>3)b.push(['2do enlace',3,n-2,'d2']);b.push(['Enlace a salir',n-2,n,'d3']);return b;}
+// Mitades: 8 elementos 4 y 4, 7 elementos 4 y 3, 6 elementos 3 y 3 (la primera parte lleva el elemento de más).
+function divMitades(n){if(n<2)return[];const m=Math.ceil(n/2);return[['Primera parte',1,m,'p1'],['Segunda parte',m+1,n,'p2']];}
 function divPrintHTML(fecha){
   // Hojas de hasta 6 atletas. Si un grupo cabe completo en la hoja del grupo anterior, va en la misma hoja (p. ej. Nivel 10 y FIG).
   const POR=6, hojas=[];
@@ -975,8 +977,9 @@ function divPrintHTML(fecha){
       for(const n of hj.at){const a=S.atletas[n];
         h+=`<div class="dcol"><div class="dname">${esc(n)}</div>`;
         for(const [ap] of APS){const rows=(a.r[ap]||[]).map(r=>r.n);const salto=ap==='SALTO';
-          h+=`<div class="dap"><div class="dt">${DIV_AP[ap]}</div><div class="dhd${salto?' solo':''}"><span>NOMBRE</span>${salto?'':'<span>DIVISIÓN</span>'}</div><div class="dbody${salto?' solo':''}">`;
+          h+=`<div class="dap"><div class="dt">${DIV_AP[ap]}</div><div class="dhd${salto?' solo':''}"><span>NOMBRE</span>${salto?'':'<span>PARTES</span><span>DIVISIÓN</span>'}</div><div class="dbody${salto?' solo':''}">`;
           (rows.length?rows:['—']).forEach((nm,i)=>{h+=`<div class="de" style="grid-row:${i+1}">${esc(nm)}</div>`;});
+          if(!salto)divMitades(rows.length).forEach(([t,x,y,c])=>{h+=`<div class="db ${c}" style="grid-row:${x}/${y+1}"><span>${t}</span></div>`;});
           if(!salto)divBloques(rows.length).forEach(([t,x,y,c])=>{h+=`<div class="db ${c}" style="grid-row:${x}/${y+1}"><span>${t}</span></div>`;});
           h+=`</div></div>`;}
         h+=`</div>`;}
