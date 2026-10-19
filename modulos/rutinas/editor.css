@@ -203,9 +203,9 @@ button{cursor:pointer}
 #printArea .dsheet .dname{border:1.5px solid #000;text-align:center;font-size:calc(var(--fs)*1.8);line-height:1.15;padding:1px 2px;margin-bottom:1.5mm;overflow-wrap:anywhere}
 #printArea .dsheet .dap{border:1.5px solid #000;margin-bottom:2mm;break-inside:avoid}
 #printArea .dsheet .dt{background:#a8d08e;text-align:center;font-weight:800;font-style:italic;font-size:calc(var(--fs)*1.25);border-bottom:1px solid #000}
-#printArea .dsheet .dhd{display:grid;grid-template-columns:1fr 2.3em 3.45em;background:#ffd865;font-size:calc(var(--fs)*.85);text-align:center;border-bottom:1px solid #000}
+#printArea .dsheet .dhd{display:grid;grid-template-columns:1fr 1.8em 2.7em;background:#ffd865;font-size:calc(var(--fs)*.85);text-align:center;border-bottom:1px solid #000}
 #printArea .dsheet .dhd.solo{grid-template-columns:1fr}
-#printArea .dsheet .dbody{display:grid;grid-template-columns:minmax(0,1fr) 1.15em 1.15em 1.15em 1.15em 1.15em}
+#printArea .dsheet .dbody{display:grid;grid-template-columns:minmax(0,1fr) .9em .9em .9em .9em .9em}
 #printArea .dsheet .dbody.solo{grid-template-columns:minmax(0,1fr)}
 #printArea .dsheet .de{grid-column:1;background:#ededed;border-bottom:1px solid #fff;text-align:center;font-size:var(--fs);line-height:1.25;padding:1px 2px;overflow-wrap:anywhere}
 #printArea .dsheet .db{writing-mode:vertical-rl;transform:rotate(180deg);font-size:calc(var(--fs)*.6);display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;border-left:1px solid #fff}
