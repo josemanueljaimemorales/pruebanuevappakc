@@ -3,6 +3,7 @@ const FIREBASE_CONFIG={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDoma
 const COLLECTION="mvpAKC", DOC="estado";
 const DAYS=["L","M","X","J","V","S"];
 const GROUPS=[
+ {block:"Bloque 1", title:"GAV 3", athletes:["Joan"]},
  {block:"Bloque 1", title:"GAV 4", athletes:["Leonardo García Lázaro","Isaac Rangel"]},
  {block:"Bloque 1", title:"GAV 5", athletes:["Leonardo Camacho","Santiago Camacho","Nicolás Flores","Charlie Aznar","David Rangel","Diego Cuevas","Emiliano González"]},
  {block:"Bloque 2", title:"GAV 6", athletes:["Alfredo Jacobo","Brittan Akim","Bruno Báez","Eric López","Chema Robles","Mauro Regand"]},
@@ -101,7 +102,7 @@ function renderDayPicker(){
 function setDay(d){selDay=d;renderRecords();}
 function groupHtml(block){
   const groups=GROUPS.filter(g=>g.block===block);
-  let html=`<div class="block-title">${block==="Bloque 1"?"🟦":"🟩"} ${block} <span>${block==="Bloque 1"?"GAV 4 + GAV 5":"GAV 6 + GAV 9 + GAV FIG"}</span></div>`;
+  let html=`<div class="block-title">${block==="Bloque 1"?"🟦":"🟩"} ${block} <span>${block==="Bloque 1"?"GAV 3 + GAV 4 + GAV 5":"GAV 6 + GAV 9 + GAV FIG"}</span></div>`;
   groups.forEach(g=>{
     html+=`<div class="group-title">${g.title}</div><div class="rec-list">`;
     g.athletes.forEach(name=>{
@@ -125,7 +126,7 @@ function renderScores(){
   ["Bloque 1","Bloque 2"].forEach(block=>{
     const names=GROUPS.filter(g=>g.block===block).flatMap(g=>g.athletes);
     const ranked=names.map(name=>({name,total:totalFor(name)})).sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name,"es"));
-    html+=`<div class="score-block"><div class="score-title">${block} <span>${block==="Bloque 1"?"GAV 4 + GAV 5":"GAV 6 + GAV 9 + GAV FIG"}</span></div>`;
+    html+=`<div class="score-block"><div class="score-title">${block} <span>${block==="Bloque 1"?"GAV 3 + GAV 4 + GAV 5":"GAV 6 + GAV 9 + GAV FIG"}</span></div>`;
     html+=ranked.map((r,i)=>`<div class="rank-row"><span class="rank">${i+1}</span><strong>${r.name}</strong><b>${r.total}</b><small>MVP</small></div>`).join("");
     html+="</div>";
   });
