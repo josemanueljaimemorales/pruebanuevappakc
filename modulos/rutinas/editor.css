@@ -231,3 +231,21 @@ button{cursor:pointer}
 @media (prefers-color-scheme:dark){#printArea{color-scheme:only light}}
 .link button.pos{border-color:var(--warn);color:var(--warn)}
 .link button.nox{border-style:solid;border-color:var(--line);color:var(--muted);padding:2px 7px;line-height:1}
+/* Dictado de rutina */
+.dict{margin-top:12px;background:rgba(21,151,255,.07);border:1px solid rgba(21,151,255,.35);border-radius:14px;padding:12px;display:grid;gap:9px}
+.dict small{color:var(--muted);font-size:12.5px;line-height:1.4}
+.dict textarea{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;color:var(--txt);font:inherit;font-size:15px;resize:vertical}
+.dbtns{display:flex;gap:8px;flex-wrap:wrap}
+.dmsg:empty{display:none}.dmsg{color:var(--warn);font-size:12.5px}
+.dlist{display:grid;gap:6px}
+.drow{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:8px}
+.drow.ok{border-left-color:var(--ok)}.drow.duda{border-left-color:var(--warn)}.drow.no{border-left-color:var(--bad)}.drow.skip{opacity:.5}
+.drow .num{font-weight:700;color:var(--muted);padding-top:8px}
+.dbody{display:grid;gap:6px;min-width:0}
+.dbody input,.dbody select{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:9px;padding:8px 9px;width:100%;color:var(--txt);font-size:13.5px;min-width:0}
+.dbody select option{background:#0b1724}
+.dbody label.opt{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px}
+.dbody label.opt input{width:auto;margin:0}
+.dmodo{display:grid;gap:4px}
+.dict .btn[disabled]{opacity:.5}
+@media print{.dict{display:none}}
