@@ -144,6 +144,8 @@ function closeNormativos(){
 const NORM_LEVEL_XLSX='../../normativos/NORMATIVOS_AKC.xlsx';
 let normLevelInfo=null;
 function normCellRef(ref){const m=/^([A-Z]+)(\d+)$/.exec(String(ref||'').trim().toUpperCase());if(!m)return null;let c=0;for(const ch of m[1])c=c*26+ch.charCodeAt(0)-64;return {c:c-1,r:Number(m[2])}}
+// La guía de niveles ("Nivel 3"…"Nivel 10 FIG") va a la derecha de los atletas; se ubica por su texto, no por columna fija,
+// para que agregar atletas no la pierda.
 async function loadNormLevels(){
  if(normLevelInfo)return normLevelInfo;
  const bars=[];
@@ -152,8 +154,8 @@ async function loadNormLevels(){
   const info=await AKC_XLSX.readSheetInfo(NORM_LEVEL_XLSX+'?v='+Date.now(),'NORMATIVOS');
   const val=(r,c)=>String((info.rows[r-1]||[])[c]??'').trim();
   const tops=new Set();
-  info.merges.forEach(ref=>{const [a,b]=String(ref).split(':');const p=normCellRef(a),q=normCellRef(b||a);if(!p||!q||p.c!==q.c||p.c<32||p.c>40)return;tops.add(p.c+'|'+p.r);const label=val(p.r,p.c);if(/^nivel/i.test(label))bars.push({col:p.c,label,from:p.r,to:q.r})});
-  info.rows.forEach((row,i)=>{for(let c=32;c<=40;c++){const label=String((row||[])[c]??'').trim();if(/^nivel/i.test(label)&&!tops.has(c+'|'+(i+1)))bars.push({col:c,label,from:i+1,to:i+1})}});
+  info.merges.forEach(ref=>{const [a,b]=String(ref).split(':');const p=normCellRef(a),q=normCellRef(b||a);if(!p||!q||p.c!==q.c||p.c<2)return;tops.add(p.c+'|'+p.r);const label=val(p.r,p.c);if(/^nivel/i.test(label))bars.push({col:p.c,label,from:p.r,to:q.r})});
+  info.rows.forEach((row,i)=>{for(let c=2;c<(row||[]).length;c++){const label=String((row||[])[c]??'').trim();if(/^nivel/i.test(label)&&!tops.has(c+'|'+(i+1)))bars.push({col:c,label,from:i+1,to:i+1})}});
  }catch(e){console.warn('Niveles de Normativos no disponibles:',e)}
  const levels=[...new Map(bars.sort((a,b)=>a.col-b.col).map(b=>[b.col,b.label])).entries()].map(([col,label])=>({col,label}));
  normLevelInfo={bars,levels};return normLevelInfo;
