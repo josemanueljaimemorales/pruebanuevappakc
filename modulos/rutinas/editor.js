@@ -84,8 +84,14 @@ function corregir(qn,ap,tab){const voc=vocabulario(ap,tab),set=new Set(voc);let 
     let mejor=null,dm=w.length>=7?2:1;for(const c of voc){const d=distancia(w,c.slice(0,Math.max(w.length,c.length)));if(d<=dm&&(!mejor||d<dm)){mejor=c;dm=d;}}
     if(mejor){cambio=true;return mejor;}return w;});
   return cambio?out.join(' '):null;}
+// Nombres de Manu por aparato: en arzón "círculo" = molino (círculo en arzones, en la orilla…); en fija los molinos
+// atrás se llaman "gigante" (los molinos adelante siguen siendo molinos). También mientras se escribe ("cir", "gig").
+function nombresAparato(ap,qn){
+  if(ap==='ARZON')return qn.replace(/\bcirc?(u(l(o(s)?)?)?)?\b/g,m=>m.length>=3?'molino':m);
+  if(ap==='FIJA')return qn.replace(/\bgig(a(n(t(e(s)?)?)?)?)?\b/g,'molino atras').replace(/\b(molino atras)( atras)+\b/g,'$1');
+  return qn;}
 function search(q,ap,nivel,sinCorregir){
-  const tab=table(ap,nivel), qn=nk(q), qt=canon(q); if(!qn)return[];
+  const tab=table(ap,nivel), qn0=nk(q), qn=nombresAparato(ap,qn0), qt=canon(qn); if(!qn0)return[];
   const out=new Map();
   const add=(k,score,name)=>{const p=out.get(k);if(!p||p.score<score)out.set(k,{k,score,name});};
   // alias (aprendidos y del Excel)
@@ -94,11 +100,13 @@ function search(q,ap,nivel,sinCorregir){
     if(!ak.startsWith(pre)||!CAT[k])continue; const an=ak.slice(pre.length);
     // Protección doble/triple solo para los apodos de fábrica; los que enseñan los entrenadores se respetan.
     if(src===ALIAS){const ct=canon(CAT[k].d), ca=canon(an); if((ct.includes('dob')&&!ca.includes('dob'))||(ct.includes('tri')&&!ca.includes('tri')))continue;}
-    let sc=0; const ans=an.replace(/ /g,''), qns=qn.replace(/ /g,'');
-    if(an===qn)sc=3; else if(an.startsWith(qn))sc=2.4; else if(an.includes(qn))sc=2;
-    // Sin espacios ("wug" → "Wu Guonian") y con un error de letra en apodos largos ("wugonian").
-    else if(qns.length>=3&&ans.startsWith(qns))sc=2.3; else if(qns.length>=6&&distancia(qns,ans.slice(0,qns.length))<=1)sc=1.8;
-    else{const at=canon(an);const hit=qt.filter(t=>at.some(a=>a.startsWith(t))).length;if(hit===qt.length&&hit)sc=1.6;}
+    const punt=(qn,qt)=>{const ans=an.replace(/ /g,''), qns=qn.replace(/ /g,'');
+      if(an===qn)return 3; if(an.startsWith(qn))return 2.4; if(an.includes(qn))return 2;
+      // Sin espacios ("wug" → "Wu Guonian") y con un error de letra en apodos largos ("wugonian").
+      if(qns.length>=3&&ans.startsWith(qns))return 2.3; if(qns.length>=6&&distancia(qns,ans.slice(0,qns.length))<=1)return 1.8;
+      const at=canon(an);const hit=qt.filter(t=>at.some(a=>a.startsWith(t))).length;return hit===qt.length&&hit?1.6:0;};
+    // Se prueba lo escrito y, si cambió, con los nombres del aparato (círculo → molino, gigante → molino atrás).
+    const sc=Math.max(punt(qn0,canon(qn0)),qn!==qn0?punt(qn,qt):0);
     if(sc)add(k,sc,an);
   }
   // ID escrito: 2.16 o 16
@@ -136,7 +144,9 @@ function apodoDe(k){const c=new Map(),desc=nk(CAT[k]?.d||'');
 // Nombre para colocar un elemento: el apodo encontrado, el más usado en las rutinas, el epónimo del Código o su descripción.
 function nombreDe(k,alias){const e=CAT[k];if(!e)return'';const cap=x=>x.replace(/^./,c=>c.toUpperCase());
   if(alias)return cap(alias);const ap=apodoDe(k);if(ap)return ap;
-  const m=/\(([A-ZÁÉÍÓÚÜ][^()]*)\)\s*\.?\s*$/.exec(e.d);return m?m[1].trim():e.d;}
+  const m=/\(([A-ZÁÉÍÓÚÜ][^()]*)\)\s*\.?\s*$/.exec(e.d);if(m)return m[1].trim();
+  // En fija los molinos atrás se llaman gigante (Manu).
+  return k.startsWith('FIJA|')?e.d.replace(/^Molino atrás/,'Gigante'):e.d;}
 function rowFromKey(k,name){
   const e=CAT[k]; const p=k.split('|');
   name=name||apodoDe(k);
