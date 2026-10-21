@@ -761,7 +761,7 @@ function dictBuscar(txt,ap,nivel){
   // Formas habladas: "parado de manos" = apoyo invertido (en aparatos; en piso no es elemento del Código); en piso la
   // rondada y el flic previos no tienen valor.
   if(ap!=='PISO')q=(' '+q+' ').replace(/ parad[oa] de manos /g,' apoyo invertido ').trim();
-  if(ap==='PISO')q=q.replace(/^((rondada|flic|flick|flic flac|flick flack|flac) )+(?=\S)/,'');
+  if(ap==='PISO'){const sq=q.replace(/^((rondada|flick flack|flic flac|flick flac|flic flack|flic|flick) )+(?=\S)/,'');if(!/^(flac|flack)$/.test(sq))q=sq;}
   let opts=search(q,ap,nivel);
   if(!opts.length||opts[0].score<1.4){const q2=dictCorregir(q,ap,nivel);if(q2){const o2=search(q2,ap,nivel);if(o2.length&&(!opts.length||o2[0].score>opts[0].score))opts=o2;}}
   let conf=!opts.length?'no':(opts[0].score>=1.4&&(!opts[1]||opts[0].score-opts[1].score>=.15))?'ok':'duda';
@@ -782,7 +782,7 @@ function dictPanel(a,rows){
   let h=`<div class="dict"><b>Dictar rutina · ${esc(apTxt)}</b>
     <small>Di o escribe los elementos en orden con su número: "1 parado de manos, 2 mortal adelante agrupado, 3 flic mortal atrás extendido…".${link?' Di "conectado con" al final de un elemento para unirlo con el siguiente.':''} ${voz?'Toca 🎤 Hablar, o usa el micrófono del teclado dentro del cuadro.':'En este navegador usa el micrófono del teclado del celular dentro del cuadro.'}</small>
     <textarea id="dtxt" rows="4" placeholder="1 parado de manos, 2 mortal adelante agrupado…">${esc(d.txt)}</textarea>
-    <div class="dbtns">${voz?`<button class="btn" data-act="dmic">${REC?'■ Detener':'🎤 Hablar'}</button>`:''}<button class="btn" data-act="dana">Buscar elementos</button><button class="btn ghost" data-act="dno">Cancelar</button></div>
+    <div class="dbtns">${voz?`<button class="btn" data-act="dmic">${REC_ON?'■ Detener':'🎤 Hablar'}</button>`:''}<button class="btn" data-act="dana">Buscar elementos</button><button class="btn ghost" data-act="dno">Cancelar</button></div>
     <div class="dmsg">${esc(d.msg||'')}</div>`;
   if(d.items){
     if(!d.items.length)h+=`<div class="empty">No encontré elementos en el texto.</div>`;
@@ -802,18 +802,29 @@ function dictPanel(a,rows){
   }
   return h+`</div>`;
 }
+// Una frase a la vez y solo el resultado final: en Chrome de Android el modo continuo con resultados parciales repite
+// lo dicho ("1 1 1 flic flic flic…"). Al terminar cada frase se vuelve a escuchar solo hasta tocar ■ Detener.
+let REC_ON=false;
+function dictLimpiar(t){return String(t).replace(/[,.;:]+/g,' ').replace(/(^|\s)(\S+)(\s+\2(?=\s|$)){2,}/gi,'$1$2').replace(/\s+/g,' ').trim();}
 function dictMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition, d=ui.dict;
-  if(REC){REC.stop();return;}
+  if(REC_ON){REC_ON=false;if(REC)REC.stop();return;}
   if(!SR){d.msg='Este navegador no tiene dictado por voz: usa el micrófono del teclado dentro del cuadro.';return render();}
-  const ta=document.getElementById('dtxt'); d.txt=ta.value; const base=d.txt.trim()?d.txt.trim()+' ':''; let fin='';
-  REC=new SR(); REC.lang='es-MX'; REC.continuous=true; REC.interimResults=true;
-  REC.onresult=e=>{let tmp='';for(let j=e.resultIndex;j<e.results.length;j++){const r=e.results[j];if(r.isFinal)fin+=r[0].transcript.trim()+' ';else tmp+=r[0].transcript;}
-    d.txt=base+fin; const t=document.getElementById('dtxt'); if(t)t.value=d.txt+tmp;};
-  REC.onerror=e=>{d.msg=e.error==='not-allowed'||e.error==='service-not-allowed'?'No hay permiso para el micrófono: actívalo en el navegador o usa el micrófono del teclado.':e.error==='no-speech'?'No se escuchó nada; vuelve a tocar 🎤 Hablar.':'El dictado se detuvo ('+e.error+').';};
-  REC.onend=()=>{REC=null;d.txt=d.txt.trim();if(ui.dict)render();};
-  try{REC.start();d.msg='Escuchando… habla y toca ■ Detener al terminar.';}catch(err){REC=null;d.msg='No se pudo iniciar el micrófono.';}
-  render();
+  const ta=document.getElementById('dtxt'); if(ta)d.txt=ta.value;
+  REC_ON=true;
+  const escuchar=()=>{
+    if(!REC_ON||!ui.dict)return;
+    REC=new SR(); REC.lang='es-MX'; REC.continuous=false; REC.interimResults=false; REC.maxAlternatives=1;
+    REC.onresult=e=>{const r=e.results[e.results.length-1];if(!r||!r.isFinal)return;
+      const frase=dictLimpiar(r[0].transcript);if(!frase)return;
+      d.txt=(d.txt.trim()?d.txt.trim().replace(/,$/,'')+', ':'')+frase; const t=document.getElementById('dtxt'); if(t)t.value=d.txt;};
+    REC.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){REC_ON=false;d.msg='No hay permiso para el micrófono: actívalo en el navegador o usa el micrófono del teclado.';}
+      else if(e.error!=='no-speech'&&e.error!=='aborted'){REC_ON=false;d.msg='El dictado se detuvo ('+e.error+'). Puedes usar el micrófono del teclado.';}};
+    REC.onend=()=>{REC=null;if(REC_ON&&ui.dict)setTimeout(escuchar,200);else if(ui.dict){d.msg=d.msg&&d.msg.startsWith('Escuchando')?'':d.msg;render();}};
+    try{REC.start();}catch(err){REC=null;REC_ON=false;d.msg='No se pudo iniciar el micrófono.';render();}
+  };
+  d.msg='Escuchando… di un elemento por frase (por ejemplo "uno, flic flac") y toca ■ Detener al terminar.';
+  escuchar(); render();
 }
 function dictColocar(){
   const a=S.atletas[ui.atleta], rows=a.r[ui.ap], d=ui.dict, link=ui.ap==='PISO'||ui.ap==='FIJA';
@@ -854,10 +865,10 @@ root.addEventListener('click',e=>{
   if(act==='delask'){ui.delAsk=el.dataset.v;return render();}
   if(act==='delno'){ui.delAsk=null;return render();}
   if(act==='delok'){const nm=ui.delAsk;delete S.atletas[nm];ORDER=ORDER.filter(x=>x!==nm);S.bajas=[...new Set([...(S.bajas||[]),nm])];ui.delAsk=null;save();return render();}
-  if(act==='dict'){if(REC)REC.stop();ui.dict={txt:'',items:null,modo:'fin'};ui.q='';ui.replace=-1;render();document.getElementById('dtxt')?.focus();return;}
-  if(act==='dno'){if(REC)REC.stop();ui.dict=null;return render();}
+  if(act==='dict'){REC_ON=false;if(REC)REC.stop();ui.dict={txt:'',items:null,modo:'fin'};ui.q='';ui.replace=-1;render();document.getElementById('dtxt')?.focus();return;}
+  if(act==='dno'){REC_ON=false;if(REC)REC.stop();ui.dict=null;return render();}
   if(act==='dmic')return dictMic();
-  if(act==='dana'){if(REC)REC.stop();const t=document.getElementById('dtxt');if(t)ui.dict.txt=t.value;ui.dict.msg='';dictAnalizar();return render();}
+  if(act==='dana'){REC_ON=false;if(REC)REC.stop();const t=document.getElementById('dtxt');if(t)ui.dict.txt=t.value;ui.dict.msg='';dictAnalizar();return render();}
   if(act==='dok')return dictColocar();
   if(act==='print')return printAll();
   if(act==='dprint')return printAll(divPrintHTML,DIV_PREF);
@@ -893,7 +904,7 @@ root.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='q'){ui.q=t.value;ui.replace=-1;renderSug(t.value,'sug');return;}
   if(t.id==='rq'){ui.q=t.value;ui.replace=+t.dataset.i;renderSug(t.value,'rsug');return;}
-  if(t.id==='dtxt'&&ui.dict&&!REC){ui.dict.txt=t.value;return;}
+  if(t.id==='dtxt'&&ui.dict){ui.dict.txt=t.value;return;}
 });
 root.addEventListener('change',e=>{
   const t=e.target, a=ui.atleta&&S.atletas[ui.atleta];
