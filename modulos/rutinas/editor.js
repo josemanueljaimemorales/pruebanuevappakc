@@ -1182,15 +1182,5 @@ async function init(){
     const ae=document.activeElement?.tagName;if(ae!=='INPUT'&&ae!=='TEXTAREA'&&ae!=='SELECT')render();},e=>console.error(e));
   render();
 }
-const PASS_HASH='edef2f146f863341daae63d0bf0b1e8aa49b805e273a6e6ca559e40dbb22e6d6';
-async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-function gate(msg){
-  root.innerHTML=`<div class="top"><a class="back" href="index.html">← Rutinas</a><h1>Editor de rutinas</h1></div>
-  <form class="score gate" id="gate"><label>Contraseña<input id="pw" type="password" autocomplete="off" required></label>
-  ${msg?`<div class="badge b">${esc(msg)}</div>`:''}<button class="btn" type="submit">Entrar</button></form>`;
-  const f=document.getElementById('gate');document.getElementById('pw').focus();
-  f.addEventListener('submit',async e=>{e.preventDefault();
-    try{if(await sha256(document.getElementById('pw').value)===PASS_HASH){sessionStorage.setItem('akcRutinasEditor','ok');init();}else gate('Contraseña incorrecta.');}
-    catch(err){gate('No se pudo validar la contraseña en este navegador.');}});
-}
-if(sessionStorage.getItem('akcRutinasEditor')==='ok')init(); else gate('');
+// App de prueba: el editor abre sin contraseña (solo entra Manu).
+init();

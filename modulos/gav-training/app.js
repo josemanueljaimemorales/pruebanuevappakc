@@ -5,7 +5,7 @@
 // siguiente en Proyección. "No adquirido" se puede pasar a "En proceso" tocando su etiqueta. "Agregar elemento" guarda
 // trabajo extra en trainingAKC (no cambia la tabla de Normativos); si el elemento ya está en Normativos se acomoda en su
 // bloque (aunque pase de los 2 en Proyección). En la lista de atletas va el nombre completo (columna NOMBRE COMPLETO).
-// Consolidar y agregar solo lo hace un entrenador (misma contraseña que el editor de rutinas y el calendario).
+// App de prueba: consolidar y agregar no piden contraseña (solo entra Manu).
 let dataApp=[];
 const APARATOS=[
   ["piso","PISO","PISO"],["arzon","ARZON","ARZÓN"],["anillos","ANILLOS","ANILLOS"],
@@ -14,8 +14,6 @@ const APARATOS=[
 const ESTADO_TXT={NA:"No adquirido",EP:"En proceso",P:"Proyección",X:"Agregado"};
 const PROYECCION_POR_BLOQUE=2;
 const BLOQUE_EXTRA="AGREGADOS POR EL ENTRENADOR";
-const PASS_HASH='edef2f146f863341daae63d0bf0b1e8aa49b805e273a6e6ca559e40dbb22e6d6';
-const COACH_KEY='akcTrainingCoach';
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const jsq=s=>String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
 
@@ -99,8 +97,6 @@ function conectarNube(){
 function redibujar(){if(vista)vista();}
 
 /* ---------- Entrenador ---------- */
-async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-const esCoach=()=>sessionStorage.getItem(COACH_KEY)==='ok';
 function modal(html){
   cerrarModal();
   const m=document.createElement('div');m.id='modal';m.className='modal';
@@ -109,19 +105,7 @@ function modal(html){
   return m;
 }
 function cerrarModal(){const m=document.getElementById('modal');if(m)m.remove();}
-function pedirCoach(){
-  if(esCoach()) return Promise.resolve(true);
-  return new Promise(ok=>{
-    const m=modal(`<h3>Solo entrenador</h3><p>Escribe la contraseña de entrenador para consolidar o agregar elementos.</p>
-      <form id='fcoach'><input id='pwcoach' type='password' autocomplete='off' placeholder='Contraseña'><div class='msg' id='msgcoach'></div>
-      <div class='acciones'><button type='button' class='sec' id='cancoach'>Cancelar</button><button type='submit'>Entrar</button></div></form>`);
-    m.querySelector('#pwcoach').focus();
-    m.querySelector('#cancoach').onclick=()=>{cerrarModal();ok(false);};
-    m.querySelector('#fcoach').onsubmit=async e=>{e.preventDefault();
-      if(await sha256(m.querySelector('#pwcoach').value)===PASS_HASH){sessionStorage.setItem(COACH_KEY,'ok');cerrarModal();ok(true);}
-      else m.querySelector('#msgcoach').textContent='Contraseña incorrecta.';};
-  });
-}
+function pedirCoach(){return Promise.resolve(true);}
 
 /* ---------- Consolidar y agregar ---------- */
 async function consolidar(i,ap,elemento,key,extra,cb){

@@ -13,7 +13,6 @@ const urls = {
   calendario: "modulos/calendario/index.html"
 };
 
-const NORMATIVOS_PASSWORD = "Akcgav";
 let pendingProtectedUrl = null;
 
 function hideScreens(){
@@ -31,9 +30,9 @@ function openScreen(type){
     return;
   }
 
+  // App de prueba: Normativos abre sin contraseña (solo entra Manu).
   if(type === "normativos"){
-    pendingProtectedUrl = urls.normativos;
-    openPassword();
+    showViewer(urls.normativos);
     return;
   }
 
@@ -83,14 +82,9 @@ function closePassword(){
 function checkPassword(){
   const input = document.getElementById("passwordInput");
   const error = document.getElementById("passwordError");
-  if(input.value === NORMATIVOS_PASSWORD){
-    const url = pendingProtectedUrl;
-    closePassword();
-    if(url) showViewer(url);
-    return;
-  }
-  error.textContent = "Contraseña incorrecta.";
-  input.select();
+  const url = pendingProtectedUrl;
+  closePassword();
+  if(url) showViewer(url);
 }
 
 document.addEventListener("keydown", event => {

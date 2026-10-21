@@ -2,7 +2,6 @@
    con datos manuales guardados en la nube (horarios por nivel, viáticos, etc.) */
 const FB_CONFIG={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 const COLLECTION='calendarioAKC', DOC='estado';
-const PASS_HASH='edef2f146f863341daae63d0bf0b1e8aa49b805e273a6e6ca559e40dbb22e6d6';
 const SRC_MACRO='../plan-anual/MACRO_26_27.xlsx', SRC_ASIG='../plan-anual/ASIGNACION DE COMPETENCIAS.xlsx';
 const MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MES3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -110,17 +109,8 @@ function monthView(today){
 }
 
 /* ---------- editor ---------- */
-async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-function editorOk(){try{return sessionStorage.getItem('akcCalEditor')==='ok';}catch(e){return false;}}
+// App de prueba: sin contraseña (solo entra Manu).
 function renderEditor(){
-  if(!editorOk()){
-    root.innerHTML=`<div class="top"><button class="back" data-a="close">← Calendario</button><h1>Editar calendario</h1></div>
-      <form class="form" id="gate" style="max-width:360px;margin:20px auto"><label>Contraseña<input id="pw" type="password" autocomplete="off" required></label>${ui.gateErr?`<div class="err">${esc(ui.gateErr)}</div>`:''}<button class="btn" type="submit">Entrar</button></form>`;
-    document.getElementById('pw').focus();
-    document.getElementById('gate').addEventListener('submit',async ev=>{ev.preventDefault();
-      try{if(await sha256(document.getElementById('pw').value)===PASS_HASH){try{sessionStorage.setItem('akcCalEditor','ok');}catch(e){}ui.gateErr='';render();}else{ui.gateErr='Contraseña incorrecta.';render();}}
-      catch(e){ui.gateErr='No se pudo validar la contraseña en este navegador.';render();}});
-    return;}
   if(ui.editing)return renderForm();
   let h=`<div class="top"><button class="back" data-a="close">← Calendario</button><h1>Editar calendario</h1><span class="sync ${syncState[0]}">${esc(syncState[1])}</span></div>
     <div class="sub" style="color:var(--muted);font-size:13px;margin-bottom:12px">Las fechas, competencias y atletas salen del MACRO y de la ASIGNACIÓN DE COMPETENCIAS del Plan Anual. Aquí agregas lo que cambia: días por nivel, horarios, viáticos y notas.</div><div class="elist">`;
