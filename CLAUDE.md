@@ -13,6 +13,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - `index.html` + `script.js`: menú principal; cada módulo vive en `modulos/<nombre>/`.
 - Módulos: basicos, calendario, cargas, fuerza, fuerzafig, gav-training, mvp, normativos, plan-anual, reportes (asistencia, estadisticas), rutinas (app.js = vista de atletas, editor.html/editor.js = editor protegido), sistemas, fuentes (diagnóstico), respaldo.
 - `cliente/config.js` (identidad del club), `cliente/xlsx-reader.js` (lector XLSX propio), `cliente/fuentes.js` (fuentes de datos).
+- **Training** (`modulos/gav-training/`): el trabajo de cada atleta sale de Normativos (Excel + nube, con `cliente/normativos-datos.js`, solo lectura): por aparato y bloque, todo lo No adquirido y En proceso y los 2 primeros en Proyección; lo Consolidado no se trabaja. `trabajo_gav.xlsx` solo da apodo (NOMBRE), NIVEL, GRUPO y la columna NORMATIVOS (nombre oficial); sus columnas de aparatos ya no se usan.
 
 ## Datos
 - **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los busca **por nombre** en la carpeta "Utilidades App" (`CARPETA_DRIVE`, compartida con enlace); si no puede listarla usa los IDs fijos de `ARCHIVOS_DRIVE`, y si Drive falla, la copia del repo. Para cambiar un Excel basta subir a esa carpeta un archivo con el mismo nombre; no hace falta subirlo al repo. Las dos apps (prueba y oficial) buscan por nombre desde el 15-oct-2026.
@@ -86,6 +87,6 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Leo Lazaro | Leo Lazaro | — | Leonardo García Lázaro | Leonardo Garcia Lazaro | —
 - Isaac Rangel (GAV 4) | Isaac Rangel | — | Isaac Rangel | Isaac Rangel | —  (el otro "Isaac" de Training, GAV 9, es Isaac Martinez)
 - "Pato" ya no está en el equipo (se quitó de Training).
-- Joan: niño nuevo de un grupo nuevo (GAV 3, ya en MVP); hay que integrarlo en Normativos, Training y Asignación.
+- Joan: niño nuevo de un grupo nuevo (GAV 3, nivel 3; ya en MVP, Normativos —todo en Proyección— y Training). No va en Asignación: todavía no compite.
 - Pablo Mares: no entrena al 100% en AKC; se queda solo en Asignación (y su historial en Estadística como PABLO). No agregarlo a Normativos ni a otros módulos.
 - Angel Babun y Felix Mogollon (registros de Fuerza) son de ESGILA, no de AKC: no mezclarlos con los atletas de AKC.
