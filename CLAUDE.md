@@ -70,7 +70,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Mario Bisteni | Mario | MARIO | Mario Bisteni | Mario Bisteni | MARIO
 - Maximiliano Diaz | Max | MAX | Max Diaz | Maximiliano Díaz | MAX DIAZ
 - Santiago Sigler | Santi Lee | SANTI LEE | Santi Sigler | Santiago Sigler | SANTI SIGLER
-- Nicolas Capitanacci | Nico Capi | NICO CAPI | Nico Capitanachi | Nicolás Capitanacci | NICO CAPITANACCI
+- Nicolas Capitanacci | Nico Capi | NICO CAPI | Nico Capitanachi | Nicolás Capitanacci | NICO CAPITANACCI  (nombre completo: Nicolás Capitanachi Vicentín)
 - Bruno Jacobo | Brunito | — | Bruno Jacobo | Bruno Jacobo | BRUNO JACOBO
 - Santi Camacho | Santi power | — | Santiago Camacho | Santiago Camacho | SANTI CAMACHO
 - Leo Camacho | Leito | — | Leonardo Camacho | Leonardo Camacho | LEO CAMACHO
