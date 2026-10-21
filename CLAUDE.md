@@ -54,6 +54,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - N7 y N8 usan la estructura de rutinas USAG; elementos del mismo cuadro del Código dan valor cada uno sin contar como repetición.
 - En el Excel de rutinas "CONECTADO A" al final de un elemento = conexión con el de la siguiente línea; "A CAMBIO DE TOMA" = cambio de toma que no suma valor.
 - Agregar elemento (editor): busca mientras se escribe por apodo (los aprendidos, los del Excel y los usados en las rutinas de todos los atletas, también sin espacios: "wug" → Wu Guonian), por la descripción del Código en español e inglés y por ID; si no encuentra, corrige errores de letra ("tipelt" → Tippelt). Tarjetas grandes con nombre, valor, ID y descripción. Al elegir se coloca el nombre correcto (apodo, el más usado, epónimo del Código o descripción), no lo escrito, y se abre su edición; al reemplazar el elemento del Código se conserva el nombre salvo que se elija por apodo.
+- Nombres de Manu por aparato (buscador del editor, `nombresAparato`): en **arzón** "círculo" = molino (círculo en arzones = molino en arzones, en la orilla, transversal…); en **fija** los molinos atrás se llaman **gigante** ("gigante" = molino atrás; los molinos adelante siguen siendo molinos) y sin apodo se colocan como "Gigante …".
 - Obligatorios: rutina oficial por nivel en `modulos/rutinas/obligatorios.json`; palomeos por atleta en la nube (`obligatorios.atletas[nombre].m`). ✓ realiza, ↺ reemplazado por BE, ✗ no realiza.
 
 ## Atletas: el mismo atleta en cada módulo (confirmado por Manu, 21-oct-2026)
