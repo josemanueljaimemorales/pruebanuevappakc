@@ -80,10 +80,12 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Jose Ma Robles | Chema | — | Chema Robles | José María Robles | CHEMA
 - Mauro Regand | Mauro | — | Mauro Regand | Mauro Regand | MAURO
 - Bruno Baez | Bruno Baez | — | Bruno Báez | Bruno Báez | BRUNO BAEZ
-- Brittan Akim | Brittan | — | Brittan Akim | Brittán Robles | BRITTAN
+- Brittan Akim | Brittan | — | Brittan Akim | Brittán Robles | BRITTAN  (nombre completo: Brittan Akin Robles)
 - Alfredo Jacobo | Alfred | — | Alfredo Jacobo | Alfredo Jacobo | ALFRED
-- Erik Lopez | — | — | Eric López | Erik Lopez | —
+- Erik Lopez | — | — | Eric López | Erik Lopez | —  (niño nuevo; aún no está en Training)
 - Leo Lazaro | Leo Lazaro | — | Leonardo García Lázaro | Leonardo Garcia Lazaro | —
-- Isaac Rangel | Isaac (GAV 3; debe llamarse "Isaac Rangel") | — | Isaac Rangel | Isaac Rangel | —
-- "Pato" (Training) ya no está en el equipo. Joan (MVP, GAV 3) es atleta: falta agregarlo en los demás módulos.
-- Pablo Mares (Asignación/Estadística) y Angel Babun / Felix Mogollon (registros de Fuerza) no están en Normativos.
+- Isaac Rangel (GAV 4) | Isaac Rangel | — | Isaac Rangel | Isaac Rangel | —  (el otro "Isaac" de Training, GAV 9, es Isaac Martinez)
+- "Pato" ya no está en el equipo (se quitó de Training).
+- Joan: niño nuevo de un grupo nuevo (GAV 3, ya en MVP); hay que integrarlo en Normativos, Training y Asignación.
+- Pablo Mares: no entrena al 100% en AKC; se queda solo en Asignación (y su historial en Estadística como PABLO). No agregarlo a Normativos ni a otros módulos.
+- Angel Babun y Felix Mogollon (registros de Fuerza) son de ESGILA, no de AKC: no mezclarlos con los atletas de AKC.
