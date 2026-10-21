@@ -7,7 +7,6 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const password = "jmjm0808";
 const STORAGE_KEY = "akc_cargas_data_v3";
 const CLOUD_COLLECTION = "cargasAKC";
 const CLOUD_DOC = "estado";
@@ -160,7 +159,8 @@ async function cargar(){
   });
 }
 
-function login(){const pass=prompt('Contraseña:');if(pass===password)editar();}
+// App de prueba: sin contraseña (solo entra Manu).
+function login(){editar();}
 function editar(){
   modoEdicion=true;
   let html=`<div class="coach-editor"><div class="editor-head"><div><h2>Modo Entrenador</h2><p>Los cambios se guardan directamente en la nube.</p></div><div id="saveStatus" class="save-status">Listo para editar</div></div><div class="editor-actions"><button onclick="guardarAhora()">GUARDAR CAMBIOS</button><button onclick="salirEdicion()">⬅ Salir</button></div>`;

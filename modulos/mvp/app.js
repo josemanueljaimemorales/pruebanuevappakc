@@ -1,4 +1,3 @@
-const MVP_PASSWORD="Akcgav";
 const FIREBASE_CONFIG={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 const COLLECTION="mvpAKC", DOC="estado";
 const DAYS=["L","M","X","J","V","S"];
@@ -143,16 +142,11 @@ function renderAll(){renderPhotos();renderRecords();renderScores();}
 function hidePanel(id){document.getElementById(id)?.classList.add("hidden");}
 function showScores(){renderScores();document.getElementById("scores").classList.remove("hidden");document.getElementById("scores").scrollIntoView({behavior:"smooth"});}
 function hideScores(){hidePanel("scores");}
-function askPassword(action){
-  pendingAction=action;
-  const modal=document.getElementById("passwordModal"), input=document.getElementById("passwordInput");
-  document.getElementById("passwordError").textContent="";
-  input.value=""; modal.classList.remove("hidden"); setTimeout(()=>input.focus(),50);
-}
+// App de prueba: sin contraseña (solo entra Manu); la acción se abre directo.
+function askPassword(action){pendingAction=action;checkPassword();}
 function closePassword(){document.getElementById("passwordModal").classList.add("hidden");pendingAction=null;}
 function checkPassword(){
   const input=document.getElementById("passwordInput");
-  if(input.value!==MVP_PASSWORD){document.getElementById("passwordError").textContent="Contraseña incorrecta.";input.select();return;}
   const action=pendingAction;closePassword();
   if(action==="records"){document.getElementById("records").classList.remove("hidden");renderRecords();document.getElementById("records").scrollIntoView({behavior:"smooth"});}
   if(action==="upload"){document.getElementById("upload").classList.remove("hidden");document.getElementById("upload").scrollIntoView({behavior:"smooth"});}

@@ -36,6 +36,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Distinguir lo hecho, lo probado y lo verificado; no afirmar que algo funciona sin probarlo.
 - Probar pantalla y también PDF/impresión (fondo blanco, sin etiquetas de prueba), navegación sin botones duplicados y cálculos con casos límite (no multiplicar porcentajes por 100 dos veces).
 - No exponer contraseñas ni tokens en texto visible ni en el repo.
+- **La app de prueba no tiene contraseñas** (Manu, 22-oct-2026: solo él entra): editor de rutinas, calendario, Normativos (menú), MVP, Carga semanal y Trabajo en desarrollo abren directo. Es solo de prueba: al pasar cambios a la oficial, conservar allá sus contraseñas (no copiar `script.js`, `cargas/app.js`, `mvp/app.js`, `calendario/calendario.js`, `gav-training/app.js` ni `rutinas/editor.js` sin volver a poner su revisión de contraseña).
 - aguilaskc.net (`Kids-Center-Gimnasia/AguilasKC`, `gav/app/`) ya no pide contraseñas de la app a coaches, ADMIN ni OWNER (Manu, 21-oct-2026): ya entraron con su usuario. Cuando un cambio en prueba u oficial agregue o cambie una contraseña (o se vaya a pasar a aguilaskc.net algo que la pida), preguntar a Manu si en aguilaskc.net se mantiene la línea de no pedir contraseñas.
 - Gimnasia varonil: sin figuras femeninas; imágenes/videos reales, no generados por IA.
 
