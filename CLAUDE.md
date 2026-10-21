@@ -51,3 +51,39 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - N7 y N8 usan la estructura de rutinas USAG; elementos del mismo cuadro del Código dan valor cada uno sin contar como repetición.
 - En el Excel de rutinas "CONECTADO A" al final de un elemento = conexión con el de la siguiente línea; "A CAMBIO DE TOMA" = cambio de toma que no suma valor.
 - Obligatorios: rutina oficial por nivel en `modulos/rutinas/obligatorios.json`; palomeos por atleta en la nube (`obligatorios.atletas[nombre].m`). ✓ realiza, ↺ reemplazado por BE, ✗ no realiza.
+
+## Atletas: el mismo atleta en cada módulo (confirmado por Manu, 21-oct-2026)
+- Nombre oficial = el de Normativos (fila 1 de la hoja NORMATIVOS, padrón que también usa Fuerza). "—" = no aparece.
+- Columnas: Normativos | Training (trabajo_gav.xlsx) | Rutinas | MVP | Asignación | Estadística.
+- Diego Jaime | Diego | DIEGO J | — | Diego Jaime | DIEGO JAIME
+- Ricardo Jimenez | Richie | RICHIE | — | Ricardo Jiménez | RICHIE
+- Alonso Ahedo | Alonso | ALONSO | Alonso Ahedo | Alonso Ahedo | ALONSO
+- Mikel Larrinua | Mikel | MIKEL | Mikel Larrinua | Mikel Larrinua | MIKEL
+- Diego Rodriguez | Champi | CHAMPI | Diego Champi Rodríguez | Diego Rodríguez | DIEGO RODRIGUEZ
+- Isaac Martinez | Isaac (GAV 9) | ISAAC | Isaac Martínez | Isaac Martínez | ISAAC MARTINEZ
+- Diego Vela | Vela | VELA | Diego Vela | Diego Vela | DIEGO VELA
+- Yerik Guerra | Yerik | YERIK | — | Yerik Guerra | YERIK
+- Fernando Talavera | Fer | FER | Fer Talavera | Fernando Talavera | FER
+- Diego Chavez | Chavez | CHAVEZ | Diego Chávez | Diego Chávez | DIEGO CHAVEZ
+- Mario Bisteni | Mario | MARIO | Mario Bisteni | Mario Bisteni | MARIO
+- Maximiliano Diaz | Max | MAX | Max Diaz | Maximiliano Díaz | MAX DIAZ
+- Santiago Sigler | Santi Lee | SANTI LEE | Santi Sigler | Santiago Sigler | SANTI SIGLER
+- Nicolas Capitanacci | Nico Capi | NICO CAPI | Nico Capitanachi | Nicolás Capitanacci | NICO CAPITANACCI
+- Bruno Jacobo | Brunito | — | Bruno Jacobo | Bruno Jacobo | BRUNO JACOBO
+- Santi Camacho | Santi power | — | Santiago Camacho | Santiago Camacho | SANTI CAMACHO
+- Leo Camacho | Leito | — | Leonardo Camacho | Leonardo Camacho | LEO CAMACHO
+- Nico Flores | Nico flores | — | Nicolás Flores | Nicolás Flores | NICO FLORES
+- Carlos Aznar | Charly | — | Charlie Aznar | Carlos Aznar | CHARLY
+- Emi Gonzalez | Emi | — | Emiliano González | Emiliano González | EMI GONZALEZ
+- David Rangel | David | — | David Rangel | David Rangel | DAVID
+- Diego Cuevas | Cuevas | — | Diego Cuevas | Diego Cuevas | DIEGO CUEVAS
+- Jose Ma Robles | Chema | — | Chema Robles | José María Robles | CHEMA
+- Mauro Regand | Mauro | — | Mauro Regand | Mauro Regand | MAURO
+- Bruno Baez | Bruno Baez | — | Bruno Báez | Bruno Báez | BRUNO BAEZ
+- Brittan Akim | Brittan | — | Brittan Akim | Brittán Robles | BRITTAN
+- Alfredo Jacobo | Alfred | — | Alfredo Jacobo | Alfredo Jacobo | ALFRED
+- Erik Lopez | — | — | Eric López | Erik Lopez | —
+- Leo Lazaro | Leo Lazaro | — | Leonardo García Lázaro | Leonardo Garcia Lazaro | —
+- Isaac Rangel | Isaac (GAV 3; debe llamarse "Isaac Rangel") | — | Isaac Rangel | Isaac Rangel | —
+- "Pato" (Training) ya no está en el equipo. Joan (MVP, GAV 3) es atleta: falta agregarlo en los demás módulos.
+- Pablo Mares (Asignación/Estadística) y Angel Babun / Felix Mogollon (registros de Fuerza) no están en Normativos.
