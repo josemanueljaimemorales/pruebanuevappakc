@@ -52,7 +52,6 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 ## Rutinas (criterios de Manu)
 - N7 y N8 usan la estructura de rutinas USAG; elementos del mismo cuadro del Código dan valor cada uno sin contar como repetición.
 - En el Excel de rutinas "CONECTADO A" al final de un elemento = conexión con el de la siguiente línea; "A CAMBIO DE TOMA" = cambio de toma que no suma valor.
-- **Dictar rutina** (editor, botón "🎤 Dictar rutina" del atleta y aparato): se dicta con el micrófono del navegador (Web Speech, es-MX, una frase a la vez y solo resultados finales: el modo continuo de Chrome en Android repetía palabras; se vuelve a escuchar hasta "Detener"; el marco del menú lleva `allow="microphone"`) o el del teclado, o se escribe. Cada número en orden (1, 2… o uno, dos…, primero…) empieza un elemento; sin números se separa por comas o renglones. Cada parte se busca con el mismo buscador del editor (más corrección de palabras mal dictadas) y se revisa antes de colocar: verde = seguro, amarillo = duda, rojo = no encontrado (a mano). "conectado con/a" = conexión con el siguiente (piso y fija). Se agrega al final o reemplaza la rutina del aparato (con confirmación); no aprende apodos.
 - Obligatorios: rutina oficial por nivel en `modulos/rutinas/obligatorios.json`; palomeos por atleta en la nube (`obligatorios.atletas[nombre].m`). ✓ realiza, ↺ reemplazado por BE, ✗ no realiza.
 
 ## Atletas: el mismo atleta en cada módulo (confirmado por Manu, 21-oct-2026)

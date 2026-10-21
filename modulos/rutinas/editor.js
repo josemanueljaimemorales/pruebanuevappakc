@@ -673,10 +673,8 @@ function renderAthlete(){
         h+=`<div class="link"><button class="${r.c?(val>0?'on':sinBono?'':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button>${r.c?'':`<button class="nox" data-act="nolink" data-i="${i}" aria-label="No usar esta conexión" title="No usar esta conexión">✕</button>`}</div>`;}
       else h+='<div class="gap"></div>';}
   });
-  h+=`</div>`;
-  if(ui.dict)h+=dictPanel(a,rows);
-  else h+=`<div class="add"><input id="q" placeholder="Escribe un elemento: nombre, apodo o ID (ej. doble atrás, Cassina, 2.16)" value="${esc(ui.replace<0?ui.q:'')}" autocomplete="off"><div id="sug"></div></div>`;
-  h+=`<div class="actions">${ui.dict?'':'<button class="btn" data-act="dict">🎤 Dictar rutina</button>'}<button class="btn ghost" data-act="reseed">Volver a cargar del Excel</button></div>`;
+  h+=`</div><div class="add"><input id="q" placeholder="Escribe un elemento: nombre, apodo o ID (ej. doble atrás, Cassina, 2.16)" value="${esc(ui.replace<0?ui.q:'')}" autocomplete="off"><div id="sug"></div></div>`;
+  h+=`<div class="actions"><button class="btn ghost" data-act="reseed">Volver a cargar del Excel</button></div>`;
   root.innerHTML=h;
   const q=document.getElementById('q'); if(ui.replace<0&&ui.q){q.focus();q.setSelectionRange(q.value.length,q.value.length);renderSug(ui.q,'sug');}
 }
@@ -712,137 +710,6 @@ function renderSug(q,target){
   box.innerHTML=h;
 }
 
-/* ---------- dictado de rutina ---------- */
-// Se dicta (micrófono del navegador o del teclado) o se escribe: "1 parado de manos, 2 mortal adelante agrupado, 3 …".
-// Cada número que sigue en orden (1, 2, 3… o uno, dos, tres…) empieza un elemento; sin números se separa por comas o
-// renglones. Cada parte se busca con search() y se revisa antes de colocarla. "conectado con/a" al final de un elemento
-// = conexión con el siguiente (piso y fija). Nada se guarda hasta tocar "Colocar".
-const NUM_PAL={uno:1,primero:1,dos:2,segundo:2,tres:3,tercero:3,cuatro:4,cuarto:4,cinco:5,quinto:5,seis:6,sexto:6,siete:7,septimo:7,ocho:8,octavo:8,nueve:9,noveno:9,diez:10,decimo:10,once:11,doce:12,trece:13,catorce:14,quince:15};
-const DICT_RELLENO=/^(y |luego |despues |entonces |hace |hacemos |hago |va |sigue |el |la |un |una |elemento |numero )+/;
-const DICT_CONEXION=/ (conectad[oa]s?|enlazad[oa]s?|en conexion)( (a|al|con|en))?( (el|la) (siguiente|que sigue))?$/;
-let REC=null, DICT_VOC={};
-// Palabras que conoce el buscador en un aparato (Código en español e inglés y apodos), para corregir lo mal dictado.
-function dictVocabulario(ap,nivel){const tab=table(ap,nivel),key=tab+'|'+ap;if(DICT_VOC[key])return DICT_VOC[key];
-  const v=new Set(),pref=tab==='N8ARZON'?'N8ARZON|':ap+'|',add=t=>nk(t).split(' ').forEach(w=>{if(w.length>=4&&!/\d/.test(w))v.add(w);});
-  for(const [k,e] of Object.entries(CAT))if(k.startsWith(pref)||k.startsWith('JA|'+ap+'|'))add(e.d+' '+(e.en||''));
-  for(const src of [S.alias,ALIAS])for(const ak of Object.keys(src))if(ak.startsWith(tab+'|'+ap+'|'))add(ak.slice(tab.length+ap.length+2));
-  return DICT_VOC[key]=[...v];}
-function distancia(a,b){if(Math.abs(a.length-b.length)>2)return 9;const m=[...Array(b.length+1).keys()];
-  for(let i=1;i<=a.length;i++){let prev=m[0];m[0]=i;for(let j=1;j<=b.length;j++){const t=m[j];m[j]=Math.min(m[j]+1,m[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t;}}return m[b.length];}
-function dictCorregir(q,ap,nivel){const voc=dictVocabulario(ap,nivel),set=new Set(voc);let cambio=false;
-  const out=q.split(' ').map(w=>{if(w.length<4||set.has(w)||/\d/.test(w)||STOP.has(w)||SYN[w])return w;
-    let mejor=null,dm=w.length>=7?2:1;for(const c of voc){const d=distancia(w,c);if(d<=dm&&(!mejor||d<dm)){mejor=c;dm=d;}}
-    if(mejor){cambio=true;return mejor;}return w;});
-  return cambio?out.join(' '):null;}
-function partirDictado(t){
-  const norm=w=>w.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const tk=String(t||'').replace(/[\n;]+/g,' | ').replace(/\bsiguiente\b(?! que)/gi,' | ').split(/\s+/).filter(Boolean);
-  const numDe=w=>{const x=norm(w).replace(/[.,:)\-]+$/,'');return /^\d{1,2}$/.test(x)?+x:(NUM_PAL[x]||0);};
-  const hayNumeros=tk.some(w=>numDe(w)===1);
-  const segs=[];let cur=[],esp=1;
-  const corta=()=>{const x=cur.join(' ').trim();if(x)segs.push(x);cur=[];};
-  for(let j=0;j<tk.length;j++){const w=tk[j];
-    if(w==='|'){corta();continue;}
-    if(hayNumeros&&numDe(w)===esp){
-      // "número 1" / "elemento 1": la palabra anterior no es parte del elemento
-      if(cur.length&&/^(numero|elemento|el)$/.test(norm(cur[cur.length-1])))cur.pop();
-      corta();esp++;continue;}
-    if(!hayNumeros&&/,$/.test(w)){cur.push(w.slice(0,-1));corta();continue;}
-    cur.push(w);
-  }
-  corta();
-  return segs.map(x=>x.replace(/^[\s,.:\-]+|[\s,.:\-]+$/g,'')).filter(Boolean);
-}
-function dictBuscar(txt,ap,nivel){
-  let q=' '+nk(txt)+' ', c=false, cAnt=false;
-  if(/^ (conectad[oa]|enlazad[oa]) (a|al|con) /.test(q)){cAnt=true;q=q.replace(/^ (conectad[oa]|enlazad[oa]) (a|al|con) /,' ');}
-  if(DICT_CONEXION.test(q.trimEnd())){c=true;q=q.trimEnd().replace(DICT_CONEXION,' ')+' ';}
-  q=q.trim().replace(DICT_RELLENO,'').trim();
-  // Formas habladas: "parado de manos" = apoyo invertido (en aparatos; en piso no es elemento del Código); en piso la
-  // rondada y el flic previos no tienen valor.
-  if(ap!=='PISO')q=(' '+q+' ').replace(/ parad[oa] de manos /g,' apoyo invertido ').trim();
-  if(ap==='PISO'){const sq=q.replace(/^((rondada|flick flack|flic flac|flick flac|flic flack|flic|flick) )+(?=\S)/,'');if(!/^(flac|flack)$/.test(sq))q=sq;}
-  let opts=search(q,ap,nivel);
-  if(!opts.length||opts[0].score<1.4){const q2=dictCorregir(q,ap,nivel);if(q2){const o2=search(q2,ap,nivel);if(o2.length&&(!opts.length||o2[0].score>opts[0].score))opts=o2;}}
-  let conf=!opts.length?'no':(opts[0].score>=1.4&&(!opts[1]||opts[0].score-opts[1].score>=.15))?'ok':'duda';
-  return{txt:q,opts,k:opts.length?opts[0].k:'m',name:opts.length?opts[0].name||'':'',conf,c,cAnt};
-}
-function dictAnalizar(){
-  const a=S.atletas[ui.atleta], d=ui.dict;
-  d.items=partirDictado(d.txt).map(x=>dictBuscar(x,ui.ap,a.nivel));
-  // "conectado con …" al inicio de un elemento une con el anterior
-  d.items.forEach((it,j)=>{if(it.cAnt&&j>0)d.items[j-1].c=true;});
-}
-function dictOpcion(s,a){const e=CAT[s.k],r=rowFromKey(s.k),nm=s.name?s.name.replace(/^./,c=>c.toUpperCase()):e.d;
-  const tag=r.t==='JA'?'Juvenil A 0.1':ui.ap==='SALTO'?`${keyLabel(r)} · ${(a.nivel==='N7'||a.nivel==='N8')?r.v.toFixed(1):(e.v??'-')}`:`${keyLabel(r)} · ${r.l} ${(LV[r.l]||0).toFixed(1)}`;
-  return `${nm} · ${tag}${s.name?' · '+e.d:''}`;}
-function dictPanel(a,rows){
-  const d=ui.dict, apTxt=(APS.find(x=>x[0]===ui.ap)||[])[1]||ui.ap, link=ui.ap==='PISO'||ui.ap==='FIJA';
-  const voz=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
-  let h=`<div class="dict"><b>Dictar rutina · ${esc(apTxt)}</b>
-    <small>Di o escribe los elementos en orden con su número: "1 parado de manos, 2 mortal adelante agrupado, 3 flic mortal atrás extendido…".${link?' Di "conectado con" al final de un elemento para unirlo con el siguiente.':''} ${voz?'Toca 🎤 Hablar, o usa el micrófono del teclado dentro del cuadro.':'En este navegador usa el micrófono del teclado del celular dentro del cuadro.'}</small>
-    <textarea id="dtxt" rows="4" placeholder="1 parado de manos, 2 mortal adelante agrupado…">${esc(d.txt)}</textarea>
-    <div class="dbtns">${voz?`<button class="btn" data-act="dmic">${REC_ON?'■ Detener':'🎤 Hablar'}</button>`:''}<button class="btn" data-act="dana">Buscar elementos</button><button class="btn ghost" data-act="dno">Cancelar</button></div>
-    <div class="dmsg">${esc(d.msg||'')}</div>`;
-  if(d.items){
-    if(!d.items.length)h+=`<div class="empty">No encontré elementos en el texto.</div>`;
-    else{
-      h+=`<small>Revisa cada elemento: en verde está seguro, en amarillo hay otras opciones parecidas y en rojo no lo encontró. Puedes corregir lo que entendió o elegir otro de la lista.</small><div class="dlist">`;
-      d.items.forEach((it,j)=>{
-        h+=`<div class="drow ${it.k==='x'?'skip':it.conf}"><span class="num">${j+1}</span><div class="dbody">
-          <input data-d="t" data-i="${j}" value="${esc(it.txt)}" aria-label="Lo que entendió" autocomplete="off">
-          <select data-d="k" data-i="${j}" aria-label="Elemento">${it.opts.map(s=>`<option value="${esc(s.k)}" ${it.k===s.k?'selected':''}>${esc(dictOpcion(s,a))}</option>`).join('')}
-            <option value="m" ${it.k==='m'?'selected':''}>Agregar "${esc(it.txt)}" a mano (grupo y valor después)</option><option value="x" ${it.k==='x'?'selected':''}>No agregar</option></select>
-          ${link&&j<d.items.length-1?`<label class="opt"><input type="checkbox" data-d="c" data-i="${j}" ${it.c?'checked':''}> Conectado con el siguiente</label>`:''}</div></div>`;});
-      h+=`</div>`;
-      const n=d.items.filter(it=>it.k!=='x').length;
-      if(rows.length)h+=`<div class="dmodo"><label class="opt"><input type="radio" name="dmodo" data-d="modo" value="fin" ${d.modo!=='rep'?'checked':''}> Agregar al final (ya tiene ${rows.length})</label><label class="opt"><input type="radio" name="dmodo" data-d="modo" value="rep" ${d.modo==='rep'?'checked':''}> Reemplazar la rutina de ${esc(apTxt)}</label></div>`;
-      h+=`<button class="btn" data-act="dok" ${n?'':'disabled'}>Colocar ${n} elemento${n===1?'':'s'} en la rutina</button>`;
-    }
-  }
-  return h+`</div>`;
-}
-// Una frase a la vez y solo el resultado final: en Chrome de Android el modo continuo con resultados parciales repite
-// lo dicho ("1 1 1 flic flic flic…"). Al terminar cada frase se vuelve a escuchar solo hasta tocar ■ Detener.
-let REC_ON=false;
-function dictLimpiar(t){return String(t).replace(/[,.;:]+/g,' ').replace(/(^|\s)(\S+)(\s+\2(?=\s|$)){2,}/gi,'$1$2').replace(/\s+/g,' ').trim();}
-function dictMic(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition, d=ui.dict;
-  if(REC_ON){REC_ON=false;if(REC)REC.stop();return;}
-  if(!SR){d.msg='Este navegador no tiene dictado por voz: usa el micrófono del teclado dentro del cuadro.';return render();}
-  const ta=document.getElementById('dtxt'); if(ta)d.txt=ta.value;
-  REC_ON=true;
-  const escuchar=()=>{
-    if(!REC_ON||!ui.dict)return;
-    REC=new SR(); REC.lang='es-MX'; REC.continuous=false; REC.interimResults=false; REC.maxAlternatives=1;
-    REC.onresult=e=>{const r=e.results[e.results.length-1];if(!r||!r.isFinal)return;
-      const frase=dictLimpiar(r[0].transcript);if(!frase)return;
-      d.txt=(d.txt.trim()?d.txt.trim().replace(/,$/,'')+', ':'')+frase; const t=document.getElementById('dtxt'); if(t)t.value=d.txt;};
-    REC.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){REC_ON=false;d.msg='No hay permiso para el micrófono: actívalo en el navegador o usa el micrófono del teclado.';}
-      else if(e.error!=='no-speech'&&e.error!=='aborted'){REC_ON=false;d.msg='El dictado se detuvo ('+e.error+'). Puedes usar el micrófono del teclado.';}};
-    REC.onend=()=>{REC=null;if(REC_ON&&ui.dict)setTimeout(escuchar,200);else if(ui.dict){d.msg=d.msg&&d.msg.startsWith('Escuchando')?'':d.msg;render();}};
-    try{REC.start();}catch(err){REC=null;REC_ON=false;d.msg='No se pudo iniciar el micrófono.';render();}
-  };
-  d.msg='Escuchando… di un elemento por frase (por ejemplo "uno, flic flac") y toca ■ Detener al terminar.';
-  escuchar(); render();
-}
-function dictColocar(){
-  const a=S.atletas[ui.atleta], rows=a.r[ui.ap], d=ui.dict, link=ui.ap==='PISO'||ui.ap==='FIJA';
-  const nuevos=[];
-  d.items.forEach(it=>{if(it.k==='x')return;
-    let row;
-    if(it.k==='m'||!CAT[it.k])row={n:it.txt?it.txt.replace(/^./,c=>c.toUpperCase()):'Elemento',k:null,t:'M',l:'A',g:1,id:'',v:ui.ap==='SALTO'?0:undefined};
-    // Nombre: el apodo que coincidió, el que ya usa en otras rutinas o, si no hay, lo que se dictó.
-    else{const s=it.opts.find(o=>o.k===it.k), cap=x=>x.replace(/^./,c=>c.toUpperCase());
-      row=rowFromKey(it.k,s&&s.name?cap(s.name):(apodoDe(it.k)||!it.txt)?'':cap(it.txt));}
-    if(link&&it.c)row.c=true;
-    nuevos.push(row);});
-  if(!nuevos.length)return;
-  if(link)nuevos[nuevos.length-1].c=false;
-  if(d.modo==='rep'&&rows.length){if(!confirm(`Se reemplazan los ${rows.length} elementos actuales de ${ui.atleta} en este aparato por los ${nuevos.length} dictados. ¿Continuar?`))return;rows.splice(0,rows.length);}
-  rows.push(...nuevos); ui.dict=null; ui.open=-1; save(); render();
-}
-
 /* ---------- eventos ---------- */
 root.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el)return;
@@ -865,11 +732,6 @@ root.addEventListener('click',e=>{
   if(act==='delask'){ui.delAsk=el.dataset.v;return render();}
   if(act==='delno'){ui.delAsk=null;return render();}
   if(act==='delok'){const nm=ui.delAsk;delete S.atletas[nm];ORDER=ORDER.filter(x=>x!==nm);S.bajas=[...new Set([...(S.bajas||[]),nm])];ui.delAsk=null;save();return render();}
-  if(act==='dict'){REC_ON=false;if(REC)REC.stop();ui.dict={txt:'',items:null,modo:'fin'};ui.q='';ui.replace=-1;render();document.getElementById('dtxt')?.focus();return;}
-  if(act==='dno'){REC_ON=false;if(REC)REC.stop();ui.dict=null;return render();}
-  if(act==='dmic')return dictMic();
-  if(act==='dana'){REC_ON=false;if(REC)REC.stop();const t=document.getElementById('dtxt');if(t)ui.dict.txt=t.value;ui.dict.msg='';dictAnalizar();return render();}
-  if(act==='dok')return dictColocar();
   if(act==='print')return printAll();
   if(act==='dprint')return printAll(divPrintHTML,DIV_PREF);
   if(act==='edit'){ui.open=ui.open===i?-1:i;ui.replace=-1;ui.q='';return render();}
@@ -904,18 +766,10 @@ root.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='q'){ui.q=t.value;ui.replace=-1;renderSug(t.value,'sug');return;}
   if(t.id==='rq'){ui.q=t.value;ui.replace=+t.dataset.i;renderSug(t.value,'rsug');return;}
-  if(t.id==='dtxt'&&ui.dict){ui.dict.txt=t.value;return;}
 });
 root.addEventListener('change',e=>{
   const t=e.target, a=ui.atleta&&S.atletas[ui.atleta];
   if(t.dataset.act==='nivel'){a.nivel=t.value;save();return render();}
-  if(t.dataset.d&&ui.dict){const d=ui.dict, it=d.items&&d.items[+t.dataset.i];
-    if(t.dataset.d==='modo'){d.modo=t.value;return render();}
-    if(!it)return;
-    if(t.dataset.d==='k'){it.k=t.value;const s=it.opts.find(o=>o.k===t.value);it.conf=t.value==='x'?it.conf:s?'ok':'no';return render();}
-    if(t.dataset.d==='c'){it.c=t.checked;return;}
-    if(t.dataset.d==='t'){const c=it.c, nv=dictBuscar(t.value,ui.ap,a.nivel);nv.c=c||nv.c;d.items[+t.dataset.i]=nv;return render();}
-    return;}
   if(t.dataset.f){const r=a.r[ui.ap][+t.dataset.i], f=t.dataset.f;
     if(f==='n'){const antes=r.n;r.n=t.value.trim()||r.n;
       if(r.k&&CAT[r.k]&&r.n!==antes&&!/^\d/.test(r.n)&&nk(r.n)!==nk(CAT[r.k].d)){
