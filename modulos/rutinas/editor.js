@@ -64,17 +64,40 @@ let INDEX=[];
 function buildIndex(){
   INDEX=Object.entries(CAT).map(([k,e])=>({k,toks:canon(e.d+' '+(e.en||''))}));
 }
-function search(q,ap,nivel){
+// Apodos con los que ya están escritos los elementos en las rutinas de los atletas (mismo aparato y tabla).
+function apodosRutinas(ap,tab){const m={};
+  for(const x of Object.values(S.atletas||{})){if(!x||table(ap,x.nivel)!==tab)continue;
+    for(const o of x.r?.[ap]||[])if(o.k&&CAT[o.k]&&o.n&&!/^\d/.test(o.n)){const n=nk(o.n);if(n&&n!==nk(CAT[o.k].d))m[`${tab}|${ap}|${n}`]=o.k;}}
+  return m;}
+// Palabras que conoce el buscador en un aparato (Código en español e inglés y apodos), para corregir lo mal escrito.
+const VOC={};
+function vocabulario(ap,tab){const key=tab+'|'+ap;if(VOC[key])return VOC[key];
+  const v=new Set(),pref=tab==='N8ARZON'?'N8ARZON|':ap+'|',add=t=>nk(t).split(' ').forEach(w=>{if(w.length>=4&&!/\d/.test(w))v.add(w);});
+  for(const [k,e] of Object.entries(CAT))if(k.startsWith(pref)||k.startsWith('JA|'+ap+'|'))add(e.d+' '+(e.en||''));
+  for(const src of [S.alias,ALIAS,apodosRutinas(ap,tab)])for(const ak of Object.keys(src))if(ak.startsWith(tab+'|'+ap+'|'))add(ak.slice(tab.length+ap.length+2));
+  return VOC[key]=[...v];}
+function distancia(a,b){if(Math.abs(a.length-b.length)>2)return 9;const m=[...Array(b.length+1).keys()];
+  for(let i=1;i<=a.length;i++){let prev=m[0];m[0]=i;for(let j=1;j<=b.length;j++){const t=m[j];m[j]=Math.min(m[j]+1,m[j-1]+1,prev+(a[i-1]===b[j-1]?0:1));prev=t;}}return m[b.length];}
+// "tipelt" → "tippelt", "kolivanov" → "kolyvanov": cada palabra desconocida se cambia por la más parecida (1 letra; 2 si es larga).
+function corregir(qn,ap,tab){const voc=vocabulario(ap,tab),set=new Set(voc);let cambio=false;
+  const out=qn.split(' ').map(w=>{if(w.length<4||set.has(w)||/\d/.test(w)||STOP.has(w)||SYN[w]||voc.some(c=>c.startsWith(w)))return w;
+    let mejor=null,dm=w.length>=7?2:1;for(const c of voc){const d=distancia(w,c.slice(0,Math.max(w.length,c.length)));if(d<=dm&&(!mejor||d<dm)){mejor=c;dm=d;}}
+    if(mejor){cambio=true;return mejor;}return w;});
+  return cambio?out.join(' '):null;}
+function search(q,ap,nivel,sinCorregir){
   const tab=table(ap,nivel), qn=nk(q), qt=canon(q); if(!qn)return[];
   const out=new Map();
   const add=(k,score,name)=>{const p=out.get(k);if(!p||p.score<score)out.set(k,{k,score,name});};
   // alias (aprendidos y del Excel)
   const pre=`${tab}|${ap}|`;
-  for(const src of [S.alias,ALIAS]) for(const [ak,k] of Object.entries(src)){
+  for(const src of [S.alias,ALIAS,apodosRutinas(ap,tab)]) for(const [ak,k] of Object.entries(src)){
     if(!ak.startsWith(pre)||!CAT[k])continue; const an=ak.slice(pre.length);
     // Protección doble/triple solo para los apodos de fábrica; los que enseñan los entrenadores se respetan.
     if(src===ALIAS){const ct=canon(CAT[k].d), ca=canon(an); if((ct.includes('dob')&&!ca.includes('dob'))||(ct.includes('tri')&&!ca.includes('tri')))continue;}
-    let sc=0; if(an===qn)sc=3; else if(an.startsWith(qn))sc=2.4; else if(an.includes(qn))sc=2;
+    let sc=0; const ans=an.replace(/ /g,''), qns=qn.replace(/ /g,'');
+    if(an===qn)sc=3; else if(an.startsWith(qn))sc=2.4; else if(an.includes(qn))sc=2;
+    // Sin espacios ("wug" → "Wu Guonian") y con un error de letra en apodos largos ("wugonian").
+    else if(qns.length>=3&&ans.startsWith(qns))sc=2.3; else if(qns.length>=6&&distancia(qns,ans.slice(0,qns.length))<=1)sc=1.8;
     else{const at=canon(an);const hit=qt.filter(t=>at.some(a=>a.startsWith(t))).length;if(hit===qt.length&&hit)sc=1.6;}
     if(sc)add(k,sc,an);
   }
@@ -98,7 +121,10 @@ function search(q,ap,nivel){
     const hit=qt.filter(t=>it.toks.some(a=>a.startsWith(t))).length;
     if(hit===qt.length&&hit)add(it.k,2.5); else if(hit&&hit>=qt.length-1)add(it.k,1.2);
   }
-  return [...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:8);
+  const res=[...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:8);
+  if(!sinCorregir&&(!res.length||res[0].score<1)){const q2=corregir(qn,ap,tab);
+    if(q2){const r2=search(q2,ap,nivel,true);if(r2.length&&(!res.length||r2[0].score>res[0].score))return r2;}}
+  return res;
 }
 
 /* ---------- filas ---------- */
@@ -107,6 +133,10 @@ function apodoDe(k){const c=new Map(),desc=nk(CAT[k]?.d||'');
   for(const x of Object.values(S.atletas||{}))for(const rows of Object.values(x?.r||{}))for(const o of rows||[])
     if(o.k===k&&o.n&&!/^\d/.test(o.n)&&nk(o.n)!==desc)c.set(o.n.trim(),(c.get(o.n.trim())||0)+1);
   let mejor=null,max=0;for(const [n,v] of c)if(v>max){max=v;mejor=n;}return mejor;}
+// Nombre para colocar un elemento: el apodo encontrado, el más usado en las rutinas, el epónimo del Código o su descripción.
+function nombreDe(k,alias){const e=CAT[k];if(!e)return'';const cap=x=>x.replace(/^./,c=>c.toUpperCase());
+  if(alias)return cap(alias);const ap=apodoDe(k);if(ap)return ap;
+  const m=/\(([A-ZÁÉÍÓÚÜ][^()]*)\)\s*\.?\s*$/.exec(e.d);return m?m[1].trim():e.d;}
 function rowFromKey(k,name){
   const e=CAT[k]; const p=k.split('|');
   name=name||apodoDe(k);
@@ -673,7 +703,7 @@ function renderAthlete(){
         h+=`<div class="link"><button class="${r.c?(val>0?'on':sinBono?'':'bad'):(ui.ap==='PISO'?'pos':'')}" data-act="link" data-i="${i}">${lbl}</button>${r.c?'':`<button class="nox" data-act="nolink" data-i="${i}" aria-label="No usar esta conexión" title="No usar esta conexión">✕</button>`}</div>`;}
       else h+='<div class="gap"></div>';}
   });
-  h+=`</div><div class="add"><input id="q" placeholder="Escribe un elemento: nombre, apodo o ID (ej. doble atrás, Cassina, 2.16)" value="${esc(ui.replace<0?ui.q:'')}" autocomplete="off"><div id="sug"></div></div>`;
+  h+=`</div><div class="add"><label for="q" class="add-t">＋ Agregar elemento</label><input id="q" type="search" enterkeyhint="search" placeholder="Apodo, nombre o ID (ej. Tippelt)" value="${esc(ui.replace<0?ui.q:'')}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><div id="sug"></div></div>`;
   h+=`<div class="actions"><button class="btn ghost" data-act="reseed">Volver a cargar del Excel</button></div>`;
   root.innerHTML=h;
   const q=document.getElementById('q'); if(ui.replace<0&&ui.q){q.focus();q.setSelectionRange(q.value.length,q.value.length);renderSug(ui.q,'sug');}
@@ -703,10 +733,13 @@ function renderSug(q,target){
   const a=S.atletas[ui.atleta]; if(!q.trim()){box.innerHTML='';return;}
   const res=search(q,ui.ap,a.nivel);
   let h='<div class="sug">';
-  for(const s of res){const e=CAT[s.k];const r=rowFromKey(s.k);
-    const tag=r.t==='JA'?'Juvenil / virtual USAG · A 0.1':ui.ap==='SALTO'?`${keyLabel(r)} · ${(a.nivel==='N7'||a.nivel==='N8')?'valor USAG '+r.v.toFixed(1):(e.v??'-')}`:`${keyLabel(r)} · ${r.l} ${(LV[r.l]||0).toFixed(1)}`;
-    h+=`<button data-act="pick" data-k="${esc(s.k)}" data-n="${esc(s.name?s.name.replace(/^./,c=>c.toUpperCase()):'')}"><b>${esc(s.name?s.name.replace(/^./,c=>c.toUpperCase()):e.d)}</b><small><span class="k">${esc(tag)}</span> · ${esc(e.d)}${e.en&&e.en!==e.d?`<br><i>EN: ${esc(e.en)}</i>`:''}</small></button>`;}
-  h+=`<button data-act="manual"><b>Agregar "${esc(q)}" a mano</b><small>Tú indicas grupo y valor</small></button></div>`;
+  if(!res.length)h+=`<div class="sg-vacio">No encontré "${esc(q)}". Prueba con otra palabra, el apodo o el nombre en inglés.</div>`;
+  for(const s of res){const e=CAT[s.k], r=rowFromKey(s.k), nm=nombreDe(s.k,s.name);
+    const id=r.t==='JA'?'Juvenil / virtual':keyLabel(r);
+    const val=r.t==='JA'?'A 0.1':ui.ap==='SALTO'?((a.nivel==='N7'||a.nivel==='N8')?'USAG '+r.v.toFixed(1):(e.v??'-')):`${r.l} ${(LV[r.l]||0).toFixed(1)}`;
+    h+=`<button class="sg" data-act="pick" data-k="${esc(s.k)}" data-n="${esc(nm)}" data-a="${s.name?1:''}"><span class="sg-top"><span class="sg-nm">${esc(nm)}</span><span class="sg-val">${esc(val)}</span></span>
+      <span class="sg-id">${esc(id)}</span><span class="sg-es">${esc(e.d)}</span>${e.en&&e.en!==e.d?`<span class="sg-en">EN: ${esc(e.en)}</span>`:''}</button>`;}
+  h+=`<button class="sg sg-man" data-act="manual"><span class="sg-nm">＋ Agregar "${esc(q)}" a mano</span><span class="sg-es">No está en la lista: tú indicas grupo y valor</span></button></div>`;
   box.innerHTML=h;
 }
 
@@ -749,16 +782,15 @@ root.addEventListener('click',e=>{
     const typed=ui.q.trim();
     let row;
     if(act==='pick'){const k=el.dataset.k;
-      const isAlias=typed&&!/^\d/.test(typed);
-      // Si la sugerencia es un apodo (p. ej. escribes "wug" y eliges "Wugonian"), el apodo se completa con ese nombre; se puede editar después.
-      // Con la escritura que ya tenga en alguna rutina (mayúsculas, acentos); el fragmento escrito no se aprende como apodo.
-      let sn=isAlias&&el.dataset.n||'';
+      // Se coloca el nombre de la tarjeta (apodo, epónimo o descripción del Código), no lo que se alcanzó a escribir;
+      // se abre su edición para cambiarlo si hace falta (al cambiarlo se aprende como apodo). Al reemplazar el elemento del
+      // Código se conserva el nombre de la fila, salvo que se haya elegido por su apodo.
+      let sn=el.dataset.n||'';
       if(sn){const nn=nk(sn);for(const x of Object.values(S.atletas||{}))for(const rr of Object.values(x?.r||{}))for(const o of rr||[])if(o.k===k&&o.n&&nk(o.n)===nn)sn=o.n.trim();}
-      row=rowFromKey(k,sn||(ui.replace>=0?rows[ui.replace].n:(isAlias?typed:'')));
-      if(isAlias&&!sn)learn(typed,ui.ap,a.nivel,k);}
+      row=rowFromKey(k,ui.replace>=0&&!el.dataset.a?rows[ui.replace].n:sn);}
     else row={n:typed||'Elemento',k:null,t:'M',l:'A',g:1,id:'',v:ui.ap==='SALTO'?0:undefined};
     if(ui.replace>=0){row.c=rows[ui.replace].c;rows[ui.replace]=row;ui.open=ui.replace;}
-    else{rows.push(row);ui.open=act==='manual'?rows.length-1:-1;}
+    else{rows.push(row);ui.open=rows.length-1;}
     ui.q='';ui.replace=-1;save();return render();
   }
 });
