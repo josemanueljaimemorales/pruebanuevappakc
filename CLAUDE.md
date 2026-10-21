@@ -13,7 +13,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - `index.html` + `script.js`: menú principal; cada módulo vive en `modulos/<nombre>/`.
 - Módulos: basicos, calendario, cargas, fuerza, fuerzafig, gav-training, mvp, normativos, plan-anual, reportes (asistencia, estadisticas), rutinas (app.js = vista de atletas, editor.html/editor.js = editor protegido), sistemas, fuentes (diagnóstico), respaldo.
 - `cliente/config.js` (identidad del club), `cliente/xlsx-reader.js` (lector XLSX propio), `cliente/fuentes.js` (fuentes de datos).
-- **Trabajo en desarrollo del atleta** (antes "Training"; carpeta `modulos/gav-training/`): el trabajo de cada atleta sale de Normativos (Excel + nube, con `cliente/normativos-datos.js`): por aparato y bloque, todo lo No adquirido y En proceso y los 2 primeros en Proyección; lo Consolidado no se trabaja. Palomear = el entrenador confirma que el atleta lo CONSOLIDÓ: se marca Consolidado en Normativos (nube, transacción) y entra el siguiente en Proyección. "Agregar elemento" guarda trabajo extra por atleta y aparato en `trainingAKC/estado` (`extras[<nombre normalizado>]`), sin tocar la tabla de Normativos. Consolidar, agregar y quitar piden la contraseña de entrenador (la misma del editor de rutinas y el calendario); todo se sincroniza entre equipos con onSnapshot. `trabajo_gav.xlsx` solo da apodo (NOMBRE), NIVEL, GRUPO y la columna NORMATIVOS (nombre oficial); sus columnas de aparatos ya no se usan.
+- **Trabajo en desarrollo del atleta** (antes "Training"; carpeta `modulos/gav-training/`): el trabajo de cada atleta sale de Normativos (Excel + nube, con `cliente/normativos-datos.js`): por aparato y bloque, todo lo No adquirido y En proceso y los 2 primeros en Proyección; lo Consolidado no se trabaja. Palomear = el entrenador confirma que el atleta lo CONSOLIDÓ: se marca Consolidado en Normativos (nube, transacción) y entra el siguiente en Proyección. "Agregar elemento" guarda trabajo extra por atleta y aparato en `trainingAKC/estado` (`extras[<nombre normalizado>]`), sin tocar la tabla de Normativos. Tocar la etiqueta "No adquirido" permite pasarlo a "En proceso" (también en Normativos). Si "Agregar elemento" recibe uno que está en Normativos (sugerencias al escribir), avisa y lo acomoda en su bloque aunque pase de los 2 en Proyección (entrada con `key` en `extras`); si ya está Consolidado o ya está en la lista, solo avisa. Tras guardar, la lista se actualiza al momento (no espera a la nube). Consolidar, cambiar estado, agregar y quitar piden la contraseña de entrenador (la misma del editor de rutinas y el calendario); todo se sincroniza entre equipos con onSnapshot. `trabajo_gav.xlsx` da apodo (NOMBRE), NIVEL, GRUPO, la columna NORMATIVOS (nombre oficial) y NOMBRE COMPLETO (lo que se muestra; filas en orden de grupo); sus columnas de aparatos ya no se usan. Grupos (Manu, 21-oct-2026): GAV 3, GAV 4, GAV 5, GAV 6, GAV 9, GAV FIG y GAV FIG ELITE.
 
 ## Datos
 - **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los busca **por nombre** en la carpeta "Utilidades App" (`CARPETA_DRIVE`, compartida con enlace); si no puede listarla usa los IDs fijos de `ARCHIVOS_DRIVE`, y si Drive falla, la copia del repo. Para cambiar un Excel basta subir a esa carpeta un archivo con el mismo nombre; no hace falta subirlo al repo. Las dos apps (prueba y oficial) buscan por nombre desde el 15-oct-2026.
@@ -62,7 +62,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Alonso Ahedo | Alonso | ALONSO | Alonso Ahedo | Alonso Ahedo | ALONSO
 - Mikel Larrinua | Mikel | MIKEL | Mikel Larrinua | Mikel Larrinua | MIKEL
 - Diego Rodriguez | Champi | CHAMPI | Diego Champi Rodríguez | Diego Rodríguez | DIEGO RODRIGUEZ
-- Isaac Martinez | Isaac (GAV 9) | ISAAC | Isaac Martínez | Isaac Martínez | ISAAC MARTINEZ
+- Isaac Martinez | Isaac (GAV FIG) | ISAAC | Isaac Martínez | Isaac Martínez | ISAAC MARTINEZ
 - Diego Vela | Vela | VELA | Diego Vela | Diego Vela | DIEGO VELA
 - Yerik Guerra | Yerik | YERIK | — | Yerik Guerra | YERIK
 - Fernando Talavera | Fer | FER | Fer Talavera | Fernando Talavera | FER
@@ -86,7 +86,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Alfredo Jacobo | Alfred | — | Alfredo Jacobo | Alfredo Jacobo | ALFRED
 - Erik Lopez | Erik (GAV 6) | — | Eric López | Erik Lopez | —  (niño nuevo)
 - Leo Lazaro | Leo Lazaro | — | Leonardo García Lázaro | Leonardo Garcia Lazaro | —
-- Isaac Rangel (GAV 4) | Isaac Rangel | — | Isaac Rangel | Isaac Rangel | —  (el otro "Isaac" de Training, GAV 9, es Isaac Martinez)
+- Isaac Rangel (GAV 4) | Isaac Rangel | — | Isaac Rangel | Isaac Rangel | —  (el otro "Isaac" de Training, GAV FIG, es Isaac Martinez)
 - "Pato" ya no está en el equipo (se quitó de Training).
 - Joan: niño nuevo de un grupo nuevo (GAV 3, nivel 3; ya en MVP, Normativos —todo en Proyección— y Training). No va en Asignación: todavía no compite.
 - Pablo Mares: no entrena al 100% en AKC; se queda solo en Asignación (y su historial en Estadística como PABLO). No agregarlo a Normativos ni a otros módulos.
