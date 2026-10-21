@@ -39,7 +39,7 @@
       if(!old){const c=oldById.get(x.id);if(c&&normName(c.element)===normName(x.element)&&c.apparatus===x.apparatus)old=c;}
       const status={};
       athletes.forEach(a=>{const prior=old?.status||{},oldA=byColumn.get(a.column);status[a.name]=prior[a.name]||(oldA?prior[oldA.name]:null)||x.status?.[a.name]||"NA";});
-      return {...x,status};
+      return {...x,status,key:k};
     });
     return {athletes,items};
   }
@@ -51,13 +51,20 @@
     return snap.exists?snap.data():null;
   }
 
-  async function cargar(){
+  async function cargarBase(){
     const fuente=window.CLIENTE?.repositorios?.normativosExcel||"NORMATIVOS_AKC.xlsx";
-    const base=desdeExcel(await AKC_XLSX.read(fuente,"NORMATIVOS"));
-    let cloud=null;
-    try{cloud=await nube();}catch(e){console.warn("Normativos: no se pudo leer la nube; se usa solo el Excel.",e);}
-    return cloud?unir(base,cloud):base;
+    return desdeExcel(await AKC_XLSX.read(fuente,"NORMATIVOS"));
   }
 
-  window.AKC_NORMATIVOS={cargar,normName,APPS};
+  async function cargar(){
+    const base=await cargarBase();
+    let cloud=null;
+    try{cloud=await nube();}catch(e){console.warn("Normativos: no se pudo leer la nube; se usa solo el Excel.",e);}
+    return cloud?unir(base,cloud):unir(base,null);
+  }
+
+  // Clave de cada elemento (aparato + clasificación + elemento + número de repetición), igual que el módulo Normativos.
+  function claves(list){const seen=new Map();return list.map(x=>{const b=x.apparatus+"|"+normName(x.classification||"")+"|"+normName(x.element);const n=(seen.get(b)||0)+1;seen.set(b,n);return [b+"|"+n,x];});}
+
+  window.AKC_NORMATIVOS={cargar,cargarBase,unir,claves,normName,APPS,FB_CONFIG};
 })();

@@ -13,7 +13,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - `index.html` + `script.js`: menú principal; cada módulo vive en `modulos/<nombre>/`.
 - Módulos: basicos, calendario, cargas, fuerza, fuerzafig, gav-training, mvp, normativos, plan-anual, reportes (asistencia, estadisticas), rutinas (app.js = vista de atletas, editor.html/editor.js = editor protegido), sistemas, fuentes (diagnóstico), respaldo.
 - `cliente/config.js` (identidad del club), `cliente/xlsx-reader.js` (lector XLSX propio), `cliente/fuentes.js` (fuentes de datos).
-- **Training** (`modulos/gav-training/`): el trabajo de cada atleta sale de Normativos (Excel + nube, con `cliente/normativos-datos.js`, solo lectura): por aparato y bloque, todo lo No adquirido y En proceso y los 2 primeros en Proyección; lo Consolidado no se trabaja. `trabajo_gav.xlsx` solo da apodo (NOMBRE), NIVEL, GRUPO y la columna NORMATIVOS (nombre oficial); sus columnas de aparatos ya no se usan.
+- **Training** (`modulos/gav-training/`): el trabajo de cada atleta sale de Normativos (Excel + nube, con `cliente/normativos-datos.js`): por aparato y bloque, todo lo No adquirido y En proceso y los 2 primeros en Proyección; lo Consolidado no se trabaja. Palomear = el entrenador confirma que el atleta lo CONSOLIDÓ: se marca Consolidado en Normativos (nube, transacción) y entra el siguiente en Proyección. "Agregar elemento" guarda trabajo extra por atleta y aparato en `trainingAKC/estado` (`extras[<nombre normalizado>]`), sin tocar la tabla de Normativos. Consolidar, agregar y quitar piden la contraseña de entrenador (la misma del editor de rutinas y el calendario); todo se sincroniza entre equipos con onSnapshot. `trabajo_gav.xlsx` solo da apodo (NOMBRE), NIVEL, GRUPO y la columna NORMATIVOS (nombre oficial); sus columnas de aparatos ya no se usan.
 
 ## Datos
 - **Excel desde Google Drive**: `cliente/fuentes.js` intercepta `fetch` de los Excel y los busca **por nombre** en la carpeta "Utilidades App" (`CARPETA_DRIVE`, compartida con enlace); si no puede listarla usa los IDs fijos de `ARCHIVOS_DRIVE`, y si Drive falla, la copia del repo. Para cambiar un Excel basta subir a esa carpeta un archivo con el mismo nombre; no hace falta subirlo al repo. Las dos apps (prueba y oficial) buscan por nombre desde el 15-oct-2026.
@@ -25,7 +25,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
   - Nada privado ahí (todo es público con el enlace). Respaldos y datos personales van en "Respaldos AKC (privado)".
   - Los IDs de `ARCHIVOS_DRIVE` son solo respaldo; "NORMATIVOS_AKC (anterior - usa la oficial).xlsx" ya no lo usa ninguna app.
 - El conector de Drive puede leer, mover, renombrar y crear archivos, pero no reemplazar el contenido de uno existente. Para actualizar un Excel, Claude crea uno nuevo con el mismo nombre en "Utilidades App" (gana el más reciente), mueve el anterior a "Respaldos AKC (privado)" y verifica descargándolo que sea idéntico y público. Solo después de que el código que lo lee esté en las dos apps. Solo caben archivos chicos (~10 KB, como ASIGNACION); el MACRO (36 KB aun sin las filas vacías de Hoja1) es demasiado grande: lo sube Manu con "Administrar versiones → Subir nueva versión" (o "Reemplazar archivo existente") y Claude verifica descargándolo y mueve a respaldos el duplicado si quedó uno.
-- **Firebase** (proyecto `akc-con-reporte`, SDK compat 9.6.10). Colecciones: normativosAKC, rutinasAKC, calendarioAKC, mvpAKC, cargasAKC (doc `estado`) y registros (Fuerza).
+- **Firebase** (proyecto `akc-con-reporte`, SDK compat 9.6.10). Colecciones: normativosAKC, rutinasAKC, calendarioAKC, mvpAKC, cargasAKC, trainingAKC (doc `estado`) y registros (Fuerza).
 - En la app de prueba `SUFIJO_FIREBASE = "_prueba"`: todo se guarda en `<coleccion>_prueba`, nunca en los datos reales. `modulos/respaldo/` descarga un JSON de los datos reales y tiene un botón para copiarlos a modo prueba.
 - Normativos une Excel + nube por aparato+clasificación+elemento (no por fila); la nube manda y nunca se borran avances.
 
@@ -83,7 +83,7 @@ Se publica con GitHub Pages desde la rama `main`. Usuario: Manu (José Manuel Ja
 - Bruno Baez | Bruno Baez | — | Bruno Báez | Bruno Báez | BRUNO BAEZ
 - Brittan Akim | Brittan | — | Brittan Akim | Brittán Robles | BRITTAN  (nombre completo: Brittan Akin Robles)
 - Alfredo Jacobo | Alfred | — | Alfredo Jacobo | Alfredo Jacobo | ALFRED
-- Erik Lopez | — | — | Eric López | Erik Lopez | —  (niño nuevo; aún no está en Training)
+- Erik Lopez | Erik (GAV 6) | — | Eric López | Erik Lopez | —  (niño nuevo)
 - Leo Lazaro | Leo Lazaro | — | Leonardo García Lázaro | Leonardo Garcia Lazaro | —
 - Isaac Rangel (GAV 4) | Isaac Rangel | — | Isaac Rangel | Isaac Rangel | —  (el otro "Isaac" de Training, GAV 9, es Isaac Martinez)
 - "Pato" ya no está en el equipo (se quitó de Training).

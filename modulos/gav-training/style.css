@@ -263,3 +263,23 @@ button:hover,.btn:hover,.button:hover{border-color:rgba(201,170,98,.50) !importa
 .estado.NA{color:#ff8a8a;border-color:rgba(255,90,90,.55)}
 .estado.EP{color:#ffd166;border-color:rgba(255,200,60,.55)}
 .estado.P{color:#7cc4ff;border-color:rgba(60,160,255,.55)}
+/* Consolidar / agregar (solo entrenadores) */
+.item .quien{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+button.chip,button.quitar,.modal button{width:auto;min-height:0;margin:0;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:0;box-shadow:none}
+button.chip:before,button.quitar:before,.modal button:before,button.agregar:before{display:none}
+button.chip.NA{color:#ff8a8a;border-color:rgba(255,90,90,.55) !important}
+button.chip.EP{color:#ffd166;border-color:rgba(255,200,60,.55) !important}
+button.chip.P{color:#7cc4ff;border-color:rgba(60,160,255,.55) !important}
+button.chip.X,.estado.X{color:#c9aa62;border-color:rgba(201,170,98,.6) !important}
+button.quitar{flex:none;padding:2px 9px;font-size:13px;color:var(--muted)}
+button.agregar{min-height:52px;margin-top:14px;font-size:14px;border-style:dashed !important}
+.ayuda{margin:8px 4px 0;font-size:12px;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.6)}
+.modal-box{width:min(420px,100%);padding:20px;border-radius:18px;border:1px solid var(--line);background:#0b1a2c;text-align:left;box-shadow:var(--shadow)}
+.modal-box h3{margin-bottom:6px;font-size:17px}
+.modal-box p{margin-bottom:12px;font-size:13px;color:var(--muted)}
+.modal-box input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#06111e;color:var(--text);font:inherit;font-size:16px}
+.modal-box .msg{min-height:18px;margin-top:6px;font-size:12.5px;color:#ff8a8a}
+.modal-box .acciones{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.modal button{padding:10px 16px;font-size:14px}
+.modal button.sec{color:var(--muted)}
