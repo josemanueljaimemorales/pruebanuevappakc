@@ -464,7 +464,7 @@ function compute(ap,rows,nivel,plantada,opt){
   for(const it of items){const virt=(nivel==='N7'||nivel==='N8')&&ap==='PISO';
     let key=it.r.k||(it.r.t==='M'&&it.r.g&&/^\d+$/.test(String(it.r.id))?`${it.r.g}|${it.r.id}`:null);
     if(key&&virt)key+='|'+nk(it.r.n);
-    if(key&&it.r.t!=='JA'){if(seen.has(key)){it.val=0;res.rep.add(it.i);}seen.add(key);}}
+    if(key&&it.r.t!=='JA'&&!CAT[key]?.sv){if(seen.has(key)){it.val=0;res.rep.add(it.i);}seen.add(key);}}
   applySpecial(ap,items,res,nivel);
   Object.entries(res.why).forEach(([i,w])=>res.notes.push(`${rows[i].n}: ${w}.`));
   res.enotes=res.enotes||[];
@@ -473,9 +473,11 @@ function compute(ap,rows,nivel,plantada,opt){
     const ta=' '+nk(a.n)+' ', ca=' '+nk((a.k&&CAT[a.k]?.en)||'')+' ', tb=txt(b);
     if(/ (una barra|1 barra|una banda|1 banda|one rail) /.test(ta)&&!/ tambien /.test(ta)&&/ healy /.test(tb)&&!/ (tippelt|arican|abiertas|abierto) /.test(ta+ca)&&!/ connected to healy /.test(ca))
       res.notes.push(`"${a.n}" a una barra seguido de Healy: el Código da una letra más a los dos. Elige la versión "conectado a Healy" del elemento y el Healy después de una barra.`);});
-  // Arzón: reglas de flops y combinados que el juez revisa en el ejercicio (Código FIG arzón 2.d; Boletín GAM N°3).
-  if(ap==='ARZON'&&nivel!=='N7'&&nivel!=='N8'&&rows.some(r=>r.k&&CAT[r.k]?.flop))
-    res.enotes.push('Flops y combinados: un flop tiene 3 o 4 elementos (los que siguen no se reconocen); deben ir separados de otro flop o combinado por al menos un molino con una mano fuera del arco; después solo se permite un elemento al apoyo invertido; si terminan en apoyo invertido cuentan como dos elementos (flop + apoyo invertido); el mismo elemento no puede ir 3 veces seguidas.');
+  // Arzón: flops y combinados deben ir separados por al menos un molino con una mano fuera del arco (Código FIG
+  // arzón 2.d.1 iv). Se marca con el elemento "Molino sin valor" (II.MS); si falta entre dos de ellos, se avisa.
+  if(ap==='ARZON'&&nivel!=='N7'&&nivel!=='N8'){let prev=null;
+    rows.forEach(r=>{const t=r.k&&CAT[r.k]?.flop;if(t==='sep'){prev=null;return;}
+      if(t==='flop'||t==='comb'){if(prev)res.enotes.push(`Entre "${prev.n}" y "${r.n}" falta un molino con una mano fuera del arco: los flops y combinados deben ir separados. Agrega "Molino sin valor" entre ellos.`);prev=r;}});}
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
   if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
     if(r.g!==4&&!JR_PROHIBIDOS.has(r.k)&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": en juvenil (N9 y N10) no están permitidos los mortales atrás en suspensión (art. 12.2.2 punto 5f). Revisa si es uno de ellos.`);});
@@ -685,7 +687,7 @@ function renderList(){
 function metaLine(r,res,i){
   if(ui.ap==='SALTO'){const vv=res.vaults.find(x=>x.i===i);return `${keyLabel(r)} · valor ${vv?vv.v.toFixed(1):'-'} · NP ${vv?f1(vv.np):'-'}`;}
   const a=S.atletas[ui.atleta]; const g=grpOf(r,ui.ap,a.nivel);
-  let m=`${keyLabel(r)} · ${r.t==='JA'?'A 0.1':(r.l||'-')+' '+(LV[r.l]||0).toFixed(1)}`;
+  let m=`${keyLabel(r)} · ${r.t==='JA'?'A 0.1':CAT[r.k]?.sv?'sin valor · corta la serie':(r.l||'-')+' '+(LV[r.l]||0).toFixed(1)}`;
   if(a.nivel==='N8'&&r.t!=='JA'&&g&&g!==r.g)m+=` · cuenta como grupo ${ROM[g]} (N8)`;
   let b='';
   if(res.rep.has(i))b+=`<span class="badge b">${esc(res.why[i]||'Repetido')}</span>`;
@@ -769,7 +771,7 @@ function renderSug(q,target){
   if(!res.length)h+=`<div class="sg-vacio">No encontré "${esc(q)}". Prueba con otra palabra, el apodo o el nombre en inglés.</div>`;
   for(const s of res){const e=CAT[s.k], r=rowFromKey(s.k), nm=nombreDe(s.k,s.name);
     const id=r.t==='JA'?'Juvenil / virtual':keyLabel(r);
-    const val=r.t==='JA'?'A 0.1':ui.ap==='SALTO'?((a.nivel==='N7'||a.nivel==='N8')?'USAG '+r.v.toFixed(1):(e.v??'-')):`${r.l} ${(LV[r.l]||0).toFixed(1)}`;
+    const val=r.t==='JA'?'A 0.1':CAT[r.k]?.sv?'Sin valor':ui.ap==='SALTO'?((a.nivel==='N7'||a.nivel==='N8')?'USAG '+r.v.toFixed(1):(e.v??'-')):`${r.l} ${(LV[r.l]||0).toFixed(1)}`;
     h+=`<button class="sg" data-act="pick" data-k="${esc(s.k)}" data-n="${esc(nm)}" data-a="${s.name?1:''}"><span class="sg-top"><span class="sg-nm">${esc(nm)}</span><span class="sg-val">${esc(val)}</span></span>
       <span class="sg-id">${esc(id)}</span><span class="sg-es">${esc(e.d)}</span>${e.en&&e.en!==e.d?`<span class="sg-en">EN: ${esc(e.en)}</span>`:''}</button>`;}
   h+=`<button class="sg sg-man" data-act="manual"><span class="sg-nm">＋ Agregar "${esc(q)}" a mano</span><span class="sg-es">No está en la lista: tú indicas grupo y valor</span></button></div>`;
