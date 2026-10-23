@@ -433,6 +433,10 @@ function applySpecial(ap,items,res,nivel){
       if(arr.length<2)return;arr.sort((a,b)=>b.val-a.val);arr.slice(1).forEach(it=>kill(it,`Solo vale 1 ${t} en suelo (ya cuenta "${arr[0].r.n}")`));});
   }
 }
+// Elementos marcados con punto rojo "Prohibido para junior" en las tablas del Código FIG 2025-2028 (anillos: dobles
+// giros de apoyo atrás a la suspensión, art. 12.2.2 punto 5f; paralelas: mortales con recepción a braquial, art. 14.2.2 punto 5d).
+// N9 y N10 compiten con reglas de juvenil (Jr FIG): no se reconocen (tabla de penalizaciones: otro elemento prohibido).
+const JR_PROHIBIDOS=new Set(['ANILLOS|1|21','ANILLOS|1|22','PARALELAS|1|20','PARALELAS|1|24','PARALELAS|1|30','PARALELAS|1|34','PARALELAS|1|51','PARALELAS|1|54','PARALELAS|1|59','PARALELAS|2|45','PARALELAS|2|47','PARALELAS|2|48','PARALELAS|2|52','PARALELAS|2|54','PARALELAS|2|104','PARALELAS|2|106','PARALELAS|2|107','PARALELAS|2|113','PARALELAS|2|114','PARALELAS|2|117','PARALELAS|2|119','PARALELAS|3|10','PARALELAS|3|50','PARALELAS|3|52','PARALELAS|3|53','PARALELAS|3|59','PARALELAS|3|60','PARALELAS|3|66','PARALELAS|3|70','PARALELAS|3|72','PARALELAS|3|78','PARALELAS|3|83','PARALELAS|3|122','PARALELAS|3|123','PARALELAS|3|125','PARALELAS|3|126']);
 function compute(ap,rows,nivel,plantada,opt){
   const res={dv:0,eg:0,cv:0,bon:0,nd:0,np:0,egDet:[],counted:new Set(),rep:new Set(),why:{},up:{},notes:[],dIdx:-1,vaults:[]};
   if(ap==='SALTO'){
@@ -455,6 +459,7 @@ function compute(ap,rows,nivel,plantada,opt){
     return res;
   }
   const items=rows.map((r,i)=>({i,r,val:valOf(r,nivel,ap),grp:grpOf(r,ap,nivel)}));
+  if(nivel==='N9'||nivel==='N10')items.forEach(it=>{if(it.r.k&&JR_PROHIBIDOS.has(it.r.k)&&it.val>0){it.val=0;res.rep.add(it.i);res.why[it.i]='Prohibido para juvenil (N9 y N10): elemento no reconocido';}});
   const seen=new Set();
   for(const it of items){const virt=(nivel==='N7'||nivel==='N8')&&ap==='PISO';
     let key=it.r.k||(it.r.t==='M'&&it.r.g&&/^\d+$/.test(String(it.r.id))?`${it.r.g}|${it.r.id}`:null);
@@ -473,7 +478,7 @@ function compute(ap,rows,nivel,plantada,opt){
     res.enotes.push('Flops y combinados: un flop tiene 3 o 4 elementos (los que siguen no se reconocen); deben ir separados de otro flop o combinado por al menos un molino con una mano fuera del arco; después solo se permite un elemento al apoyo invertido; si terminan en apoyo invertido cuentan como dos elementos (flop + apoyo invertido); el mismo elemento no puede ir 3 veces seguidas.');
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
   if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
-    if(r.g!==4&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": si compite como junior FIG, los mortales atrás en suspensión no están permitidos.`);});
+    if(r.g!==4&&!JR_PROHIBIDOS.has(r.k)&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": en juvenil (N9 y N10) no están permitidos los mortales atrás en suspensión (art. 12.2.2 punto 5f). Revisa si es uno de ellos.`);});
   if(ap==='FIJA'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct||FV_OPC[a.pv])return;
     const tb=txt(b);
     const kipHS=kipAManos(a);
@@ -579,8 +584,10 @@ function compute(ap,rows,nivel,plantada,opt){
   if(ap==='PISO'){
     const multi=r=>r.t==='C'&&(r.g===2||r.g===3)&&/ (doble|triple|dob|tri) /.test(descOf(r));
     if(!usagN){
-      if(nivel==='FIG'){const last=rows[rows.length-1];if(!last||!multi(last)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple como último elemento (sénior): -0.3 del jurado D.');}}
-      else if(!rows.some(multi)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple en la rutina: -0.3 del jurado D.');}
+      // Art. 10.2.2 punto 3: mortal múltiple dentro de los 8 elementos; en FIG (sénior) debe ser la salida.
+      // N9 y N10 son juvenil: basta con un mortal múltiple en cualquier parte del ejercicio.
+      if(nivel==='FIG'){const li=rows.length-1;if(li<0||!multi(rows[li])||!res.counted.has(li)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple como último elemento (FIG sénior; dentro de los 8 elementos): -0.3 del jurado D.');}}
+      else if(!rows.some((r,i)=>multi(r)&&res.counted.has(i))){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple dentro de los 8 elementos (juvenil N9/N10; no tiene que ser la salida): -0.3 del jurado D.');}
     }
     // Balanza en una pierna: la cubren las planchas I.61/I.62 o cualquier elemento llamado arabesca,
     // flick facial o salto con giro a facial (cuente o no entre los 8). Si no hay, se puede marcar en la coreografía.
