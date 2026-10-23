@@ -90,10 +90,14 @@ function nombresAparato(ap,qn){
   if(ap==='ARZON')return qn.replace(/\bcirc?(u(l(o(s)?)?)?)?\b/g,m=>m.length>=3?'molino':m);
   if(ap==='FIJA')return qn.replace(/\bgig(a(n(t(e(s)?)?)?)?)?\b/g,'molino atras').replace(/\b(molino atras)( atras)+\b/g,'$1');
   return qn;}
+// Orden en que se proponen los flops y combinados de arzón (de menor a mayor valor).
+const FLOP_ORDEN=['FL3','FL4','FB3','FB4','CR1C','CR1D','CR1E','CR2B','CR2C','CR2D','CR2E','CBB','CBC','CBD','CBE'];
 function search(q,ap,nivel,sinCorregir){
   const tab=table(ap,nivel), qn0=nk(q), qn=nombresAparato(ap,qn0), qt=canon(qn); if(!qn0)return[];
   const out=new Map();
-  const add=(k,score,name)=>{const p=out.get(k);if(!p||p.score<score)out.set(k,{k,score,name});};
+  // Casillas vacías del Código (x) nunca se proponen; los flops y combinados de arzón solo en N9, N10 y FIG.
+  const add=(k,score,name)=>{const e=CAT[k];if(!e||e.x||(e.flop&&(nivel==='N7'||nivel==='N8')))return;
+    const p=out.get(k);if(!p||p.score<score)out.set(k,{k,score,name});};
   // alias (aprendidos y del Excel)
   const pre=`${tab}|${ap}|`;
   for(const src of [S.alias,ALIAS,apodosRutinas(ap,tab)]) for(const [ak,k] of Object.entries(src)){
@@ -120,6 +124,8 @@ function search(q,ap,nivel,sinCorregir){
       const extra=it.toks.filter(a=>!qt.some(t=>a.startsWith(t)));
       let sc=hit/qt.length*(hit===qt.length?1.5:1)-0.03*extra.length;
       if(extra.some(a=>a==='dob'||a==='tri'))sc-=.5;
+      // "flop" sin rusas propone primero las series flop; con "rusa", los combinados.
+      const fl=CAT[it.k].flop;if(fl&&/flop|combinad/.test(qn))sc=((fl==='comb')===/ (rusa|rusas|russian|r\d+) /.test(' '+qn+' ')?2.9:2.5)-.01*FLOP_ORDEN.indexOf(it.k.split('|')[2]);
       add(it.k,sc);}
   }
   // N7 y N8: elementos juveniles / virtuales de USAG (valen A 0.1). Escribir "juvenil" o "virtual" los muestra todos.
@@ -129,7 +135,7 @@ function search(q,ap,nivel,sinCorregir){
     const hit=qt.filter(t=>it.toks.some(a=>a.startsWith(t))).length;
     if(hit===qt.length&&hit)add(it.k,2.5); else if(hit&&hit>=qt.length-1)add(it.k,1.2);
   }
-  const res=[...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:8);
+  const res=[...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:/flop|combinad/.test(qn)?16:8);
   if(!sinCorregir&&(!res.length||res[0].score<1)){const q2=corregir(qn,ap,tab);
     if(q2){const r2=search(q2,ap,nivel,true);if(r2.length&&(!res.length||r2[0].score>res[0].score))return r2;}}
   return res;
@@ -333,7 +339,7 @@ const ARZ_REP={
   rusaEntre:['2|110','2|111','2|112','2|113','4|10'],          // b) rusa en un arzón o entre arzones
   rusaPunta:['2|85','2|91','2|92','2|93','2|97','2|103','2|104','2|105','4|1','4|7','4|8','4|9'], // b) rusa en la punta (con salida)
   famRusa:['3|64','3|65','3|70'], famTongFei:['3|57','3|58','3|59']};                             // j) una sola variante por familia
-function arzonRepeticiones(items,res,kill){
+function arzonRepeticiones(items,res,kill,nivel){
   const id=it=>it.r.k&&/^ARZON\|/.test(it.r.k)?it.r.k.slice(6):null;
   const en=it=>txt(it.r);
   const vivos=items.filter(it=>it.val>0&&id(it)).sort((a,b)=>((b.grp===4)-(a.grp===4))||(b.val-a.val));
@@ -346,6 +352,12 @@ function arzonRepeticiones(items,res,kill){
   tope(ARZ_REP.famRusa,1,'Misma familia que otro recorrido en rusas (Roth, Wu Guonian, 3/3 con 630°): solo vale uno');
   tope(ARZ_REP.famTongFei,1,'Misma familia que otro recorrido tipo Tong Fei (Tong Fei, Vammen): solo vale uno');
   {let n=0;vivos.forEach(it=>{if(it.val>0&&(id(it)==='3|22'||id(it)==='3|23')){if(/ nin reyes /.test(' '+nk(it.r.n)+' ')){n++;if(n>1)kill(it,'Nin Reyes y Nin Reyes 2: solo vale uno (con Titov o Keikha 4 sí valen los dos)');}}});}
+  // d) Flops y elementos combinados (Código FIG 2025-2028, arzón 2.d; Boletín GAM N°1): solo N9, N10 y FIG,
+  // una secuencia flop y un combinado (flop + rusas) con valor por ejercicio; cuenta el de mayor valor.
+  {const tipo=it=>CAT[it.r.k]?.flop;
+    if(nivel==='N7')vivos.forEach(it=>{if(tipo(it))kill(it,'Flops y elementos combinados solo cuentan en N9, N10 y FIG');});
+    [['flop','Solo una secuencia flop con valor por ejercicio'],['comb','Solo un elemento combinado (flop con rusas) con valor por ejercicio']]
+      .forEach(([t,why])=>vivos.filter(it=>it.val>0&&tipo(it)===t).slice(1).forEach(it=>kill(it,why)));}
   // b) Rusas: máximo 2 en la rutina (con la salida) y no más de una en la punta ni más de una entre arzones.
   {let punta=0,entre=0,total=0;vivos.forEach(it=>{if(!(it.val>0))return;const k=id(it);
     const p=ARZ_REP.rusaPunta.includes(k)||(it.grp===4&&/ (rusa|russian) /.test(en(it))&&!ARZ_REP.rusaEntre.includes(k)), e=ARZ_REP.rusaEntre.includes(k);
@@ -407,7 +419,7 @@ function applySpecial(ap,items,res,nivel){
     for(const [k,arr] of Object.entries(best)){if(arr.length<2)continue;arr.sort((a,b)=>b.val-a.val);
       arr.slice(1).forEach(it=>kill(it,`Misma posición final (${POS_TXT[it.pos]}) que "${arr[0].r.n}" en el grupo ${ROM[it.r.g]}`));}
   }
-  if(ap==='ARZON'&&nivel!=='N8')arzonRepeticiones(items,res,kill);
+  if(ap==='ARZON'&&nivel!=='N8')arzonRepeticiones(items,res,kill,nivel);
   if(ap==='PARALELAS')familiasRep(items,kill,PAR_REP,'PARALELAS');
   if(ap==='FIJA'){familiasRep(items,kill,FIJA_REP,'FIJA');fijaQuintaSoltada(items,kill);}
   if(ap==='PISO'){
@@ -455,6 +467,9 @@ function compute(ap,rows,nivel,plantada,opt){
     const ta=' '+nk(a.n)+' ', ca=' '+nk((a.k&&CAT[a.k]?.en)||'')+' ', tb=txt(b);
     if(/ (una barra|1 barra|una banda|1 banda|one rail) /.test(ta)&&!/ tambien /.test(ta)&&/ healy /.test(tb)&&!/ (tippelt|arican|abiertas|abierto) /.test(ta+ca)&&!/ connected to healy /.test(ca))
       res.notes.push(`"${a.n}" a una barra seguido de Healy: el Código da una letra más a los dos. Elige la versión "conectado a Healy" del elemento y el Healy después de una barra.`);});
+  // Arzón: reglas de flops y combinados que el juez revisa en el ejercicio (Código FIG arzón 2.d; Boletín GAM N°3).
+  if(ap==='ARZON'&&nivel!=='N7'&&nivel!=='N8'&&rows.some(r=>r.k&&CAT[r.k]?.flop))
+    res.enotes.push('Flops y combinados: un flop tiene 3 o 4 elementos (los que siguen no se reconocen); deben ir separados de otro flop o combinado por al menos un molino con una mano fuera del arco; después solo se permite un elemento al apoyo invertido; si terminan en apoyo invertido cuentan como dos elementos (flop + apoyo invertido); el mismo elemento no puede ir 3 veces seguidas.');
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
   if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
     if(r.g!==4&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": si compite como junior FIG, los mortales atrás en suspensión no están permitidos.`);});
