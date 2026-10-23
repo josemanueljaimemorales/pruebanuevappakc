@@ -474,10 +474,12 @@ function compute(ap,rows,nivel,plantada,opt){
     if(/ (una barra|1 barra|una banda|1 banda|one rail) /.test(ta)&&!/ tambien /.test(ta)&&/ healy /.test(tb)&&!/ (tippelt|arican|abiertas|abierto) /.test(ta+ca)&&!/ connected to healy /.test(ca))
       res.notes.push(`"${a.n}" a una barra seguido de Healy: el Código da una letra más a los dos. Elige la versión "conectado a Healy" del elemento y el Healy después de una barra.`);});
   // Arzón: flops y combinados deben ir separados por al menos un molino con una mano fuera del arco (Código FIG
-  // arzón 2.d.1 iv). Se marca con el elemento "Molino sin valor" (II.MS); si falta entre dos de ellos, se avisa.
+  // arzón 2.d.1 iv). Cualquier elemento entre ellos los separa (un molino, un desplazamiento o el "Molino sin valor",
+  // II.MS, que no suma); solo se avisa cuando dos quedan seguidos.
   if(ap==='ARZON'&&nivel!=='N7'&&nivel!=='N8'){let prev=null;
-    rows.forEach(r=>{const t=r.k&&CAT[r.k]?.flop;if(t==='sep'){prev=null;return;}
-      if(t==='flop'||t==='comb'){if(prev)res.enotes.push(`Entre "${prev.n}" y "${r.n}" falta un molino con una mano fuera del arco: los flops y combinados deben ir separados. Agrega "Molino sin valor" entre ellos.`);prev=r;}});}
+    rows.forEach(r=>{const t=r.k&&CAT[r.k]?.flop;
+      if(t==='flop'||t==='comb'){if(prev)res.enotes.push(`Entre "${prev.n}" y "${r.n}" falta un molino con una mano fuera del arco: los flops y combinados deben ir separados. Agrega un molino (o "Molino sin valor") entre ellos.`);prev=r;}
+      else prev=null;});}
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
   if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
     if(r.g!==4&&!JR_PROHIBIDOS.has(r.k)&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": en juvenil (N9 y N10) no están permitidos los mortales atrás en suspensión (art. 12.2.2 punto 5f). Revisa si es uno de ellos.`);});
