@@ -478,7 +478,7 @@ function compute(ap,rows,nivel,plantada,opt){
   // II.MS, que no suma); solo se avisa cuando dos quedan seguidos.
   if(ap==='ARZON'&&nivel!=='N7'&&nivel!=='N8'){let prev=null;
     rows.forEach(r=>{const t=r.k&&CAT[r.k]?.flop;
-      if(t==='flop'||t==='comb'){if(prev)res.enotes.push(`Entre "${prev.n}" y "${r.n}" falta un molino con una mano fuera del arco: los flops y combinados deben ir separados. Agrega un molino (o "Molino sin valor") entre ellos.`);prev=r;}
+      if(t==='flop'||t==='comb'){if(prev)res.enotes.push(`Entre "${prev.n}" y "${r.n}" falta un molino con una mano fuera del arco: los flops y combinados deben ir separados. En "${prev.n}" elige "Después continúa con: Molino sin valor" o agrega un molino entre ellos.`);prev=r.sm?null:r;}
       else prev=null;});}
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
   if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
@@ -700,6 +700,7 @@ function metaLine(r,res,i){
   if(r.t==='JA'&&a.nivel!=='N7'&&a.nivel!=='N8')b+='<span class="badge b">Juvenil A: sin valor en '+a.nivel+'</span>';
   if(r.ct)b+='<span class="badge i">A cambio de toma</span>';
   if(r.gig)b+=`<span class="badge i">Cae a ${r.gig}</span>`;
+  if(r.sm)b+=`<span class="badge i">Sigue molino sin valor</span>`;
   if(PV_TXT(r.pv))b+=`<span class="badge i">Luego: ${PV_TXT(r.pv)} (sin valor)</span>`;
   if(r.nf)b+='<span class="badge b">No está en el Código 2025: revisa ID</span>';
   if(r.ex)b+=`<span class="badge w">${esc(r.ex)}</span>`;
@@ -760,6 +761,8 @@ function editPanel(r,i,a,pot){
   if((ui.ap==='PISO'||ui.ap==='FIJA')&&!r.c&&r.nc&&(pot>0||viable)&&i<rowsA.length-1)h+=`<button class="btn ghost" data-act="relink" data-i="${i}">Conectar con "${esc(rowsA[i+1].n)}" (${pot>0?'+'+pot.toFixed(1):'sin bonificación'})</button>`;
   if(ui.ap==='PARALELAS'&&llegaAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
+  // Arzón: el flop o combinado puede seguir con un molino sin valor que corta la serie (como "a gigante" en fija).
+  if(ui.ap==='ARZON'&&(CAT[r.k]?.flop==='flop'||CAT[r.k]?.flop==='comb'))h+=`<label>Después continúa con<select data-f="sm" data-i="${i}"><option value="" ${!r.sm?'selected':''}>Según el siguiente elemento</option><option value="1" ${r.sm?'selected':''}>Molino sin valor (corta la serie)</option></select></label>`;
   if(ui.ap==='FIJA'&&kipAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(FV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t} y sigue a gigante</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA')h+=`<label class="opt"><input type="checkbox" data-f="ct" data-i="${i}" ${r.ct?'checked':''}> Después de este elemento hay cambio de toma (sin valor)</label>`;
   if(r.k&&CAT[r.k])h+=`<small style="color:var(--muted)">${esc(CAT[r.k].d)}${CAT[r.k].en&&CAT[r.k].en!==CAT[r.k].d?`<br><i>Código en inglés: ${esc(CAT[r.k].en)}</i>`:''}${CAT[r.k].corr?'<br>Traducción corregida con el Código en inglés.':''}</small>`;
@@ -853,6 +856,7 @@ root.addEventListener('change',e=>{
     if(f==='gx')r.gx=t.value?+t.value:undefined;
     if(f==='ct')r.ct=t.checked||undefined;
     if(f==='gig')r.gig=t.value||undefined;
+    if(f==='sm')r.sm=t.value?1:undefined;
     if(f==='pv')r.pv=t.value||undefined;
     if(f==='cv')r.cv=t.value===''?undefined:t.value;
     if(f==='cvm'){if(t.value){r.c=true;r.cv=t.value;delete r.nc;}else{r.cv=undefined;r.c=false;}}
