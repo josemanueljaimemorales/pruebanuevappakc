@@ -91,7 +91,7 @@ function nombresAparato(ap,qn){
   if(ap==='FIJA')return qn.replace(/\bgig(a(n(t(e(s)?)?)?)?)?\b/g,'molino atras').replace(/\b(molino atras)( atras)+\b/g,'$1');
   return qn;}
 // Orden en que se proponen los flops y combinados de arzón (de menor a mayor valor).
-const FLOP_ORDEN=['FL3','FL4','FB3','FB4','CR1C','CR1D','CR1E','CR2B','CR2C','CR2D','CR2E','CBB','CBC','CBD','CBE'];
+const FLOP_ORDEN=['FL3','FL4','FB3','FB4','FL3F','FL4F','FB3F','FB4F','CR1C','CR1D','CR1E','CR2B','CR2C','CR2D','CR2E','CBB','CBC','CBD','CBE'];
 function search(q,ap,nivel,sinCorregir){
   const tab=table(ap,nivel), qn0=nk(q), qn=nombresAparato(ap,qn0), qt=canon(qn); if(!qn0)return[];
   const out=new Map();
@@ -125,7 +125,8 @@ function search(q,ap,nivel,sinCorregir){
       let sc=hit/qt.length*(hit===qt.length?1.5:1)-0.03*extra.length;
       if(extra.some(a=>a==='dob'||a==='tri'))sc-=.5;
       // "flop" sin rusas propone primero las series flop; con "rusa", los combinados.
-      const fl=CAT[it.k].flop;if(fl&&/flop|combinad/.test(qn))sc=((fl==='comb')===/ (rusa|rusas|russian|r\d+) /.test(' '+qn+' ')?2.9:2.5)-.01*FLOP_ORDEN.indexOf(it.k.split('|')[2]);
+      const fl=CAT[it.k].flop;if(fl&&/flop|combinad/.test(qn))sc=((fl==='comb')===/ (rusa|rusas|russian|r\d+) /.test(' '+qn+' ')?2.9:2.5)-.01*FLOP_ORDEN.indexOf(it.k.split('|')[2])
+        +(/ flair /.test(' '+qn+' ')&&/ en flair /.test(' '+nk(CAT[it.k].d)+' ')?.3:0);
       add(it.k,sc);}
   }
   // N7 y N8: elementos juveniles / virtuales de USAG (valen A 0.1). Escribir "juvenil" o "virtual" los muestra todos.
