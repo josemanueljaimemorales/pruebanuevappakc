@@ -21,6 +21,30 @@ function leerEnlace(txt){
   const u=t.replace(/^@/,"");
   return USUARIO_OK.test(u)?{red:null,usuario:u}:null;
 }
+// Nombre automático: TikTok lo da su servicio oEmbed (el nombre real del perfil); Instagram y YouTube no lo dan sin
+// permisos especiales, así que se arma con el usuario ("kohei.uchimura" → "Kohei Uchimura"). Se puede corregir a mano.
+function nombreDeUsuario(u){
+  return String(u||"").replace(/[0-9]+$/,"").split(/[._-]+/).filter(Boolean)
+    .map(w=>w.charAt(0).toUpperCase()+w.slice(1).toLowerCase()).join(" ")||u;
+}
+async function nombreTikTok(u){
+  try{
+    const r=await fetch("https://www.tiktok.com/oembed?url="+encodeURIComponent("https://www.tiktok.com/@"+u));
+    if(!r.ok)return "";
+    const j=await r.json();return String(j.author_name||"").trim().slice(0,60);
+  }catch(e){return "";}
+}
+let nombreManual=false, consulta=0;
+async function autoNombre(){
+  const x=leerEnlace($("fEnlace").value);
+  if(!x||nombreManual)return;
+  const red=x.red||$("fRed").value, n=++consulta;
+  $("fTitulo").value=nombreDeUsuario(x.usuario);
+  if(red==="tiktok"){
+    const t=await nombreTikTok(x.usuario);
+    if(t&&n===consulta&&!nombreManual)$("fTitulo").value=t;
+  }
+}
 function iniciales(s){
   const p=String(s||"").trim().split(/\s+/).filter(Boolean);
   return ((p[0]||"?")[0]+(p.length>1?p[p.length-1][0]:"")).toUpperCase();
@@ -74,7 +98,7 @@ function abrir(p){
   editando=p||null;
   $("modalTitulo").textContent=p?"Editar perfil":"Agregar perfil";
   $("fEnlace").value=p?REDES[p.red].url(p.usuario):"";$("fRed").value=p?p.red:"instagram";
-  $("fTitulo").value=p?p.titulo:"";$("fNota").value=p?(p.nota||""):"";$("fError").textContent="";
+  $("fTitulo").value=p?p.titulo:"";nombreManual=!!p;$("fNota").value=p?(p.nota||""):"";$("fError").textContent="";
   $("modal").classList.remove("oculto");setTimeout(()=>$("fEnlace").focus(),30);
 }
 function cerrar(){$("modal").classList.add("oculto");editando=null;}
@@ -82,12 +106,16 @@ $("btnAgregar").onclick=()=>abrir(null);
 $("fCancelar").onclick=cerrar;
 $("modal").addEventListener("click",e=>{if(e.target===$("modal"))cerrar();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("modal").classList.contains("oculto"))cerrar();});
-$("fEnlace").addEventListener("input",()=>{const x=leerEnlace($("fEnlace").value);if(x&&x.red)$("fRed").value=x.red;});
+let esperaNombre=null;
+$("fEnlace").addEventListener("input",()=>{const x=leerEnlace($("fEnlace").value);if(x&&x.red)$("fRed").value=x.red;
+  clearTimeout(esperaNombre);esperaNombre=setTimeout(autoNombre,400);});
+$("fRed").addEventListener("change",autoNombre);
+$("fTitulo").addEventListener("input",()=>{nombreManual=$("fTitulo").value.trim()!=="";});
 $("form").addEventListener("submit",e=>{
   e.preventDefault();
   const x=leerEnlace($("fEnlace").value), err=$("fError");
   if(!x){err.textContent="Pega el enlace del perfil (no de un video) o escribe @usuario.";return;}
-  const red=x.red||$("fRed").value, titulo=$("fTitulo").value.trim(), nota=$("fNota").value.trim();
+  const red=x.red||$("fRed").value, titulo=$("fTitulo").value.trim()||nombreDeUsuario(x.usuario), nota=$("fNota").value.trim();
   if(!titulo){err.textContent="Escribe el nombre que se mostrará.";return;}
   const rep=perfiles.find(p=>p.red===red&&p.usuario.toLowerCase()===x.usuario.toLowerCase()&&(!editando||p.id!==editando.id));
   if(rep){err.textContent=`@${x.usuario} ya está en la lista (${rep.titulo}).`;return;}
