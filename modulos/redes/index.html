@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gimnasia en redes · AKC</title>
+<link rel="stylesheet" href="style.css?v=1">
+</head>
+<body>
+
+<div class="bg-eagle" aria-hidden="true"></div>
+
+<div class="app-shell">
+  <header class="header">
+    <div class="eyebrow"><span data-cliente-name></span> · Gimnasia artística varonil</div>
+    <h1>Diviértete viendo gimnasia<span>Perfiles de gimnastas en redes</span></h1>
+  </header>
+
+  <div class="barra">
+    <div class="filtros" id="filtros" role="tablist" aria-label="Red social"></div>
+    <button type="button" class="agregar" id="btnAgregar">+ Agregar perfil</button>
+  </div>
+  <div class="estado" id="estado" role="status"></div>
+  <main class="lista" id="lista"></main>
+  <p class="nota-pie">Al tocar un perfil se abre en Instagram, TikTok o YouTube.</p>
+</div>
+
+<div class="modal oculto" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+  <form class="caja" id="form" autocomplete="off">
+    <h2 id="modalTitulo">Agregar perfil</h2>
+    <label>Enlace o usuario
+      <input id="fEnlace" required placeholder="https://www.instagram.com/usuario o @usuario" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" data-form-type="other">
+    </label>
+    <label>Red social
+      <select id="fRed">
+        <option value="instagram">Instagram</option>
+        <option value="tiktok">TikTok</option>
+        <option value="youtube">YouTube</option>
+      </select>
+    </label>
+    <label>Nombre que se muestra
+      <input id="fTitulo" required maxlength="60" placeholder="P. ej. Kohei Uchimura" autocomplete="off" autocorrect="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" data-form-type="other">
+    </label>
+    <label>Nota (opcional)
+      <input id="fNota" maxlength="80" placeholder="P. ej. Campeón olímpico · barra fija" autocomplete="off" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" data-form-type="other">
+    </label>
+    <div class="error" id="fError" role="alert"></div>
+    <div class="acciones">
+      <button type="button" class="sec" id="fCancelar">Cancelar</button>
+      <button type="submit" id="fGuardar">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<script src="../../cliente/config.js"></script>
+<script src="../../cliente/theme.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="../../cliente/fuentes.js"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>

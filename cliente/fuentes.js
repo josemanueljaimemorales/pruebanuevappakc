@@ -21,7 +21,7 @@
   // así basta con subir un archivo nuevo con el mismo nombre; el más reciente es el que se usa.
   // Si la búsqueda falla, se usa el ID fijo de ARCHIVOS_DRIVE.
   const CARPETA_DRIVE = "1hpU7ZeK-iv83c1hULbvt-5zRXeDpyMJi";
-  const COLECCIONES = ["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros","trainingAKC"];
+  const COLECCIONES = ["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros","trainingAKC","redesAKC"];
   // Nombre exacto del archivo que pide la app -> ID del archivo en Drive (carpeta "Utilidades App")
   const ARCHIVOS_DRIVE = {
     "MACRO_26_27.xlsx":                        "1EykSlwYmfnoMYu2fjT9mEbFeQ6R4HqfF",

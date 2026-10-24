@@ -1,0 +1,59 @@
+/* Gimnasia en redes: perfiles de gimnasia varonil en Instagram, TikTok y YouTube */
+:root{
+  --bg:#030914;--panel:rgba(12,27,46,.78);--line:rgba(120,190,255,.16);--blue:#178cff;--blue2:#6cc3ff;
+  --gold:#c9aa62;--text:#f4f9ff;--muted:#8ea7bd;--err:#ff8a80;--shadow:0 22px 55px rgba(0,0,0,.45);
+  --instagram:#e1306c;--tiktok:#25f4ee;--youtube:#ff3d3d;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{min-height:100%;background:var(--bg)}
+body{min-height:100vh;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:var(--text);overflow-x:hidden;
+  background:radial-gradient(circle at 50% -12%,rgba(23,140,255,.28),transparent 42%),
+    radial-gradient(circle at 100% 100%,rgba(201,170,98,.10),transparent 40%),
+    linear-gradient(160deg,#020710 0%,#071526 55%,#020812 100%)}
+.bg-eagle{position:fixed;width:min(980px,110vw);height:680px;left:50%;top:10px;transform:translateX(-50%);
+  background:url("../../cliente/logo.png") center/contain no-repeat;opacity:.06;filter:invert(1);pointer-events:none}
+.app-shell{position:relative;z-index:1;width:min(780px,100%);margin:auto;padding:22px 16px 46px}
+.header{text-align:center;padding:24px 18px 20px;margin-bottom:16px;border-radius:26px;border:1px solid rgba(201,170,98,.22);
+  background:linear-gradient(140deg,rgba(14,32,54,.92),rgba(5,12,22,.88) 60%,rgba(40,33,18,.55));box-shadow:var(--shadow)}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+h1{margin-top:8px;font-size:clamp(23px,6vw,34px);line-height:1.08;font-weight:900;text-transform:uppercase}
+h1 span{display:block;margin-top:6px;font-size:.5em;letter-spacing:.2em;font-weight:700;color:var(--blue2)}
+.barra{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.filtros{display:flex;flex-wrap:wrap;gap:6px}
+.filtros button{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font:700 13px inherit;font-family:inherit;cursor:pointer}
+.filtros button[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.agregar{padding:10px 15px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--gold),#a88a45);color:#1a1405;font:800 14px inherit;font-family:inherit;cursor:pointer}
+.estado{min-height:18px;margin:0 0 8px;font-size:13px;color:var(--muted)}
+.estado.err{color:var(--err)}
+.lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.vacio{grid-column:1/-1;padding:28px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:18px}
+.perfil{position:relative;display:flex;align-items:center;gap:12px;padding:14px 14px;border-radius:18px;border:1px solid var(--line);
+  background:var(--panel);box-shadow:0 10px 26px rgba(0,0,0,.28);color:inherit;text-decoration:none;min-width:0}
+.perfil:hover,.perfil:focus-visible{border-color:var(--red,var(--blue2));outline:none}
+.avatar{flex:0 0 auto;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:19px;
+  color:#fff;background:var(--red,var(--blue));box-shadow:0 0 0 3px rgba(255,255,255,.08)}
+.datos{min-width:0;flex:1}
+.datos b{display:block;font-size:15px;line-height:1.2;overflow-wrap:anywhere}
+.datos small{display:block;margin-top:2px;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.datos .nota{margin-top:4px;color:#c9d6e3}
+.chip{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em;
+  color:var(--red,var(--blue2));border:1px solid var(--red,var(--blue2))}
+.perfil.instagram{--red:var(--instagram)}.perfil.tiktok{--red:#19c9c3}.perfil.youtube{--red:var(--youtube)}
+.perfil.tiktok .avatar{color:#001a19}
+.herr{position:absolute;top:6px;right:6px;display:flex;gap:4px}
+.herr button{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:rgba(3,9,20,.7);color:var(--muted);font-size:14px;cursor:pointer}
+.herr button:hover{color:var(--text)}
+.nota-pie{margin-top:16px;text-align:center;font-size:12px;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.62)}
+.modal.oculto{display:none}
+.caja{width:min(420px,100%);padding:20px;border-radius:20px;border:1px solid var(--line);background:#0b1828;box-shadow:var(--shadow)}
+.caja h2{font-size:18px;margin-bottom:12px}
+.caja label{display:block;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--muted)}
+.caja input,.caja select{display:block;width:100%;margin-top:4px;padding:10px 11px;border-radius:10px;border:1px solid var(--line);
+  background:#06101c;color:var(--text);font-size:16px;font-family:inherit}
+.error{min-height:18px;font-size:13px;color:var(--err)}
+.acciones{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.acciones button{padding:10px 15px;border-radius:11px;border:0;background:var(--blue);color:#fff;font:800 14px inherit;font-family:inherit;cursor:pointer}
+.acciones button.sec{background:transparent;color:var(--text);border:1px solid var(--line)}
+.acciones button:disabled{opacity:.5;cursor:default}
+@media (max-width:520px){.lista{grid-template-columns:1fr}.barra{flex-direction:column;align-items:stretch}.agregar{width:100%}}
