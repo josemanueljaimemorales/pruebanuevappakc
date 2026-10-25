@@ -135,12 +135,57 @@ const observador=new IntersectionObserver(es=>{
   es.forEach(e=>{if(e.isIntersecting){const l=[...$("feed").querySelectorAll(".slide")];actual=Math.max(0,l.indexOf(e.target));cargarCerca();}});
 },{root:null,threshold:.6});
 
+// Orden al azar cada vez que se abre el módulo, sin dos seguidos del mismo perfil. Mientras se ven, el orden no cambia;
+// los que lleguen de la nube se acomodan al azar más adelante (nunca antes del que se está viendo).
+let orden=[], ponerPrimero=null;
+// La misma persona en Instagram y TikTok cuenta como un solo perfil (se junta por el nombre de la lista de perfiles).
+function perfilDe(v){
+  if(!v.perfil)return "manual:"+v.id;
+  const u=v.perfil.toLowerCase(), p=(typeof perfiles!=="undefined"?perfiles:[]).find(x=>x.red===v.red&&x.usuario.toLowerCase()===u);
+  return p?p.titulo.trim().toLowerCase():u;
+}
+// Toma al azar de qué perfil sigue (más probable el que tiene más videos), nunca el mismo que el anterior si se puede;
+// si un perfil tiene tantos que ya no alcanzarían los demás para separarlos, va ése.
+function mezclar(lista){
+  const grupos=new Map();
+  lista.forEach(v=>{const k=perfilDe(v);if(!grupos.has(k))grupos.set(k,[]);grupos.get(k).push(v);});
+  grupos.forEach(g=>{for(let i=g.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[g[i],g[j]]=[g[j],g[i]];}});
+  const out=[];let ultimo=null;
+  while(out.length<lista.length){
+    const vivos=[...grupos].filter(([,g])=>g.length);
+    const total=vivos.reduce((t,[,g])=>t+g.length,0);
+    const [kMax,gMax]=vivos.reduce((m,x)=>x[1].length>m[1].length?x:m);
+    let k;
+    if(kMax!==ultimo&&gMax.length>total-gMax.length)k=kMax;
+    else{
+      const cand=vivos.filter(([kk])=>kk!==ultimo);
+      if(!cand.length)k=ultimo;
+      else{let r=Math.random()*cand.reduce((t,[,g])=>t+g.length,0);k=cand.find(([,g])=>(r-=g.length)<0)?.[0]||cand[0][0];}
+    }
+    out.push(grupos.get(k).pop());ultimo=k;
+  }
+  return out;
+}
+function ordenar(lista){
+  const porId=new Map(lista.map(v=>[v.id,v]));
+  if(!orden.length){orden=mezclar(lista).map(v=>v.id);}
+  else{
+    orden=orden.filter(id=>porId.has(id));
+    const nuevos=lista.filter(v=>!orden.includes(v.id));
+    nuevos.forEach(v=>{
+      if(v.id===ponerPrimero){orden.unshift(v.id);return;}
+      const desde=Math.min(orden.length,actual+2), k=desde+Math.floor(Math.random()*(orden.length-desde+1));
+      orden.splice(k,0,v.id);
+    });
+  }
+  return orden.map(id=>porId.get(id));
+}
 function pintarVideos(){
   const feed=$("feed");
   for(const [id,s] of slides)if(!videos.some(v=>v.id===id)){observador.unobserve(s);s.remove();slides.delete(id);}
   feed.querySelector(".vacio")?.remove();
   if(!videos.length){const d=document.createElement("div");d.className="vacio";d.textContent="Todavía no hay videos. Toca «+ Video» y pega el enlace de un video de Instagram, TikTok o YouTube.";feed.appendChild(d);return;}
-  videos.forEach((v,i)=>{const s=slide(v);if(feed.children[i]!==s)feed.insertBefore(s,feed.children[i]||null);});
+  ordenar(videos).forEach((v,i)=>{const s=slide(v);if(feed.children[i]!==s)feed.insertBefore(s,feed.children[i]||null);});
   cargarCerca();
 }
 window.alRecibirVideos=function(lista){
@@ -184,7 +229,7 @@ $("formVideo").addEventListener("submit",async e=>{
   if(!x){err.textContent="No reconozco ese enlace. Pega el enlace de un video (reel, post, TikTok o YouTube), no el de un perfil.";return;}
   if(videosNube.some(v=>v.red===x.red&&v.codigo===x.codigo)){err.textContent="Ese video ya está en la lista.";return;}
   const nuevo={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),red:x.red,codigo:x.codigo};
-  cerrarVideo();
+  cerrarVideo();ponerPrimero=nuevo.id;  // el que se acaba de agregar sale primero
   await guardarVideos([nuevo,...videosNube]);
   $("feed").scrollTo({top:0,behavior:"smooth"});
 });
