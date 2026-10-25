@@ -104,3 +104,6 @@ h1 span{display:block;margin-top:6px;font-size:.5em;letter-spacing:.2em;font-wei
 .slide .sonido{position:absolute;right:10px;bottom:64px;z-index:3;width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.25);
   background:rgba(0,0,0,.5);color:#fff;font-size:18px;cursor:pointer}
 .pestanas{background:linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,0))}
+.slide{background-size:cover;background-position:center}
+.aviso-video{position:relative;z-index:2;margin:auto 24px;padding:18px;border-radius:16px;background:rgba(0,0,0,.72);color:#fff;text-align:center;font-size:15px;line-height:1.4}
+.aviso-video a{display:block;margin-top:10px;color:#ffd86b;font-weight:800;text-decoration:none}
