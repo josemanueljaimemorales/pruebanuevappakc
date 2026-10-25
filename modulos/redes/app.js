@@ -160,6 +160,7 @@ function iniciar(){
       const d=s.exists?s.data():{};
       perfiles=(Array.isArray(d.perfiles)?d.perfiles:[]).filter(p=>p&&REDES[p.red]&&USUARIO_OK.test(p.usuario||"")&&p.titulo);
       estado("");pintar();
+      if(window.alRecibirVideos)alRecibirVideos(d.videos);
     },e=>{console.error(e);estado("No se pudo conectar con la nube: "+e.message,true);});
   }catch(e){console.error(e);estado("No se pudo conectar con la nube.",true);}
 }
