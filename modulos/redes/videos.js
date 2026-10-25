@@ -2,7 +2,7 @@
 // Reels). Los videos se agregan pegando su enlace de Instagram, TikTok o YouTube y se guardan en la misma nube que los
 // perfiles: redesAKC/estado.videos = [{id, red, codigo}] (lo más nuevo primero).
 // Solo el video que se está viendo y sus vecinos tienen cargado su reproductor; los demás se vacían para que no suenen.
-let videos=[];
+let videos=[], videosNube=[];  // videos = los que se muestran; videosNube = todos (también los ocultos)
 const VIDEO={
   instagram:c=>`https://www.instagram.com/p/${encodeURIComponent(c)}/embed/`,
   tiktok:c=>`https://www.tiktok.com/embed/v2/${encodeURIComponent(c)}`,
@@ -33,7 +33,7 @@ function videoValido(v){
   return v&&VIDEO[v.red]&&typeof v.codigo==="string"&&/^[A-Za-z0-9_-]{5,25}$/.test(v.codigo)&&v.id
     // Los automáticos de Instagram o TikTok sin archivo son los que la red no deja ver fuera de su app (p. ej. reels con
     // música con derechos): su reproductor solo diría "enlace dañado", así que no se muestran.
-    &&!(v.auto&&!v.mp4&&v.red!=="youtube");
+    &&!(v.auto&&!v.mp4&&v.red!=="youtube")&&!v.foto;  // foto = publicación de fotos de TikTok (no es video)
 }
 
 const slides=new Map();
@@ -144,18 +144,20 @@ function pintarVideos(){
   cargarCerca();
 }
 window.alRecibirVideos=function(lista){
-  videos=(Array.isArray(lista)?lista:[]).filter(videoValido);
+  videosNube=(Array.isArray(lista)?lista:[]).filter(v=>v&&v.id);
+  videos=videosNube.filter(videoValido);
   pintarVideos();
 };
 
-async function guardarVideos(nuevos){
-  const antes=videos;videos=nuevos;pintarVideos();
-  try{await ref.set({videos:nuevos,actualizado:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
-  catch(e){console.error(e);videos=antes;pintarVideos();alert("No se pudo guardar: "+e.message);}
+// Se guarda la lista completa de la nube (con los ocultos), para no borrar los que esperan que su archivo abra.
+async function guardarVideos(nube){
+  const antes=[videos,videosNube];videosNube=nube;videos=nube.filter(videoValido);pintarVideos();
+  try{await ref.set({videos:nube,actualizado:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});}
+  catch(e){console.error(e);[videos,videosNube]=antes;pintarVideos();alert("No se pudo guardar: "+e.message);}
 }
 function quitarVideo(v){
   if(!confirm("¿Quitar este video?"))return;
-  guardarVideos(videos.filter(x=>x.id!==v.id));
+  guardarVideos(videosNube.filter(x=>x.id!==v.id));
 }
 
 // Pestañas: Videos (al abrir) y Perfiles.
@@ -180,10 +182,10 @@ $("formVideo").addEventListener("submit",async e=>{
   const err=$("vError"), b=$("vGuardar");b.disabled=true;err.textContent="";
   const x=await leerVideo($("vEnlace").value);b.disabled=false;
   if(!x){err.textContent="No reconozco ese enlace. Pega el enlace de un video (reel, post, TikTok o YouTube), no el de un perfil.";return;}
-  if(videos.some(v=>v.red===x.red&&v.codigo===x.codigo)){err.textContent="Ese video ya está en la lista.";return;}
+  if(videosNube.some(v=>v.red===x.red&&v.codigo===x.codigo)){err.textContent="Ese video ya está en la lista.";return;}
   const nuevo={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),red:x.red,codigo:x.codigo};
   cerrarVideo();
-  await guardarVideos([nuevo,...videos]);
+  await guardarVideos([nuevo,...videosNube]);
   $("feed").scrollTo({top:0,behavior:"smooth"});
 });
 pintarVideos();
