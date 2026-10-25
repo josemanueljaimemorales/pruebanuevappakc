@@ -148,13 +148,17 @@ MEDIO = {"instagram": medio_instagram, "tiktok": medio_tiktok}
 
 
 def abre(url):
-    """¿El archivo se puede pedir desde cualquier lado, sin galletas? (algunos de TikTok responden 403)."""
+    """Peso en bytes si el archivo se puede pedir desde cualquier lado, sin galletas (algunos de TikTok responden 403);
+    0 si no abre. La app usa el peso para no cargar los muy pesados con datos móviles."""
     try:
         r = urllib.request.Request(url, headers={"User-Agent": NAVEGADOR, "Range": "bytes=0-1"})
         with urllib.request.urlopen(r, timeout=20) as resp:
-            return resp.status in (200, 206) and (resp.headers.get("Content-Type") or "").startswith("video")
+            if resp.status not in (200, 206) or not (resp.headers.get("Content-Type") or "").startswith("video"):
+                return 0
+            total = (resp.headers.get("Content-Range") or "").rsplit("/", 1)[-1]
+            return int(total) if total.isdigit() else 1
     except Exception:
-        return False
+        return 0
 
 
 def renovar(lista):
@@ -170,11 +174,12 @@ def renovar(lista):
             m = None
         if m and m.get("foto"):
             medios[f"{red}:{codigo}"] = m
-        elif m and not abre(m["mp4"]):
+        elif m and not (peso := abre(m["mp4"])):
             medios[f"{red}:{codigo}"] = {"noabre": True}
             fallas += 1
         elif m:
             m["renovado"] = int(time.time())
+            m["peso"] = peso
             medios[f"{red}:{codigo}"] = m
         else:
             fallas += 1
@@ -241,7 +246,7 @@ def main():
     for v in lista:
         m = medios.get(f"{v.get('red')}:{v.get('codigo')}")
         if m and (m.get("foto") or m.get("noabre")):
-            for k in ("mp4", "imagen", "renovado"):
+            for k in ("mp4", "imagen", "renovado", "peso"):
                 v.pop(k, None)
             if m.get("foto"):
                 v["foto"] = True      # publicación de fotos: la app no la muestra

@@ -107,3 +107,6 @@ h1 span{display:block;margin-top:6px;font-size:.5em;letter-spacing:.2em;font-wei
 .slide{background-size:cover;background-position:center}
 .aviso-video{position:relative;z-index:2;margin:auto 24px;padding:18px;border-radius:16px;background:rgba(0,0,0,.72);color:#fff;text-align:center;font-size:15px;line-height:1.4}
 .aviso-video a{display:block;margin-top:10px;color:#ffd86b;font-weight:800;text-decoration:none}
+.pestanas .ahorro{font-size:11px;padding:6px 10px}
+.pestanas .ahorro[aria-pressed="true"]{border-color:#31e76b;color:#31e76b}
+@media (max-width:420px){.pestanas{gap:4px;padding:8px 6px}.pestanas button{padding:7px 10px;font-size:12px}.pestanas .ahorro{font-size:10px;padding:6px 8px}}
