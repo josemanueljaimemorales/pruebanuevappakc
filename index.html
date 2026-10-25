@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Águilas Kids Center · Plataforma AKC</title>
   <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="menu-tarjetas.css?v=1">
 </head>
 <body>
 <div id="app">
@@ -27,21 +28,21 @@
 
     <div class="section-label"><span>PLATAFORMA DE ENTRENAMIENTO</span><i></i></div>
 
-    <main class="menu">
-      <button type="button" class="btn mvp" onclick="openScreen('mvp')"><span class="icon">🏆</span><span class="btn-copy"><strong>MVP</strong><small>Most Valuable Player · MVP de la semana</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn plan-anual" onclick="openScreen('planAnual')"><span class="icon">▦</span><span class="btn-copy"><strong>PLAN ANUAL</strong><small>Macrociclo y planificación anual</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn fuerza" onclick="openScreen('fuerza')"><span class="icon">✚</span><span class="btn-copy"><strong>FUERZA</strong><small>Prevención y orientación</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn fig" onclick="openScreen('FuerzaFIG')"><span class="icon">⌁</span><span class="btn-copy"><strong>FUERZA FIG</strong><small>Fuerza específica para FIG</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn cargas" onclick="openScreen('cargas')"><span class="icon">▥</span><span class="btn-copy"><strong>CARGA SEMANAL</strong><small>Carga semanal y sistemas</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn trabajo" onclick="openScreen('trabajo')"><span class="icon">◎</span><span class="btn-copy"><strong>TRABAJO EN DESARROLLO DEL ATLETA</strong><small>Lo que trabaja cada atleta según Normativos</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn SISTEMAS" onclick="openScreen('SISTEMAS')"><span class="icon">⚙</span><span class="btn-copy"><strong>SISTEMAS</strong><small>Organización y control</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn rutinas" onclick="openScreen('rutinas')"><span class="icon">▤</span><span class="btn-copy"><strong>RUTINAS</strong><small>Rutinas NP</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn basicos" onclick="openScreen('basicos')"><span class="icon">◈</span><span class="btn-copy"><strong>BÁSICOS</strong><small>Fundamentos AKC</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn normativos" onclick="openScreen('normativos')"><span class="icon">✓</span><span class="btn-copy"><strong>NORMATIVOS</strong><small>Seguimiento técnico</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn reportes" onclick="openScreen('reportes')"><span class="icon">▥</span><span class="btn-copy"><strong>REPORTES</strong><small>Estadísticas y análisis</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn redes" onclick="openScreen('redes')"><span class="icon">▶</span><span class="btn-copy"><strong>GIMNASIA EN REDES</strong><small>Diviértete viendo gimnasia varonil</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn drive" onclick="openScreen('drive')"><span class="icon">□</span><span class="btn-copy"><strong>ARCHIVOS</strong><small>OneDrive</small></span><span class="arrow">›</span></button>
-      <button type="button" class="btn calendar-btn" onclick="openScreen('calendar')"><span class="icon">▣</span><span class="btn-copy"><strong>CALENDARIO</strong><small>Competencias y eventos</small></span><span class="arrow">›</span></button>
+    <main class="menu tarjetas">
+      <button type="button" class="btn mvp" onclick="openScreen('mvp')"><span class="icon"><span aria-hidden="true">🏆</span></span><span class="btn-copy"><strong>MVP</strong><small>¿Quién fue el mejor de la semana?</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn plan-anual" onclick="openScreen('planAnual')"><span class="icon"><span aria-hidden="true">📅</span></span><span class="btn-copy"><strong>PLAN ANUAL</strong><small>Todo el año de entrenamiento</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn fuerza" onclick="openScreen('fuerza')"><span class="icon"><span aria-hidden="true">💪</span></span><span class="btn-copy"><strong>FUERZA</strong><small>Tus ejercicios de fuerza</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn fig" onclick="openScreen('FuerzaFIG')"><span class="icon"><span aria-hidden="true">🏋️‍♂️</span></span><span class="btn-copy"><strong>FUERZA FIG</strong><small>Fuerza para el nivel FIG</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn cargas" onclick="openScreen('cargas')"><span class="icon"><span aria-hidden="true">📊</span></span><span class="btn-copy"><strong>CARGA SEMANAL</strong><small>Cuánto entrenamos cada semana</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn trabajo" onclick="openScreen('trabajo')"><span class="icon"><span aria-hidden="true">🎯</span></span><span class="btn-copy"><strong>TRABAJO EN DESARROLLO DEL ATLETA</strong><small>Lo que estás aprendiendo</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn SISTEMAS" onclick="openScreen('SISTEMAS')"><span class="icon"><span aria-hidden="true">⚙️</span></span><span class="btn-copy"><strong>SISTEMAS</strong><small>Cómo nos organizamos</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn rutinas" onclick="openScreen('rutinas')"><span class="icon"><span aria-hidden="true">🤸‍♂️</span></span><span class="btn-copy"><strong>RUTINAS</strong><small>Tus rutinas por aparato</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn basicos" onclick="openScreen('basicos')"><span class="icon"><span aria-hidden="true">🧱</span></span><span class="btn-copy"><strong>BÁSICOS</strong><small>Los fundamentos de AKC</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn normativos" onclick="openScreen('normativos')"><span class="icon"><span aria-hidden="true">✅</span></span><span class="btn-copy"><strong>NORMATIVOS</strong><small>Tus avances técnicos</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn reportes" onclick="openScreen('reportes')"><span class="icon"><span aria-hidden="true">📈</span></span><span class="btn-copy"><strong>REPORTES</strong><small>Estadísticas y resultados</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn redes" onclick="openScreen('redes')"><span class="icon"><span aria-hidden="true">📱</span></span><span class="btn-copy"><strong>GIMNASIA EN REDES</strong><small>Videos para divertirte</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn drive" onclick="openScreen('drive')"><span class="icon"><span aria-hidden="true">📁</span></span><span class="btn-copy"><strong>ARCHIVOS</strong><small>Documentos del equipo</small></span><span class="arrow">›</span></button>
+      <button type="button" class="btn calendar-btn" onclick="openScreen('calendar')"><span class="icon"><span aria-hidden="true">🗓️</span></span><span class="btn-copy"><strong>CALENDARIO</strong><small>Competencias y eventos</small></span><span class="arrow">›</span></button>
     </main>
 
     <footer class="footer">ÁGUILAS DE KIDS CENTER <span>•</span> SISTEMA AKC</footer>

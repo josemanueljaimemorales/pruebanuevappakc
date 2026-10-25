@@ -1,0 +1,14 @@
+/* ===== Menú en tarjetas tipo app (Manu, 26-oct-2026): ícono grande y una frase corta, fácil de reconocer para niños ===== */
+.menu.tarjetas{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:700px){.menu.tarjetas{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}}
+@media (min-width:1100px){.menu.tarjetas{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}}
+.menu.tarjetas .btn{flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;min-height:156px;padding:18px 10px 14px;border-radius:22px}
+.menu.tarjetas .icon{width:70px;height:70px;border-radius:22px;font-size:40px;line-height:1;
+  background:radial-gradient(circle at 50% 35%,var(--glow,rgba(43,157,255,.18)),rgba(255,255,255,.04) 72%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),0 8px 18px rgba(0,0,0,.25);
+  font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.menu.tarjetas .btn-copy{margin:12px 0 0;align-items:center;text-align:center;gap:5px}
+.menu.tarjetas .btn-copy strong{font-size:13px;letter-spacing:.05em;line-height:1.15}
+.menu.tarjetas .btn-copy small{font-size:11.5px;color:#a9bccd;line-height:1.25}
+.menu.tarjetas .arrow{display:none}
+@media (max-width:360px){.menu.tarjetas .btn{min-height:140px;padding:14px 8px 12px}.menu.tarjetas .icon{width:58px;height:58px;font-size:33px}}
