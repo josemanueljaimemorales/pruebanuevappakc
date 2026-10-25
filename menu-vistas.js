@@ -1,8 +1,7 @@
 // Menú: algunas tarjetas muestran un adelanto de lo que tienen adentro (Manu, 26-oct-2026).
 //   MVP: las dos fotos de la semana (mvpAKC/foto1 y foto2).
-//   Gimnasia en redes: la imagen de un video al azar (redesAKC/estado.videos).
 // Se leen de Firebase con su API pública (sin cargar todo Firebase en el menú) y se guardan en el celular: las fotos de
-// MVP solo se vuelven a bajar si cambiaron (primero se pide solo su fecha) y la lista de videos dura 6 horas. Si algo
+// MVP solo se vuelven a bajar si cambiaron (primero se pide solo su fecha). Si algo
 // falla, la tarjeta se queda con su ícono.
 (function () {
   "use strict";
@@ -52,25 +51,6 @@
     ponerVista(document.querySelector(".menu .btn.mvp"), fotos, fotos.length > 1 ? "dos" : "una");
   }
 
-  async function redes() {
-    const clave = "akcMenuRedes", guardada = leer(clave);
-    let imagenes = guardada && Date.now() - guardada.t < 6 * 3600e3 ? guardada.imagenes : null;
-    if (!imagenes) {
-      try {
-        const d = await pedir("redesAKC" + SUFIJO + "/estado", ["videos"]);
-        imagenes = (d.fields?.videos?.arrayValue?.values || [])
-          .map(v => v.mapValue?.fields || {})
-          .filter(f => f.mp4 && !f.foto && f.imagen)
-          .map(f => f.imagen.stringValue)
-          .filter(s => IMG_OK.test(s));
-        guardar(clave, { t: Date.now(), imagenes: imagenes.slice(0, 60) });
-      } catch (e) {
-        imagenes = guardada && guardada.imagenes || [];
-      }
-    }
-    if (imagenes.length) ponerVista(document.querySelector(".menu .btn.redes"), [imagenes[Math.floor(Math.random() * imagenes.length)]], "video");
-  }
-
-  function iniciar() { mvp(); redes(); }
+  function iniciar() { mvp(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
 })();
