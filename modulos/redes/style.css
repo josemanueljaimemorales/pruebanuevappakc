@@ -57,3 +57,12 @@ h1 span{display:block;margin-top:6px;font-size:.5em;letter-spacing:.2em;font-wei
 .acciones button.sec{background:transparent;color:var(--text);border:1px solid var(--line)}
 .acciones button:disabled{opacity:.5;cursor:default}
 @media (max-width:520px){.lista{grid-template-columns:1fr}.barra{flex-direction:column;align-items:stretch}.agregar{width:100%}}
+
+/* Visores de cada perfil (se ven directo al abrir) */
+.lista{grid-template-columns:1fr;gap:14px}
+.visor{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.28)}
+.visor iframe{display:block;width:100%;height:420px;border:0;background:#fff}
+.visor .herr{position:static;justify-content:flex-end;padding:5px 6px;background:#0b1828;border-bottom:1px solid var(--line)}
+.visor .herr button{background:rgba(3,9,20,.78);color:#dfe8f2}
+.visor .enlace{display:flex;align-items:center;gap:12px;padding:16px 14px;color:inherit;text-decoration:none;background:var(--panel)}
+.visor.youtube{background:var(--panel)}.visor.youtube .avatar{background:var(--youtube)}
