@@ -4,13 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gimnasia en redes · AKC</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
 <div class="bg-eagle" aria-hidden="true"></div>
 
-<div class="app-shell">
+<nav class="pestanas" aria-label="Secciones">
+  <button type="button" id="tabVideos" aria-selected="true">Videos</button>
+  <button type="button" id="tabPerfiles" aria-selected="false">Perfiles</button>
+  <button type="button" class="mas" id="btnVideo" aria-label="Agregar video">+ Video</button>
+</nav>
+
+<main class="feed" id="feed" aria-label="Videos"></main>
+
+<div class="app-shell oculto" id="vistaPerfiles">
   <header class="header">
     <div class="eyebrow"><span data-cliente-name></span> · Gimnasia artística varonil</div>
     <h1>Diviértete viendo gimnasia<span>Perfiles de gimnastas en redes</span></h1>
@@ -57,6 +65,22 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <script src="../../cliente/fuentes.js"></script>
-<script src="app.js?v=3"></script>
+<div class="modal oculto" id="modalVideo" role="dialog" aria-modal="true" aria-labelledby="mvTitulo">
+  <form class="caja" id="formVideo" autocomplete="off">
+    <h2 id="mvTitulo">Agregar video</h2>
+    <label>Enlace del video (Instagram, TikTok o YouTube)
+      <input id="vEnlace" required placeholder="https://www.instagram.com/reel/…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore="true" data-lpignore="true" data-bwignore="true" data-form-type="other">
+    </label>
+    <p class="ayuda">En la app de Instagram o TikTok: «Compartir» → «Copiar enlace», y pégalo aquí.</p>
+    <div class="error" id="vError" role="alert"></div>
+    <div class="acciones">
+      <button type="button" class="sec" id="vCancelar">Cancelar</button>
+      <button type="submit" id="vGuardar">Agregar</button>
+    </div>
+  </form>
+</div>
+
+<script src="app.js?v=4"></script>
+<script src="videos.js?v=1"></script>
 </body>
 </html>
