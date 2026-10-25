@@ -34,27 +34,85 @@ function videoValido(v){
 }
 
 const slides=new Map();
+const MP4_OK=/^https:\/\/[^\s"'<>]+$/;
+// Con archivo (.mp4, lo renueva la tarea de las 7:00 y 19:00): video propio, a pantalla completa, que arranca solo al
+// llegar y se pausa al pasar. Sin archivo (recién agregado, YouTube, o si el archivo ya venció): el reproductor de la red.
 function slide(v){
-  const ya=slides.get(v.id);if(ya)return ya;
+  const ya=slides.get(v.id);
+  if(ya){actualizarSlide(ya,v);return ya;}
   const s=document.createElement("section");s.className="slide "+v.red;s.dataset.id=v.id;
   s.setAttribute("aria-label","Video de "+NOMBRE_RED[v.red]);
-  const f=document.createElement("iframe");f.title="Video de "+NOMBRE_RED[v.red];f.dataset.src=VIDEO[v.red](v.codigo);
-  f.setAttribute("allow","autoplay; encrypted-media; fullscreen; picture-in-picture");f.setAttribute("allowfullscreen","");
-  f.setAttribute("referrerpolicy","strict-origin-when-cross-origin");
+  if(v.mp4&&MP4_OK.test(v.mp4))ponerVideo(s,v);else ponerIframe(s,v);
+  const pie=document.createElement("div");pie.className="pie-video";
+  const a=document.createElement("a");a.className="autor";a.target="_blank";a.rel="noopener noreferrer";
+  a.href=v.red==="instagram"?`https://www.instagram.com/p/${encodeURIComponent(v.codigo)}/`:v.red==="tiktok"?`https://www.tiktok.com/@${encodeURIComponent(v.perfil||"_")}/video/${encodeURIComponent(v.codigo)}`:`https://www.youtube.com/watch?v=${encodeURIComponent(v.codigo)}`;
+  a.textContent=(v.perfil?"@"+v.perfil+" · ":"")+NOMBRE_RED[v.red];
+  pie.appendChild(a);s.appendChild(pie);
   const q=document.createElement("button");q.type="button";q.className="quitar";q.textContent="✕";q.title="Quitar video";
   q.setAttribute("aria-label","Quitar este video");q.onclick=()=>quitarVideo(v);
-  s.appendChild(f);s.appendChild(q);
+  s.appendChild(q);
   slides.set(v.id,s);observador.observe(s);
   return s;
 }
-// Carga el reproductor del video visible y sus vecinos; vacía los demás (así deja de sonar el que ya pasó).
+function ponerIframe(s,v){
+  s.querySelector("video")?.remove();s.querySelector(".sonido")?.remove();s.classList.remove("nativo","pausado","esperando");
+  if(s.querySelector("iframe"))return;
+  const f=document.createElement("iframe");f.title="Video de "+NOMBRE_RED[v.red];f.dataset.src=VIDEO[v.red](v.codigo);
+  f.setAttribute("allow","autoplay; encrypted-media; fullscreen; picture-in-picture");f.setAttribute("allowfullscreen","");
+  f.setAttribute("referrerpolicy","strict-origin-when-cross-origin");
+  s.insertBefore(f,s.firstChild);
+}
+function ponerVideo(s,v){
+  s.classList.add("nativo");
+  const x=document.createElement("video");x.dataset.src=v.mp4;x.muted=!conSonido;x.loop=true;x.playsInline=true;
+  x.setAttribute("playsinline","");x.setAttribute("webkit-playsinline","");x.preload="none";
+  if(v.imagen&&MP4_OK.test(v.imagen))x.poster=v.imagen;
+  x.addEventListener("loadedmetadata",()=>{x.classList.toggle("horizontal",x.videoWidth>x.videoHeight);});
+  x.addEventListener("error",()=>{if(x.getAttribute("src"))ponerIframe(s,v),cargarCerca();});  // archivo vencido
+  x.addEventListener("click",()=>{if(x.paused)x.play().catch(()=>{});else x.pause();});
+  x.addEventListener("waiting",()=>s.classList.add("esperando"));
+  x.addEventListener("playing",()=>s.classList.remove("esperando","pausado"));
+  x.addEventListener("pause",()=>s.classList.add("pausado"));
+  s.insertBefore(x,s.firstChild);
+  const b=document.createElement("button");b.type="button";b.className="sonido";b.setAttribute("aria-label","Sonido");
+  b.textContent=conSonido?"🔊":"🔇";b.onclick=()=>cambiarSonido();
+  s.appendChild(b);
+}
+// La nube trae el archivo renovado: se cambia si ese video no se está reproduciendo.
+function actualizarSlide(s,v){
+  const x=s.querySelector("video");
+  if(v.mp4&&MP4_OK.test(v.mp4)){
+    if(!x){s.querySelector("iframe")?.remove();ponerVideo(s,v);}
+    else if(x.dataset.src!==v.mp4&&(x.paused||x.error)){x.dataset.src=v.mp4;if(x.getAttribute("src")){x.src=v.mp4;}}
+  }
+}
+// Sonido: los navegadores solo dejan arrancar solos los videos sin sonido; al tocar 🔇 se activa para todos.
+let conSonido=false;
+function cambiarSonido(){
+  conSonido=!conSonido;
+  $("feed").querySelectorAll("video").forEach(x=>{x.muted=!conSonido;});
+  $("feed").querySelectorAll(".sonido").forEach(b=>{b.textContent=conSonido?"🔊":"🔇";});
+  const x=videoActual();if(x&&x.paused)x.play().catch(()=>{});
+}
+function videoActual(){const l=[...$("feed").querySelectorAll(".slide")];return l[actual]&&l[actual].querySelector("video");}
+// El video visible se reproduce; el siguiente y el anterior se precargan; los demás se vacían (no suenan ni gastan datos).
 let actual=0;
 function cargarCerca(){
   const lista=[...$("feed").querySelectorAll(".slide")];
+  const visible=!$("feed").classList.contains("oculto");
   lista.forEach((s,i)=>{
-    const f=s.querySelector("iframe"), cerca=Math.abs(i-actual)<=1;
-    if(cerca&&!f.getAttribute("src"))f.src=f.dataset.src;
-    if(!cerca&&f.getAttribute("src"))f.removeAttribute("src");
+    const d=Math.abs(i-actual), f=s.querySelector("iframe"), x=s.querySelector("video");
+    if(f){
+      if(visible&&d<=1&&!f.getAttribute("src"))f.src=f.dataset.src;
+      if((!visible||d>1)&&f.getAttribute("src"))f.removeAttribute("src");
+    }
+    if(x){
+      if(visible&&d<=1){
+        if(!x.getAttribute("src")){x.src=x.dataset.src;x.preload=d===0?"auto":"metadata";}
+        if(d===0){x.muted=!conSonido;x.play().catch(()=>{if(!x.muted){x.muted=true;conSonido=false;$("feed").querySelectorAll(".sonido").forEach(b=>b.textContent="🔇");x.play().catch(()=>{});}});}
+        else x.pause();
+      }else if(x.getAttribute("src")){x.pause();x.removeAttribute("src");x.load();}
+    }
   });
 }
 const observador=new IntersectionObserver(es=>{
@@ -90,8 +148,7 @@ function verPestana(cual){
   $("tabVideos").setAttribute("aria-selected",String(vid));$("tabPerfiles").setAttribute("aria-selected",String(!vid));
   $("feed").classList.toggle("oculto",!vid);$("vistaPerfiles").classList.toggle("oculto",vid);
   $("btnVideo").classList.toggle("oculto",!vid);
-  if(vid)cargarCerca();
-  else $("feed").querySelectorAll("iframe[src]").forEach(f=>f.removeAttribute("src"));  // que no siga sonando
+  cargarCerca();  // al salir de Videos se vacían todos, para que no siga sonando
 }
 $("tabVideos").onclick=()=>verPestana("videos");
 $("tabPerfiles").onclick=()=>verPestana("perfiles");
