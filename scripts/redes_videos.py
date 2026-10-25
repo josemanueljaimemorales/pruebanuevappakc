@@ -105,6 +105,65 @@ def videos_youtube(usuario):
 BUSCAR = {"instagram": videos_instagram, "tiktok": videos_tiktok, "youtube": videos_youtube}
 
 
+# ---- Archivo de cada video, para que la app lo reproduzca sola, en pantalla completa y sin tocar play ----
+# Instagram y TikTok dan en su página para insertar la dirección del archivo .mp4 y de su imagen. Esas direcciones
+# vencen en alrededor de un día, por eso se renuevan en cada vuelta. Si no se consigue, la app usa el reproductor
+# oficial de la red.
+def _desescapar(t):
+    """Quita las capas de escape de JSON (barras, \\uXXXX y comillas) que traen estas páginas."""
+    for _ in range(4):
+        n = t.replace('\\/', '/').replace('\\"', '"')
+        n = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), n)
+        n = n.replace('\\\\', '\\')
+        if n == t:
+            break
+        t = n
+    return t
+
+
+def medio_instagram(codigo):
+    h = _desescapar(pedir(f"https://www.instagram.com/p/{urllib.parse.quote(codigo)}/embed/captioned/"))
+    m = re.search(r'"video_url":"(https://[^"]+)"', h)
+    if not m:
+        return None
+    img = re.search(r'"display_url":"(https://[^"]+)"', h)
+    return {"mp4": m.group(1), "imagen": img.group(1) if img else ""}
+
+
+def medio_tiktok(codigo):
+    h = pedir(f"https://www.tiktok.com/embed/v2/{urllib.parse.quote(codigo)}")
+    h = _desescapar(h)
+    m = re.search(r'"playUrl":\["(https://[^"]+)"', h)
+    if not m:
+        return None
+    img = re.search(r'"(?:covers|coversOrigin)":\["(https://[^"]+)"', h)
+    return {"mp4": m.group(1), "imagen": img.group(1) if img else ""}
+
+
+MEDIO = {"instagram": medio_instagram, "tiktok": medio_tiktok}
+
+
+def renovar(lista):
+    """Devuelve {red:codigo: {mp4, imagen, renovado}} de los videos de Instagram y TikTok de la lista."""
+    medios, fallas = {}, 0
+    for v in lista:
+        red, codigo = v.get("red"), str(v.get("codigo") or "")
+        if red not in MEDIO or not codigo:
+            continue
+        try:
+            m = MEDIO[red](codigo)
+        except Exception:
+            m = None
+        if m:
+            m["renovado"] = int(time.time())
+            medios[f"{red}:{codigo}"] = m
+        else:
+            fallas += 1
+        time.sleep(0.8)
+    print(f"Archivos de video renovados: {len(medios)} (sin archivo: {fallas})")
+    return medios
+
+
 def main():
     probar = "--probar" in sys.argv
     doc = json.loads(pedir(DOC))
@@ -145,14 +204,17 @@ def main():
     if probar:
         print(json.dumps(nuevos, ensure_ascii=False, indent=1))
         return
-    if not nuevos and len(vistos) == len(campos.get("videosVistos") or []):
-        return
+    medios = renovar(nuevos + videos)
 
     # Volver a leer justo antes de guardar, por si Manu agregó o quitó algo mientras tanto.
     doc = json.loads(pedir(DOC))
     actuales = [v for v in de_fs(doc.get("fields", {}).get("videos", {"arrayValue": {}})) or [] if isinstance(v, dict)]
     claves = {f"{v.get('red')}:{v.get('codigo')}" for v in actuales}
     lista = [v for v in nuevos if f"{v['red']}:{v['codigo']}" not in claves] + actuales
+    for v in lista:
+        m = medios.get(f"{v.get('red')}:{v.get('codigo')}")
+        if m:
+            v.update(m)
     while len(lista) > MAX_VIDEOS and any(v.get("auto") for v in lista):
         i = max(i for i, v in enumerate(lista) if v.get("auto"))
         lista.pop(i)
