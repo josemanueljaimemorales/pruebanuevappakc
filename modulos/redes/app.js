@@ -1,5 +1,4 @@
-// Gimnasia en redes: lista de perfiles de gimnasia varonil (Instagram, TikTok, YouTube). Cada tarjeta abre el
-// perfil en su red. Los perfiles se guardan en Firebase, redesAKC/estado = {perfiles: [{id, red, usuario, titulo, nota}]}.
+// Gimnasia en redes: perfiles de gimnasia varonil (Instagram, TikTok, YouTube) que se ven dentro de la app. Los perfiles se guardan en Firebase, redesAKC/estado = {perfiles: [{id, red, usuario, titulo, nota}]}.
 const FIREBASE_CONFIG={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 const REDES={
   instagram:{nombre:"Instagram",url:u=>`https://www.instagram.com/${encodeURIComponent(u)}/`},
@@ -60,29 +59,56 @@ function pintarFiltros(){
     b.setAttribute("aria-selected",String(filtro===k));b.onclick=()=>{filtro=k;pintar();};box.appendChild(b);
   });
 }
+// Al abrir se ve directo cada perfil, dentro de la app, con el visor oficial de su red: Instagram (perfil y sus
+// últimas publicaciones) y TikTok (perfil y sus videos). YouTube no tiene visor de canal sin su id interno, así que
+// queda como enlace. Los visores ya hechos se reutilizan para que no se recarguen con cada cambio de la nube.
+const VISOR={
+  instagram:u=>`https://www.instagram.com/${encodeURIComponent(u)}/embed/`,
+  tiktok:u=>`https://www.tiktok.com/embed/@${encodeURIComponent(u)}`
+};
+const bloques=new Map();
+function altoVisor(red,ancho){return red==="instagram"?Math.round(150+ancho*2/3):420;}
+function ajustarAltos(){
+  document.querySelectorAll(".visor iframe").forEach(f=>{f.style.height=altoVisor(f.dataset.red,f.clientWidth||f.parentNode.clientWidth)+"px";});
+}
+function bloque(p){
+  const clave=p.red+"|"+p.usuario.toLowerCase();
+  const ya=bloques.get(p.id);
+  if(ya&&ya.clave===clave)return ya.nodo;
+  const r=REDES[p.red], nodo=el("section","visor "+p.red);
+  nodo.setAttribute("aria-label",`${p.titulo} en ${r.nombre}`);
+  const h=el("div","herr");
+  const be=el("button",null,"✎");be.type="button";be.title="Editar";be.setAttribute("aria-label","Editar "+p.titulo);
+  be.onclick=()=>abrir(perfiles.find(x=>x.id===p.id)||p);
+  const bq=el("button",null,"✕");bq.type="button";bq.title="Quitar";bq.setAttribute("aria-label","Quitar "+p.titulo);
+  bq.onclick=()=>quitar(perfiles.find(x=>x.id===p.id)||p);
+  h.appendChild(be);h.appendChild(bq);nodo.appendChild(h);
+  if(VISOR[p.red]){
+    const f=document.createElement("iframe");f.src=VISOR[p.red](p.usuario);f.loading="lazy";f.dataset.red=p.red;
+    f.title=`${p.titulo} en ${r.nombre}`;f.setAttribute("allowfullscreen","");f.setAttribute("allow","autoplay; encrypted-media; fullscreen; picture-in-picture");
+    f.setAttribute("referrerpolicy","strict-origin-when-cross-origin");
+    nodo.appendChild(f);
+  }else{
+    const a=el("a","enlace");a.href=r.url(p.usuario);a.target="_blank";a.rel="noopener noreferrer";
+    a.appendChild(el("div","avatar",iniciales(p.titulo)));
+    const d=el("div","datos");d.appendChild(el("b",null,p.titulo));d.appendChild(el("small",null,"Ver su canal en "+r.nombre));
+    a.appendChild(d);nodo.appendChild(a);
+  }
+  bloques.set(p.id,{clave,nodo});
+  return nodo;
+}
 function pintar(){
   pintarFiltros();
-  const box=$("lista");box.innerHTML="";
-  const lista=perfiles.filter(p=>filtro==="todos"||p.red===filtro)
-    .sort((a,b)=>a.titulo.localeCompare(b.titulo,"es",{sensitivity:"base"}));
-  if(!lista.length){box.appendChild(el("div","vacio",perfiles.length?"No hay perfiles de esta red.":"Todavía no hay perfiles. Toca «+ Agregar perfil»."));return;}
-  lista.forEach(p=>{
-    const r=REDES[p.red];if(!r)return;
-    const a=el("a","perfil "+p.red);a.href=r.url(p.usuario);a.target="_blank";a.rel="noopener noreferrer";
-    a.setAttribute("aria-label",`${p.titulo}, @${p.usuario} en ${r.nombre}`);
-    a.appendChild(el("div","avatar",iniciales(p.titulo)));
-    const d=el("div","datos");d.appendChild(el("b",null,p.titulo));d.appendChild(el("small",null,"@"+p.usuario));
-    if(p.nota)d.appendChild(el("small","nota",p.nota));
-    d.appendChild(el("span","chip",r.nombre));a.appendChild(d);
-    const h=el("div","herr");
-    const be=el("button",null,"✎");be.type="button";be.title="Editar";be.setAttribute("aria-label","Editar "+p.titulo);
-    be.onclick=e=>{e.preventDefault();e.stopPropagation();abrir(p);};
-    const bq=el("button",null,"✕");bq.type="button";bq.title="Quitar";bq.setAttribute("aria-label","Quitar "+p.titulo);
-    bq.onclick=e=>{e.preventDefault();e.stopPropagation();quitar(p);};
-    h.appendChild(be);h.appendChild(bq);a.appendChild(h);
-    box.appendChild(a);
-  });
+  const box=$("lista");
+  const lista=perfiles.filter(p=>filtro==="todos"||p.red===filtro).slice().reverse();  // lo más nuevo arriba
+  [...box.children].forEach(n=>{if(!lista.some(p=>bloques.get(p.id)?.nodo===n))n.remove();});
+  for(const id of [...bloques.keys()])if(!perfiles.some(p=>p.id===id))bloques.delete(id);
+  if(!lista.length){box.innerHTML="";box.appendChild(el("div","vacio",perfiles.length?"No hay perfiles de esta red.":"Todavía no hay perfiles. Toca «+ Agregar perfil»."));return;}
+  box.querySelector(".vacio")?.remove();
+  lista.forEach((p,i)=>{const n=bloque(p);if(box.children[i]!==n)box.insertBefore(n,box.children[i]||null);});
+  ajustarAltos();
 }
+window.addEventListener("resize",ajustarAltos);
 
 async function guardar(nuevos){
   const antes=perfiles;perfiles=nuevos;pintar();
