@@ -225,6 +225,11 @@ def main():
     if probar:
         print(json.dumps(nuevos, ensure_ascii=False, indent=1))
         return
+    # Intercalar: uno de cada perfil por turno, para que no salgan seguidos los del mismo.
+    grupos = {}
+    for v in nuevos:
+        grupos.setdefault((v["red"], v["perfil"]), []).append(v)
+    nuevos = [g.pop(0) for _ in range(max((len(g) for g in grupos.values()), default=0)) for g in grupos.values() if g]
     medios = renovar(nuevos + videos)
     nuevos = [v for v in nuevos if not medios.get(f"{v['red']}:{v['codigo']}", {}).get("foto")]
 
