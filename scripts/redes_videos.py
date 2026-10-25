@@ -133,14 +133,28 @@ def medio_instagram(codigo):
 def medio_tiktok(codigo):
     h = pedir(f"https://www.tiktok.com/embed/v2/{urllib.parse.quote(codigo)}")
     h = _desescapar(h)
-    m = re.search(r'"playUrl":\["(https://[^"]+)"', h)
+    # Las publicaciones de fotos (carrusel con música) traen como "video" solo el audio: no son videos.
+    if "photomode" in h or not re.search(r'"width":[1-9]\d*', h):
+        return {"foto": True}
+    # El archivo del video está en "video":{"urls":[...]} (ojo: "playUrl" es la canción, no el video).
+    m = re.search(r'"video":\{"urls":\["(https://[^"]+)"', h)
     if not m:
         return None
-    img = re.search(r'"(?:covers|coversOrigin)":\["(https://[^"]+)"', h)
+    img = re.search(r'"(https://[^"]+\.(?:jpeg|jpg|webp|image)[^"]*)"\],"video":\{"urls"', h)
     return {"mp4": m.group(1), "imagen": img.group(1) if img else ""}
 
 
 MEDIO = {"instagram": medio_instagram, "tiktok": medio_tiktok}
+
+
+def abre(url):
+    """¿El archivo se puede pedir desde cualquier lado, sin galletas? (algunos de TikTok responden 403)."""
+    try:
+        r = urllib.request.Request(url, headers={"User-Agent": NAVEGADOR, "Range": "bytes=0-1"})
+        with urllib.request.urlopen(r, timeout=20) as resp:
+            return resp.status in (200, 206) and (resp.headers.get("Content-Type") or "").startswith("video")
+    except Exception:
+        return False
 
 
 def renovar(lista):
@@ -154,13 +168,20 @@ def renovar(lista):
             m = MEDIO[red](codigo)
         except Exception:
             m = None
-        if m:
+        if m and m.get("foto"):
+            medios[f"{red}:{codigo}"] = m
+        elif m and not abre(m["mp4"]):
+            medios[f"{red}:{codigo}"] = {"noabre": True}
+            fallas += 1
+        elif m:
             m["renovado"] = int(time.time())
             medios[f"{red}:{codigo}"] = m
         else:
             fallas += 1
         time.sleep(0.8)
-    print(f"Archivos de video renovados: {len(medios)} (sin archivo: {fallas})")
+    listos = sum(1 for m in medios.values() if "mp4" in m)
+    fotos = sum(1 for m in medios.values() if m.get("foto"))
+    print(f"Archivos de video renovados: {listos} · fotos (no son video): {fotos} · sin archivo o no abren: {fallas}")
     return medios
 
 
@@ -205,6 +226,7 @@ def main():
         print(json.dumps(nuevos, ensure_ascii=False, indent=1))
         return
     medios = renovar(nuevos + videos)
+    nuevos = [v for v in nuevos if not medios.get(f"{v['red']}:{v['codigo']}", {}).get("foto")]
 
     # Volver a leer justo antes de guardar, por si Manu agregó o quitó algo mientras tanto.
     doc = json.loads(pedir(DOC))
@@ -213,7 +235,13 @@ def main():
     lista = [v for v in nuevos if f"{v['red']}:{v['codigo']}" not in claves] + actuales
     for v in lista:
         m = medios.get(f"{v.get('red')}:{v.get('codigo')}")
-        if m:
+        if m and (m.get("foto") or m.get("noabre")):
+            for k in ("mp4", "imagen", "renovado"):
+                v.pop(k, None)
+            if m.get("foto"):
+                v["foto"] = True      # publicación de fotos: la app no la muestra
+            # si no abre, queda sin archivo (la app no lo muestra) y se vuelve a probar en la siguiente vuelta
+        elif m:
             v.update(m)
     while len(lista) > MAX_VIDEOS and any(v.get("auto") for v in lista):
         i = max(i for i, v in enumerate(lista) if v.get("auto"))
