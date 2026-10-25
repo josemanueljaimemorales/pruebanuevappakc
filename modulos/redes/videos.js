@@ -30,7 +30,10 @@ async function leerVideo(txt){
   return null;
 }
 function videoValido(v){
-  return v&&VIDEO[v.red]&&typeof v.codigo==="string"&&/^[A-Za-z0-9_-]{5,25}$/.test(v.codigo)&&v.id;
+  return v&&VIDEO[v.red]&&typeof v.codigo==="string"&&/^[A-Za-z0-9_-]{5,25}$/.test(v.codigo)&&v.id
+    // Los automáticos de Instagram o TikTok sin archivo son los que la red no deja ver fuera de su app (p. ej. reels con
+    // música con derechos): su reproductor solo diría "enlace dañado", así que no se muestran.
+    &&!(v.auto&&!v.mp4&&v.red!=="youtube");
 }
 
 const slides=new Map();
@@ -68,7 +71,7 @@ function ponerVideo(s,v){
   x.setAttribute("playsinline","");x.setAttribute("webkit-playsinline","");x.preload="none";
   if(v.imagen&&MP4_OK.test(v.imagen))x.poster=v.imagen;
   x.addEventListener("loadedmetadata",()=>{x.classList.toggle("horizontal",x.videoWidth>x.videoHeight);});
-  x.addEventListener("error",()=>{if(x.getAttribute("src"))ponerIframe(s,v),cargarCerca();});  // archivo vencido
+  x.addEventListener("error",()=>{if(x.getAttribute("src"))ponerAviso(s,v);});  // archivo vencido o que no abre
   x.addEventListener("click",()=>{if(x.paused)x.play().catch(()=>{});else x.pause();});
   x.addEventListener("waiting",()=>s.classList.add("esperando"));
   x.addEventListener("playing",()=>s.classList.remove("esperando","pausado"));
@@ -78,11 +81,24 @@ function ponerVideo(s,v){
   b.textContent=conSonido?"🔊":"🔇";b.onclick=()=>cambiarSonido();
   s.appendChild(b);
 }
+// Si el archivo no abre (venció y aún no se renueva): aviso con enlace al original, en lugar del reproductor de la red,
+// que con estos videos suele decir "enlace dañado".
+function ponerAviso(s,v){
+  const x=s.querySelector("video");if(x){x.removeAttribute("src");x.load();x.remove();}
+  s.querySelector(".sonido")?.remove();s.classList.remove("pausado","esperando");
+  if(s.querySelector(".aviso-video"))return;
+  const d=document.createElement("div");d.className="aviso-video";
+  d.appendChild(document.createTextNode("Este video no se pudo ver aquí."));
+  const a=document.createElement("a");a.target="_blank";a.rel="noopener noreferrer";a.href=s.querySelector(".autor")?.href||"#";
+  a.textContent="Verlo en "+NOMBRE_RED[v.red];d.appendChild(a);
+  if(v.imagen&&MP4_OK.test(v.imagen))s.style.backgroundImage=`url("${v.imagen.replace(/"/g,"%22")}")`;
+  s.insertBefore(d,s.firstChild);
+}
 // La nube trae el archivo renovado: se cambia si ese video no se está reproduciendo.
 function actualizarSlide(s,v){
   const x=s.querySelector("video");
   if(v.mp4&&MP4_OK.test(v.mp4)){
-    if(!x){s.querySelector("iframe")?.remove();ponerVideo(s,v);}
+    if(!x){s.querySelector("iframe")?.remove();s.querySelector(".aviso-video")?.remove();s.style.backgroundImage="";ponerVideo(s,v);}
     else if(x.dataset.src!==v.mp4&&(x.paused||x.error)){x.dataset.src=v.mp4;if(x.getAttribute("src")){x.src=v.mp4;}}
   }
 }
