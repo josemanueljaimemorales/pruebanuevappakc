@@ -97,10 +97,14 @@ function nombresAparato(ap,qn){
   if(ap==='ARZON')return qn.replace(/\bcirc?(u(l(o(s)?)?)?)?\b/g,m=>m.length>=3?'molino':m);
   if(ap==='FIJA')return qn.replace(/\bgig(a(n(t(e(s)?)?)?)?)?\b/g,'molino atras').replace(/\b(molino atras)( atras)+\b/g,'$1');
   return qn;}
+// Orden en que se proponen los flops y combinados de arzón (de menor a mayor valor).
+const FLOP_ORDEN=['FL3','FL4','FB3','FB4','FL3F','FL4F','FB3F','FB4F','CR1C','CR1D','CR1E','CR2B','CR2C','CR2D','CR2E','CBB','CBC','CBD','CBE'];
 function search(q,ap,nivel,sinCorregir){
   const tab=table(ap,nivel), qn0=nk(q), qn=nombresAparato(ap,qn0), qt=canon(qn); if(!qn0)return[];
   const out=new Map();
-  const add=(k,score,name)=>{const p=out.get(k);if(!p||p.score<score)out.set(k,{k,score,name});};
+  // Casillas vacías del Código (x) nunca se proponen; los flops y combinados de arzón solo en N9, N10 y FIG.
+  const add=(k,score,name)=>{const e=CAT[k];if(!e||e.x||(e.flop&&(nivel==='N7'||nivel==='N8')))return;
+    const p=out.get(k);if(!p||p.score<score)out.set(k,{k,score,name});};
   // alias (aprendidos y del Excel)
   const pre=`${tab}|${ap}|`;
   for(const src of [S.alias,ALIAS,apodosRutinas(ap,tab)]) for(const [ak,k] of Object.entries(src)){
@@ -127,6 +131,9 @@ function search(q,ap,nivel,sinCorregir){
       const extra=it.toks.filter(a=>!qt.some(t=>a.startsWith(t)));
       let sc=hit/qt.length*(hit===qt.length?1.5:1)-0.03*extra.length;
       if(extra.some(a=>a==='dob'||a==='tri'))sc-=.5;
+      // "flop" sin rusas propone primero las series flop; con "rusa", los combinados.
+      const fl=CAT[it.k].flop;if(fl&&/flop|combinad/.test(qn))sc=((fl==='comb')===/ (rusa|rusas|russian|r\d+) /.test(' '+qn+' ')?2.9:2.5)-.01*FLOP_ORDEN.indexOf(it.k.split('|')[2])
+        +(/ flair /.test(' '+qn+' ')&&/ en flair /.test(' '+nk(CAT[it.k].d)+' ')?.3:0);
       add(it.k,sc);}
   }
   // N7 y N8: elementos juveniles / virtuales de USAG (valen A 0.1). Escribir "juvenil" o "virtual" los muestra todos.
@@ -136,7 +143,7 @@ function search(q,ap,nivel,sinCorregir){
     const hit=qt.filter(t=>it.toks.some(a=>a.startsWith(t))).length;
     if(hit===qt.length&&hit)add(it.k,2.5); else if(hit&&hit>=qt.length-1)add(it.k,1.2);
   }
-  const res=[...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:8);
+  const res=[...out.values()].sort((a,b)=>b.score-a.score||CAT[a.k].d.length-CAT[b.k].d.length).slice(0,/^(juv|virt|ja$)/.test(qn)?12:/flop|combinad/.test(qn)?16:8);
   if(!sinCorregir&&(!res.length||res[0].score<1)){const q2=corregir(qn,ap,tab);
     if(q2){const r2=search(q2,ap,nivel,true);if(r2.length&&(!res.length||r2[0].score>res[0].score))return r2;}}
   return res;
@@ -340,7 +347,7 @@ const ARZ_REP={
   rusaEntre:['2|110','2|111','2|112','2|113','4|10'],          // b) rusa en un arzón o entre arzones
   rusaPunta:['2|85','2|91','2|92','2|93','2|97','2|103','2|104','2|105','4|1','4|7','4|8','4|9'], // b) rusa en la punta (con salida)
   famRusa:['3|64','3|65','3|70'], famTongFei:['3|57','3|58','3|59']};                             // j) una sola variante por familia
-function arzonRepeticiones(items,res,kill){
+function arzonRepeticiones(items,res,kill,nivel){
   const id=it=>it.r.k&&/^ARZON\|/.test(it.r.k)?it.r.k.slice(6):null;
   const en=it=>txt(it.r);
   const vivos=items.filter(it=>it.val>0&&id(it)).sort((a,b)=>((b.grp===4)-(a.grp===4))||(b.val-a.val));
@@ -353,6 +360,12 @@ function arzonRepeticiones(items,res,kill){
   tope(ARZ_REP.famRusa,1,'Misma familia que otro recorrido en rusas (Roth, Wu Guonian, 3/3 con 630°): solo vale uno');
   tope(ARZ_REP.famTongFei,1,'Misma familia que otro recorrido tipo Tong Fei (Tong Fei, Vammen): solo vale uno');
   {let n=0;vivos.forEach(it=>{if(it.val>0&&(id(it)==='3|22'||id(it)==='3|23')){if(/ nin reyes /.test(' '+nk(it.r.n)+' ')){n++;if(n>1)kill(it,'Nin Reyes y Nin Reyes 2: solo vale uno (con Titov o Keikha 4 sí valen los dos)');}}});}
+  // d) Flops y elementos combinados (Código FIG 2025-2028, arzón 2.d; Boletín GAM N°1): solo N9, N10 y FIG,
+  // una secuencia flop y un combinado (flop + rusas) con valor por ejercicio; cuenta el de mayor valor.
+  {const tipo=it=>CAT[it.r.k]?.flop;
+    if(nivel==='N7')vivos.forEach(it=>{if(tipo(it))kill(it,'Flops y elementos combinados solo cuentan en N9, N10 y FIG');});
+    [['flop','Solo una secuencia flop con valor por ejercicio'],['comb','Solo un elemento combinado (flop con rusas) con valor por ejercicio']]
+      .forEach(([t,why])=>vivos.filter(it=>it.val>0&&tipo(it)===t).slice(1).forEach(it=>kill(it,why)));}
   // b) Rusas: máximo 2 en la rutina (con la salida) y no más de una en la punta ni más de una entre arzones.
   {let punta=0,entre=0,total=0;vivos.forEach(it=>{if(!(it.val>0))return;const k=id(it);
     const p=ARZ_REP.rusaPunta.includes(k)||(it.grp===4&&/ (rusa|russian) /.test(en(it))&&!ARZ_REP.rusaEntre.includes(k)), e=ARZ_REP.rusaEntre.includes(k);
@@ -414,7 +427,7 @@ function applySpecial(ap,items,res,nivel){
     for(const [k,arr] of Object.entries(best)){if(arr.length<2)continue;arr.sort((a,b)=>b.val-a.val);
       arr.slice(1).forEach(it=>kill(it,`Misma posición final (${POS_TXT[it.pos]}) que "${arr[0].r.n}" en el grupo ${ROM[it.r.g]}`));}
   }
-  if(ap==='ARZON'&&nivel!=='N8')arzonRepeticiones(items,res,kill);
+  if(ap==='ARZON'&&nivel!=='N8')arzonRepeticiones(items,res,kill,nivel);
   if(ap==='PARALELAS')familiasRep(items,kill,PAR_REP,'PARALELAS');
   if(ap==='FIJA'){familiasRep(items,kill,FIJA_REP,'FIJA');fijaQuintaSoltada(items,kill);}
   if(ap==='PISO'){
@@ -427,6 +440,10 @@ function applySpecial(ap,items,res,nivel){
       if(arr.length<2)return;arr.sort((a,b)=>b.val-a.val);arr.slice(1).forEach(it=>kill(it,`Solo vale 1 ${t} en suelo (ya cuenta "${arr[0].r.n}")`));});
   }
 }
+// Elementos marcados con punto rojo "Prohibido para junior" en las tablas del Código FIG 2025-2028 (anillos: dobles
+// giros de apoyo atrás a la suspensión, art. 12.2.2 punto 5f; paralelas: mortales con recepción a braquial, art. 14.2.2 punto 5d).
+// N9 y N10 compiten con reglas de juvenil (Jr FIG): no se reconocen (tabla de penalizaciones: otro elemento prohibido).
+const JR_PROHIBIDOS=new Set(['ANILLOS|1|21','ANILLOS|1|22','PARALELAS|1|20','PARALELAS|1|24','PARALELAS|1|30','PARALELAS|1|34','PARALELAS|1|51','PARALELAS|1|54','PARALELAS|1|59','PARALELAS|2|45','PARALELAS|2|47','PARALELAS|2|48','PARALELAS|2|52','PARALELAS|2|54','PARALELAS|2|104','PARALELAS|2|106','PARALELAS|2|107','PARALELAS|2|113','PARALELAS|2|114','PARALELAS|2|117','PARALELAS|2|119','PARALELAS|3|10','PARALELAS|3|50','PARALELAS|3|52','PARALELAS|3|53','PARALELAS|3|59','PARALELAS|3|60','PARALELAS|3|66','PARALELAS|3|70','PARALELAS|3|72','PARALELAS|3|78','PARALELAS|3|83','PARALELAS|3|122','PARALELAS|3|123','PARALELAS|3|125','PARALELAS|3|126']);
 function compute(ap,rows,nivel,plantada,opt){
   const res={dv:0,eg:0,cv:0,bon:0,nd:0,np:0,egDet:[],counted:new Set(),rep:new Set(),why:{},up:{},notes:[],dIdx:-1,vaults:[]};
   if(ap==='SALTO'){
@@ -449,11 +466,12 @@ function compute(ap,rows,nivel,plantada,opt){
     return res;
   }
   const items=rows.map((r,i)=>({i,r,val:valOf(r,nivel,ap),grp:grpOf(r,ap,nivel)}));
+  if(nivel==='N9'||nivel==='N10')items.forEach(it=>{if(it.r.k&&JR_PROHIBIDOS.has(it.r.k)&&it.val>0){it.val=0;res.rep.add(it.i);res.why[it.i]='Prohibido para juvenil (N9 y N10): elemento no reconocido';}});
   const seen=new Set();
   for(const it of items){const virt=(nivel==='N7'||nivel==='N8')&&ap==='PISO';
     let key=it.r.k||(it.r.t==='M'&&it.r.g&&/^\d+$/.test(String(it.r.id))?`${it.r.g}|${it.r.id}`:null);
     if(key&&virt)key+='|'+nk(it.r.n);
-    if(key&&it.r.t!=='JA'){if(seen.has(key)){it.val=0;res.rep.add(it.i);}seen.add(key);}}
+    if(key&&it.r.t!=='JA'&&!CAT[key]?.sv){if(seen.has(key)){it.val=0;res.rep.add(it.i);}seen.add(key);}}
   applySpecial(ap,items,res,nivel);
   Object.entries(res.why).forEach(([i,w])=>res.notes.push(`${rows[i].n}: ${w}.`));
   res.enotes=res.enotes||[];
@@ -462,9 +480,16 @@ function compute(ap,rows,nivel,plantada,opt){
     const ta=' '+nk(a.n)+' ', ca=' '+nk((a.k&&CAT[a.k]?.en)||'')+' ', tb=txt(b);
     if(/ (una barra|1 barra|una banda|1 banda|one rail) /.test(ta)&&!/ tambien /.test(ta)&&/ healy /.test(tb)&&!/ (tippelt|arican|abiertas|abierto) /.test(ta+ca)&&!/ connected to healy /.test(ca))
       res.notes.push(`"${a.n}" a una barra seguido de Healy: el Código da una letra más a los dos. Elige la versión "conectado a Healy" del elemento y el Healy después de una barra.`);});
+  // Arzón: flops y combinados deben ir separados por al menos un molino con una mano fuera del arco (Código FIG
+  // arzón 2.d.1 iv). Cualquier elemento entre ellos los separa (un molino, un desplazamiento o el "Molino sin valor",
+  // II.MS, que no suma); solo se avisa cuando dos quedan seguidos.
+  if(ap==='ARZON'&&nivel!=='N7'&&nivel!=='N8'){let prev=null;
+    rows.forEach(r=>{const t=r.k&&CAT[r.k]?.flop;
+      if(t==='flop'||t==='comb'){if(prev)res.enotes.push(`Entre "${prev.n}" y "${r.n}" falta un molino con una mano fuera del arco: los flops y combinados deben ir separados. En "${prev.n}" elige "Después continúa con: Molino sin valor" o agrega un molino entre ellos.`);prev=r.sm?null:r;}
+      else prev=null;});}
   // Anillos: para juniors FIG no se permiten mortales atrás en suspensión (art. 12.2.2 punto 5f).
   if(ap==='ANILLOS'&&(nivel==='N9'||nivel==='N10'))rows.forEach((r,i)=>{const t=txt(r);
-    if(r.g!==4&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": si compite como junior FIG, los mortales atrás en suspensión no están permitidos.`);});
+    if(r.g!==4&&!JR_PROHIBIDOS.has(r.k)&&/ salto bwd /.test(t)&&/ (hang|susp) /.test(t))res.enotes.push(`"${r.n}": en juvenil (N9 y N10) no están permitidos los mortales atrás en suspensión (art. 12.2.2 punto 5f). Revisa si es uno de ellos.`);});
   if(ap==='FIJA'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct||FV_OPC[a.pv])return;
     const tb=txt(b);
     const kipHS=kipAManos(a);
@@ -570,8 +595,10 @@ function compute(ap,rows,nivel,plantada,opt){
   if(ap==='PISO'){
     const multi=r=>r.t==='C'&&(r.g===2||r.g===3)&&/ (doble|triple|dob|tri) /.test(descOf(r));
     if(!usagN){
-      if(nivel==='FIG'){const last=rows[rows.length-1];if(!last||!multi(last)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple como último elemento (sénior): -0.3 del jurado D.');}}
-      else if(!rows.some(multi)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple en la rutina: -0.3 del jurado D.');}
+      // Art. 10.2.2 punto 3: mortal múltiple dentro de los 8 elementos; en FIG (sénior) debe ser la salida.
+      // N9 y N10 son juvenil: basta con un mortal múltiple en cualquier parte del ejercicio.
+      if(nivel==='FIG'){const li=rows.length-1;if(li<0||!multi(rows[li])||!res.counted.has(li)){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple como último elemento (FIG sénior; dentro de los 8 elementos): -0.3 del jurado D.');}}
+      else if(!rows.some((r,i)=>multi(r)&&res.counted.has(i))){res.nd=r1(res.nd+.3);res.notes.push('Sin mortal múltiple dentro de los 8 elementos (juvenil N9/N10; no tiene que ser la salida): -0.3 del jurado D.');}
     }
     // Balanza en una pierna: la cubren las planchas I.61/I.62 o cualquier elemento llamado arabesca,
     // flick facial o salto con giro a facial (cuente o no entre los 8). Si no hay, se puede marcar en la coreografía.
@@ -669,7 +696,7 @@ function renderList(){
 function metaLine(r,res,i){
   if(ui.ap==='SALTO'){const vv=res.vaults.find(x=>x.i===i);return `${keyLabel(r)} · valor ${vv?vv.v.toFixed(1):'-'} · NP ${vv?f1(vv.np):'-'}`;}
   const a=S.atletas[ui.atleta]; const g=grpOf(r,ui.ap,a.nivel);
-  let m=`${keyLabel(r)} · ${r.t==='JA'?'A 0.1':(r.l||'-')+' '+(LV[r.l]||0).toFixed(1)}`;
+  let m=`${keyLabel(r)} · ${r.t==='JA'?'A 0.1':CAT[r.k]?.sv?'sin valor · corta la serie':(r.l||'-')+' '+(LV[r.l]||0).toFixed(1)}`;
   if(a.nivel==='N8'&&r.t!=='JA'&&g&&g!==r.g)m+=` · cuenta como grupo ${ROM[g]} (N8)`;
   let b='';
   if(res.rep.has(i))b+=`<span class="badge b">${esc(res.why[i]||'Repetido')}</span>`;
@@ -680,6 +707,7 @@ function metaLine(r,res,i){
   if(r.t==='JA'&&a.nivel!=='N7'&&a.nivel!=='N8')b+='<span class="badge b">Juvenil A: sin valor en '+a.nivel+'</span>';
   if(r.ct)b+='<span class="badge i">A cambio de toma</span>';
   if(r.gig)b+=`<span class="badge i">Cae a ${r.gig}</span>`;
+  if(r.sm)b+=`<span class="badge i">Sigue molino sin valor</span>`;
   if(PV_TXT(r.pv))b+=`<span class="badge i">Luego: ${PV_TXT(r.pv)} (sin valor)</span>`;
   if(r.nf)b+='<span class="badge b">No está en el Código 2025: revisa ID</span>';
   if(r.ex)b+=`<span class="badge w">${esc(r.ex)}</span>`;
@@ -740,6 +768,8 @@ function editPanel(r,i,a,pot){
   if((ui.ap==='PISO'||ui.ap==='FIJA')&&!r.c&&r.nc&&(pot>0||viable)&&i<rowsA.length-1)h+=`<button class="btn ghost" data-act="relink" data-i="${i}">Conectar con "${esc(rowsA[i+1].n)}" (${pot>0?'+'+pot.toFixed(1):'sin bonificación'})</button>`;
   if(ui.ap==='PARALELAS'&&(llegaAManos(r)||alemanaAtras(r)))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
+  // Arzón: el flop o combinado puede seguir con un molino sin valor que corta la serie (como "a gigante" en fija).
+  if(ui.ap==='ARZON'&&(CAT[r.k]?.flop==='flop'||CAT[r.k]?.flop==='comb'))h+=`<label>Después continúa con<select data-f="sm" data-i="${i}"><option value="" ${!r.sm?'selected':''}>Según el siguiente elemento</option><option value="1" ${r.sm?'selected':''}>Molino sin valor (corta la serie)</option></select></label>`;
   if(ui.ap==='FIJA'&&kipAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(FV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t} y sigue a gigante</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA')h+=`<label class="opt"><input type="checkbox" data-f="ct" data-i="${i}" ${r.ct?'checked':''}> Después de este elemento hay cambio de toma (sin valor)</label>`;
   if(r.k&&CAT[r.k])h+=`<small style="color:var(--muted)">${esc(CAT[r.k].d)}${CAT[r.k].en&&CAT[r.k].en!==CAT[r.k].d?`<br><i>Código en inglés: ${esc(CAT[r.k].en)}</i>`:''}${CAT[r.k].corr?'<br>Traducción corregida con el Código en inglés.':''}</small>`;
@@ -753,7 +783,7 @@ function renderSug(q,target){
   if(!res.length)h+=`<div class="sg-vacio">No encontré "${esc(q)}". Prueba con otra palabra, el apodo o el nombre en inglés.</div>`;
   for(const s of res){const e=CAT[s.k], r=rowFromKey(s.k), nm=nombreDe(s.k,s.name);
     const id=r.t==='JA'?'Juvenil / virtual':keyLabel(r);
-    const val=r.t==='JA'?'A 0.1':ui.ap==='SALTO'?((a.nivel==='N7'||a.nivel==='N8')?'USAG '+r.v.toFixed(1):(e.v??'-')):`${r.l} ${(LV[r.l]||0).toFixed(1)}`;
+    const val=r.t==='JA'?'A 0.1':CAT[r.k]?.sv?'Sin valor':ui.ap==='SALTO'?((a.nivel==='N7'||a.nivel==='N8')?'USAG '+r.v.toFixed(1):(e.v??'-')):`${r.l} ${(LV[r.l]||0).toFixed(1)}`;
     h+=`<button class="sg" data-act="pick" data-k="${esc(s.k)}" data-n="${esc(nm)}" data-a="${s.name?1:''}"><span class="sg-top"><span class="sg-nm">${esc(nm)}</span><span class="sg-val">${esc(val)}</span></span>
       <span class="sg-id">${esc(id)}</span><span class="sg-es">${esc(e.d)}</span>${e.en&&e.en!==e.d?`<span class="sg-en">EN: ${esc(e.en)}</span>`:''}</button>`;}
   h+=`<button class="sg sg-man" data-act="manual"><span class="sg-nm">＋ Agregar "${esc(q)}" a mano</span><span class="sg-es">No está en la lista: tú indicas grupo y valor</span></button></div>`;
@@ -833,6 +863,7 @@ root.addEventListener('change',e=>{
     if(f==='gx')r.gx=t.value?+t.value:undefined;
     if(f==='ct')r.ct=t.checked||undefined;
     if(f==='gig')r.gig=t.value||undefined;
+    if(f==='sm')r.sm=t.value?1:undefined;
     if(f==='pv')r.pv=t.value||undefined;
     if(f==='cv')r.cv=t.value===''?undefined:t.value;
     if(f==='cvm'){if(t.value){r.c=true;r.cv=t.value;delete r.nc;}else{r.cv=undefined;r.c=false;}}

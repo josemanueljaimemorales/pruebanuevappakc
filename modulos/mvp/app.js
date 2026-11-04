@@ -108,6 +108,7 @@ function groupHtml(block){
       const n=scoreFor(name,selDay),e=escHtml(name);
       html+=`<div class="rec-row${n?" has":""}"><div class="rec-name">${e}<small>Semana: ${totalFor(name)}</small></div>`+
         `<div class="rec-count" aria-label="${n} MVP el ${DAY_NAMES[selDay]}">${n}</div>`+
+        `<button type="button" class="rec-minus" data-name="${e}" aria-label="Quitar 1 MVP a ${e}"${n?"":" disabled"}>−1</button>`+
         `<button type="button" class="rec-plus" data-name="${e}" data-delta="1" aria-label="Sumar 1 MVP a ${e}">+1</button></div>`;
     });
     html+="</div>";
@@ -168,6 +169,25 @@ async function undoLast(){
   await addScore(u.name,u.day,-u.delta,false);
   toastMvp(`Se deshizo: ${u.delta>0?"+1":"−1"} a ${u.name} (${DAY_NAMES[u.day]})`);
 }
+// Aviso con "Deshacer" unos segundos después de cada +1 (para el error de dedo inmediato).
+let ultimoMas=null;
+function avisoMas(name,day){
+  const e=document.getElementById("mvpToast");if(!e)return;
+  ultimoMas={name,day};
+  e.textContent="";
+  e.append(document.createTextNode(`+1 a ${name} · `));
+  const b=document.createElement("button");b.type="button";b.id="mvpDeshacer";b.className="mvp-toast-btn";b.textContent="Deshacer";e.append(b);
+  e.classList.add("show","con-boton");clearTimeout(window.__mt);
+  window.__mt=setTimeout(()=>{e.classList.remove("show","con-boton");ultimoMas=null;},5000);
+}
+async function deshacerMas(){
+  const u=ultimoMas;if(!u)return;ultimoMas=null;
+  const e=document.getElementById("mvpToast");if(e)e.classList.remove("con-boton");
+  const i=historial.map(h=>h.name+"|"+h.day+"|"+h.delta).lastIndexOf(u.name+"|"+u.day+"|1");
+  if(i>=0){historial.splice(i,1);guardarHistorial();}
+  await addScore(u.name,u.day,-1,false);
+  toastMvp(`Se deshizo: +1 a ${u.name} (${DAY_NAMES[u.day]})`);
+}
 function toastMvp(t){const e=document.getElementById("mvpToast");if(!e)return;e.textContent=t;e.classList.add("show");clearTimeout(window.__mt);window.__mt=setTimeout(()=>e.classList.remove("show"),2600);}
 async function addScore(name,day,delta=1,registrar=true){
   const nuevo=Math.max(0,scoreFor(name,day)+delta);
@@ -211,6 +231,10 @@ document.addEventListener("keydown",e=>{if(!document.getElementById("passwordMod
 document.addEventListener("click",e=>{
   const d=e.target.closest(".day-btn");if(d){setDay(d.dataset.day);return;}
   if(e.target.closest("#undoBtn")){undoLast();return;}
-  const b=e.target.closest(".rec-plus");if(b)addScore(b.dataset.name,selDay,1);
+  if(e.target.closest("#mvpDeshacer")){deshacerMas();return;}
+  const m=e.target.closest(".rec-minus");
+  if(m){const n=m.dataset.name;if(scoreFor(n,selDay)<=0)return;
+    if(confirm(`¿Quitar 1 MVP a ${n} del ${DAY_NAMES[selDay].toLowerCase()}?`))addScore(n,selDay,-1);return;}
+  const b=e.target.closest(".rec-plus");if(b){addScore(b.dataset.name,selDay,1);avisoMas(b.dataset.name,selDay);}
 });
 window.addEventListener("load",initCloud);

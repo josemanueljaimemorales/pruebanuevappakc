@@ -1,0 +1,26 @@
+# Gimnasia en redes: agrega solos los videos nuevos de los perfiles de la lista (scripts/redes_videos.py).
+# Corre a las 7:00 y a las 19:00 de Ciudad de México (13:00 y 01:00 UTC); también se puede correr a mano en Actions.
+name: Videos de Gimnasia en redes
+
+on:
+  schedule:
+    - cron: "7 13 * * *"
+    - cron: "7 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  videos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Agregar videos nuevos
+        env:
+          COLECCION: redesAKC_prueba   # app de prueba; en la oficial sería redesAKC
+        run: python3 -I scripts/redes_videos.py

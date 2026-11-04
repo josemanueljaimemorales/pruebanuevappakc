@@ -10,7 +10,8 @@ const urls = {
   basicos: "modulos/basicos/index.html",
   normativos: "modulos/normativos/index.html",
   reportes: "modulos/reportes/index.html",
-  calendario: "modulos/calendario/index.html"
+  calendario: "modulos/calendario/index.html",
+  redes: "modulos/redes/index.html"
 };
 
 let pendingProtectedUrl = null;
