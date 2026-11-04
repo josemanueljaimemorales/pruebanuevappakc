@@ -48,7 +48,7 @@ const bajaABraquial=r=>{const t=txt(r);return r.k==='PARALELAS|1|1'||/ (braq(uia
 // y después del Tippelt, que termina con fuerza a la parada de manos (no es vuelo a manos).
 const VUELTA_COMPLETA=new Set(['PARALELAS|3|4','PARALELAS|3|21','PARALELAS|3|22','PARALELAS|3|29','PARALELAS|3|30','PARALELAS|3|42','PARALELAS|3|106','PARALELAS|3|107','PARALELAS|3|108','PARALELAS|3|114','PARALELAS|3|119','PARALELAS|3|130','PARALELAS|3|131']);
 const permiteBraquial=r=>{const t=txt(r);return !!r.pv||VUELTA_COMPLETA.has(r.k)||/ (gigante|tippelt|tippet|tipelt|giant swing|molino (atras )?(al|a) (ap|apoyo) inv|felge a manos|felge (al|a) (ap|apoyo) inv|felge to handstand|cucherat|celen) /.test(' '+nk(r.n||'')+' ')||/ (cambio|kato|change) /.test(t)||/ (a|al) (apoyo )?braq(uial)? | (to|al) (up(per)?\.? arm|upper arm hang|up arm) /.test(t);};
-const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
+const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson',lsitkato:'L-sit y Kato'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
 const PV_TXT=v=>PV_OPC[v]||FV_OPC[v]||'';
