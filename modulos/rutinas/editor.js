@@ -44,9 +44,10 @@ const bajaABraquial=r=>{const t=txt(r);return r.k==='PARALELAS|1|1'||/ (braq(uia
 // Paralelas: de dónde puede venir un elemento que baja a braquial (criterio de Manu): de la entrada, de un cambio,
 // de un Kato o de un elemento que termina en braquial (ballestón, Felge a braquial, Moy a braquial, Healy…).
 // De un vuelo, de un L-sit o de una alemana no: habría contrabalanceo.
-// También después de un gigante o un Felge a manos (y los de su casilla): vienen de una vuelta completa.
-const VUELTA_COMPLETA=new Set(['PARALELAS|3|21','PARALELAS|3|22','PARALELAS|3|29','PARALELAS|3|30','PARALELAS|3|42','PARALELAS|3|106','PARALELAS|3|107','PARALELAS|3|108','PARALELAS|3|114','PARALELAS|3|119','PARALELAS|3|130','PARALELAS|3|131']);
-const permiteBraquial=r=>{const t=txt(r);return !!r.pv||VUELTA_COMPLETA.has(r.k)||/ (gigante|giant swing|molino (atras )?(al|a) (ap|apoyo) inv|felge a manos|felge (al|a) (ap|apoyo) inv|felge to handstand|cucherat|celen) /.test(' '+nk(r.n||'')+' ')||/ (cambio|kato|change) /.test(t)||/ (a|al) (apoyo )?braq(uial)? | (to|al) (up(per)?\.? arm|upper arm hang|up arm) /.test(t);};
+// También después de un gigante o un Felge a manos (y los de su casilla): vienen de una vuelta completa;
+// y después del Tippelt, que termina con fuerza a la parada de manos (no es vuelo a manos).
+const VUELTA_COMPLETA=new Set(['PARALELAS|3|4','PARALELAS|3|21','PARALELAS|3|22','PARALELAS|3|29','PARALELAS|3|30','PARALELAS|3|42','PARALELAS|3|106','PARALELAS|3|107','PARALELAS|3|108','PARALELAS|3|114','PARALELAS|3|119','PARALELAS|3|130','PARALELAS|3|131']);
+const permiteBraquial=r=>{const t=txt(r);return !!r.pv||VUELTA_COMPLETA.has(r.k)||/ (gigante|tippelt|tippet|tipelt|giant swing|molino (atras )?(al|a) (ap|apoyo) inv|felge a manos|felge (al|a) (ap|apoyo) inv|felge to handstand|cucherat|celen) /.test(' '+nk(r.n||'')+' ')||/ (cambio|kato|change) /.test(t)||/ (a|al) (apoyo )?braq(uial)? | (to|al) (up(per)?\.? arm|upper arm hang|up arm) /.test(t);};
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
@@ -525,7 +526,7 @@ function compute(ap,rows,nivel,plantada,opt){
     if(aManos&&salidaAtras)res.enotes.push(`Vuelo perdido / contrabalanceo: después de "${a.n}" (termina balanceando atrás) sale "${b.n}" hacia atrás, en contra del balanceo. Tendría que haber un cambio antes (½ giro, giro, Healy o Gatson; márcalo en "Después hace"). -0.30 del jurado E.`);
     else if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos o de una alemana, que terminan balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza). Si después del vuelo hace un cambio, giro, Healy o Gatson sin capturarlo, márcalo en el elemento.`);});
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((b,i)=>{const a=rows[i-1];if(!a||!bajaABraquial(b)||permiteBraquial(a))return;
-    res.enotes.push(`Contrabalanceo: "${b.n}" baja a braquial después de "${a.n}". A la braquial solo se llega de entrada, después de un cambio, de un Kato, de un gigante o Felge a manos (vuelta completa) o de un elemento que termina en braquial (ballestón, Felge a braquial…); de un vuelo, un L-sit o una alemana no. -0.30 del jurado E.`);});
+    res.enotes.push(`Contrabalanceo: "${b.n}" baja a braquial después de "${a.n}". A la braquial solo se llega de entrada, después de un cambio, de un Kato, de un gigante o Felge a manos (vuelta completa), de un Tippelt (fuerza a manos) o de un elemento que termina en braquial (ballestón, Felge a braquial…); de un vuelo, un L-sit o una alemana no. -0.30 del jurado E.`);});
   const valued=items.filter(x=>x.val>0);
   const n7=nivel==='N7', n8=nivel==='N8', usag=n7||n8;
   let dis=null;
