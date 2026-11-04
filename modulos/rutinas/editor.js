@@ -34,6 +34,13 @@ const esBalanza=r=>r.k==='PISO|1|61'||r.k==='PISO|1|62'||/ (arabesc[a-z]*|fli(c|
 // Paralelas: elementos que terminan balanceando atrás. La braquial subida de pecho, si no lleva corte adelante,
 // termina por naturaleza con un vuelo atrás (criterio de Manu).
 const llegaAManos=r=>{const t=txt(r);return r.k==='PARALELAS|2|1'||/ (vuelo|imp(ulso)? a manos) /.test(t)||((/ (braq(uial)? subida de pecho|pechada) /.test(t)||r.k==='PARALELAS|1|1')&&!/ corte /.test(t))||(/ moy /.test(t)&&!/ (ap inv|apoyo invertido|handstand|hdst|braq|braquial|upper arm|mortal|salto|tippelt|nolet|giraldo) /.test(t));};
+// Paralelas: la alemana (báscula de impulso) termina con un vuelo atrás, salvo que se detenga en L-sit,
+// llegue al apoyo invertido o lleve giro (criterio de Manu).
+const alemanaAtras=r=>{const t=txt(r);if(r.k==='PARALELAS|3|73')return!/ (l|l sit|lsit|escuadra|v sit|vsit) /.test(t);
+  return / (alemana|aleman|bascula|kip|kipe|kippe|glide kip) /.test(t)&&!/ (balleston|cast) /.test(t)
+    &&!/ (l|l sit|lsit|escuadra|v sit|vsit|ap inv|apoyo invertido|handstand|hdst|a manos|suspension|hang|okubo|1\/2 g|1\/2 giro|1\/2 t|con giro|turn|cambio) /.test(t);};
+// Paralelas: elementos que empiezan bajando a braquial (braquial subida de pecho, pechada, impulso a manos de braquial…).
+const bajaABraquial=r=>{const t=txt(r);return r.k==='PARALELAS|1|1'||/ (braq(uial)? subida de pecho|subida de pecho|pechada|imp(ulso)? a manos (de|desde) (el )?braq(uial)?|corte braq(uial)?) /.test(t)||/^ braq(uial)? /.test(' '+nk(r.n||'')+' ');};
 const PV_OPC={medio:'Cambio (½ giro)',giro:'Giro completo',healy:'Healy',gatson:'Gatson'};
 // Barra fija: después de llegar a parada de manos (alemana/kip a manos) puede hacer un cambio sencillo sin valor y seguir a gigante.
 const FV_OPC={cs:'Cambio sencillo'};
@@ -504,13 +511,13 @@ function compute(ap,rows,nivel,plantada,opt){
       res.enotes.push(`Vuelo perdido: la salida de ${dobleAd?'doble ':''}mortal adelante ("${u.n}") debe venir de un impulso braquial, un Healy o un Moy directo; después de "${pr.n}" queda un balanceo vacío. -0.30 del jurado E.`);}
   if(ap==='PARALELAS'&&nivel!=='N7'&&nivel!=='N8')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct)return;
     const nb=txt(b);
-    const aManos=llegaAManos(a)&&!a.pv;
+    const aManos=(llegaAManos(a)||alemanaAtras(a))&&!a.pv;
     // La salida hacia atrás (último elemento) también va en contra del balanceo.
-    const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb)||(i+1===rows.length-1&&/ atras /.test(nb)&&!/ adelante /.test(nb));
+    const baja=/ (moy|tippelt|tippet|molino|gigante|kenmotsu|bhavsar|babsar|diamidov|diamidob|makuts|felge|peters) /.test(nb)||bajaABraquial(b)||(i+1===rows.length-1&&/ atras /.test(nb)&&!/ adelante /.test(nb));
     // Con solo apodo (sin elemento del Código), "doble en C/V" en paralelas es la salida atrás.
     const salidaAtras=i+1===rows.length-1&&(/ atras /.test(nb)||(!b.k&&/ doble (en c|en v|c|v|agrup|agrupado|carpa|ext|extendido) /.test(nb)))&&!/ (adelante|ade|adel|al frente) /.test(nb);
-    if(aManos&&salidaAtras)res.enotes.push(`Vuelo perdido / contrabalanceo: después de "${a.n}" (llega a manos balanceando atrás) sale "${b.n}" hacia atrás, en contra del balanceo. Tendría que haber un cambio antes (½ giro, giro, Healy o Gatson; márcalo en "Después hace"). -0.30 del jurado E.`);
-    else if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza). Si después del vuelo hace un cambio, giro, Healy o Gatson sin capturarlo, márcalo en el elemento.`);});
+    if(aManos&&salidaAtras)res.enotes.push(`Vuelo perdido / contrabalanceo: después de "${a.n}" (termina balanceando atrás) sale "${b.n}" hacia atrás, en contra del balanceo. Tendría que haber un cambio antes (½ giro, giro, Healy o Gatson; márcalo en "Después hace"). -0.30 del jurado E.`);
+    else if(aManos&&baja)res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". -0.30 del jurado E (después de llegar a manos o de una alemana, que terminan balanceando atrás, el siguiente elemento debe seguir en la misma dirección o ir precedido de un elemento de fuerza). Si después del vuelo hace un cambio, giro, Healy o Gatson sin capturarlo, márcalo en el elemento.`);});
   const valued=items.filter(x=>x.val>0);
   const n7=nivel==='N7', n8=nivel==='N8', usag=n7||n8;
   let dis=null;
@@ -759,7 +766,7 @@ function editPanel(r,i,a,pot){
   if((ui.ap==='PISO'||ui.ap==='FIJA')&&i<rowsA.length-1&&(ui.ap!=='PISO'||r.c||viable)){const cur=(r.c&&r.cv!=null&&r.cv!=='')?String(r.cv):'';
     h+=`<label>Conexión manual con "${esc(rowsA[i+1].n)}"<select data-f="cvm" data-i="${i}"><option value="" ${cur===''?'selected':''}>No, solo según reglas</option><option value="0.1" ${cur==='0.1'?'selected':''}>Sí, 0.1</option><option value="0.2" ${cur==='0.2'?'selected':''}>Sí, 0.2</option></select></label>`;}
   if((ui.ap==='PISO'||ui.ap==='FIJA')&&!r.c&&r.nc&&(pot>0||viable)&&i<rowsA.length-1)h+=`<button class="btn ghost" data-act="relink" data-i="${i}">Conectar con "${esc(rowsA[i+1].n)}" (${pot>0?'+'+pot.toFixed(1):'sin bonificación'})</button>`;
-  if(ui.ap==='PARALELAS'&&llegaAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
+  if(ui.ap==='PARALELAS'&&(llegaAManos(r)||alemanaAtras(r)))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
   // Arzón: el flop o combinado puede seguir con un molino sin valor que corta la serie (como "a gigante" en fija).
   if(ui.ap==='ARZON'&&(CAT[r.k]?.flop==='flop'||CAT[r.k]?.flop==='comb'))h+=`<label>Después continúa con<select data-f="sm" data-i="${i}"><option value="" ${!r.sm?'selected':''}>Según el siguiente elemento</option><option value="1" ${r.sm?'selected':''}>Molino sin valor (corta la serie)</option></select></label>`;
