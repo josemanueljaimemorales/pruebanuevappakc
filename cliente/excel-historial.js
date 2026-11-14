@@ -108,8 +108,8 @@
     // Colores con significado (Manu, 14-nov-2026):
     //  · Nombre de la copa (B) = su ciclo: blanco 24-25, amarillo 25-26 (los del Excel) y uno nuevo por ciclo desde 26-27.
     //    Solo se pinta en las copas nuevas; las del Excel se quedan como están.
-    //  · Verde claro = la nota más alta de ese aparato del atleta en ese nivel; verde fuerte = su AA más alto en ese nivel.
-    //    Se recalcula solo en los niveles de un atleta que reciben copas del sitio.
+    //  · Verde claro = la nota más alta de ese aparato del atleta en su último nivel; verde fuerte = su AA más alto ahí.
+    //  · Sin raya entre las copas del Excel y las nuevas: la que era la última del bloque pierde su borde de abajo.
     if (stDoc && xfs) {
       const fillsEl = stDoc.getElementsByTagNameNS(NS, "fills")[0];
       const lista = () => [...fillsEl.getElementsByTagNameNS(NS, "fill")];
@@ -136,28 +136,45 @@
       };
       const esVerde = s => { const b = xfLista[Number(s)]; const f = b && lista()[Number(b.getAttribute("fillId") || 0)]; return !!f && ["t9:0.6", "FF00B050"].includes(color(f)); };
       const num = v => { const x = Number(v); return v != null && v !== "" && isFinite(x) ? x : null; };
+      // Borde de las filas de en medio, por columna (el más usado), para quitar la raya de la que deja de ser la última.
+      const bordes = {};
+      bloques.forEach(b => { const o = b.filas.filter(x => x.orig); o.forEach((x, i) => { if (i === 0 || i === o.length - 1) return;
+        COLS.forEach(c => { const st = x.orig.celdas[c] && x.orig.celdas[c].getAttribute("s"), xf = st != null && xfLista[Number(st)]; if (!xf) return;
+          const bid = xf.getAttribute("borderId") || "0"; bordes[c] = bordes[c] || {}; bordes[c][bid] = (bordes[c][bid] || 0) + 1; }); }); });
+      const bordeMedio = c => bordes[c] ? Object.entries(bordes[c]).sort((a, b) => b[1] - a[1])[0][0] : null;
+      const conBorde = (s, borderId) => {
+        if (s == null || borderId == null) return s;
+        const base = xfLista[Number(s)]; if (!base || (base.getAttribute("borderId") || "0") === borderId) return s;
+        const k = s + "|b" + borderId; if (cache[k] != null) return cache[k];
+        const nx = base.cloneNode(true); nx.setAttribute("borderId", borderId); nx.setAttribute("applyBorder", "1");
+        xfs.appendChild(nx); xfLista.push(nx); xfs.setAttribute("count", xfLista.length);
+        return (cache[k] = String(xfLista.length - 1));
+      };
+      bloques.forEach(b => { const o = b.filas.filter(x => x.orig); if (!o.length) return; const k = b.filas.indexOf(o[o.length - 1]);
+        if (k < b.filas.length - 1 && k > 0) COLS.forEach(c => { if (c !== "A") b.filas[k].st[c] = conBorde(b.filas[k].st[c], bordeMedio(c)); }); });
       bloques.forEach(b => {
         // Color de ciclo en las copas nuevas.
         b.filas.forEach(x => { if (x.nube && !x.orig) { const c = CICLOS[x.nube.CICLO]; if (c) x.st.B = conRelleno(x.st.B, c()); } });
-        // Mejores notas por nivel, en los niveles que recibieron algo del sitio.
-        const porNivel = {};
-        b.filas.forEach(x => {
+        // Verdes solo en el último nivel en que compitió (Manu, 14-nov-2026): entre todas sus copas de ese nivel (también
+        // las del ciclo pasado si repite nivel), la nota más alta de cada aparato y el AA más alto. En los niveles
+        // anteriores ya no hay verdes.
+        const filasN = b.filas.map(x => {
           const nv = norm(x.nube ? x.nube.NIVEL : valor(x.orig.celdas.C));
           const ap = x.nube ? AP.map(a => num(x.nube[a])) : "EFGHIJ".split("").map(c => num(valor(x.orig.celdas[c])));
-          const aa = ap.reduce((s, v) => s + (v || 0), 0);
-          (porNivel[nv] = porNivel[nv] || {filas: [], nube: false}).filas.push({x, ap, aa});
-          if (x.nube) porNivel[nv].nube = true;
+          return {x, nv, ap, aa: ap.reduce((s, v) => s + (v || 0), 0)};
         });
-        Object.values(porNivel).filter(g => g.nube).forEach(g => {
-          "EFGHIJ".split("").forEach((c, k) => {
-            const max = Math.max(...g.filas.map(f => f.ap[k] || 0));
-            g.filas.forEach(f => { const top = max > 0 && Math.abs((f.ap[k] || 0) - max) < 1e-9;
-              if (top) f.x.st[c] = conRelleno(f.x.st[c], VERDE); else if (esVerde(f.x.st[c])) f.x.st[c] = conRelleno(f.x.st[c], BLANCO); });
-          });
-          const maxAA = Math.max(...g.filas.map(f => f.aa));
-          g.filas.forEach(f => { const top = maxAA > 0 && Math.abs(f.aa - maxAA) < 1e-9;
-            if (top) f.x.st.K = conRelleno(f.x.st.K, VERDE_AA); else if (esVerde(f.x.st.K)) f.x.st.K = conRelleno(f.x.st.K, BLANCO); });
+        if (!filasN.length) return;
+        const ultimo = filasN[filasN.length - 1].nv;
+        const g = filasN.filter(f => f.nv === ultimo);
+        filasN.filter(f => f.nv !== ultimo).forEach(f => "EFGHIJK".split("").forEach(c => { if (esVerde(f.x.st[c])) f.x.st[c] = conRelleno(f.x.st[c], BLANCO); }));
+        "EFGHIJ".split("").forEach((c, k) => {
+          const max = Math.max(...g.map(f => f.ap[k] || 0));
+          g.forEach(f => { const top = max > 0 && Math.abs((f.ap[k] || 0) - max) < 1e-9;
+            if (top) f.x.st[c] = conRelleno(f.x.st[c], VERDE); else if (esVerde(f.x.st[c])) f.x.st[c] = conRelleno(f.x.st[c], BLANCO); });
         });
+        const maxAA = Math.max(...g.map(f => f.aa));
+        g.forEach(f => { const top = maxAA > 0 && Math.abs(f.aa - maxAA) < 1e-9;
+          if (top) f.x.st.K = conRelleno(f.x.st.K, VERDE_AA); else if (esVerde(f.x.st.K)) f.x.st.K = conRelleno(f.x.st.K, BLANCO); });
       });
       zip.file("xl/styles.xml", new XMLSerializer().serializeToString(stDoc));
     }
