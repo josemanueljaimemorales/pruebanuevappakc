@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>El atleta más eficiente de la copa · AKC</title>
+<style>
+:root{--bg:#07111f;--panel:#0c1a2b;--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff;--green:#64d8b2;--gold:#ffd166;--red:#ff9aa8}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:1100px;margin:auto;padding:22px 16px 60px}
+.eyebrow{color:#68b4ff;font-size:11px;font-weight:800;letter-spacing:.16em}
+h1{margin:6px 0 4px;font-size:28px;line-height:1.1}
+.copa{font-size:20px;font-weight:900;color:var(--gold);margin:0}
+.sub{color:var(--muted);font-size:13px;margin:4px 0 0}
+.ganadores{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.gan{background:linear-gradient(160deg,#10243a,#0a1727);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.gan .foto{aspect-ratio:4/5;max-height:440px;width:100%;background:#071321;display:grid;place-items:center;font-size:64px}
+.gan .foto img{width:100%;height:100%;object-fit:cover;display:block}
+.gan .info{padding:14px 16px 16px;display:grid;gap:8px}
+.gan .grp{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#68b4ff}
+.gan .nom{font-size:22px;font-weight:900;line-height:1.15}
+.gan .niv{color:var(--muted);font-size:13px}
+.gan .nums{display:flex;gap:8px;flex-wrap:wrap}
+.gan .nums div{background:#101f32;border-radius:10px;padding:8px 11px}
+.gan .nums span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}
+.gan .nums b{font-size:19px}
+.gan .ef b{color:var(--green);font-size:24px}
+.gan .porque{font-size:13px;line-height:1.5;color:#d6e3f2;background:#0d1d31;border-radius:10px;padding:10px 12px}
+.gan.vacio .info{color:var(--muted)}
+details.como{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:18px}
+details.como summary{cursor:pointer;font-weight:800}
+details.como p,details.como li{color:#d6e3f2;font-size:13px;line-height:1.55}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tabs button{flex:1 1 160px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:12px;padding:12px;font-weight:900;font-size:14px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:#163a60;color:#fff;border-color:#3b79b5}
+.lista{display:grid;gap:8px}
+.at{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.at>button{all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 14px;cursor:pointer}
+.at>button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.lug{font-size:20px;font-weight:900;text-align:center}
+.at.top1 .lug{color:var(--gold)}
+.nm b{display:block;font-size:15px;overflow-wrap:anywhere}
+.nm small{color:var(--muted);font-size:12px}
+.barra{height:7px;background:#16283d;border-radius:99px;overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;background:var(--green);border-radius:99px}
+.efi{text-align:right}
+.efi b{font-size:18px;color:var(--green);display:block}
+.efi small{color:var(--muted);font-size:11px}
+.at.no .efi b,.at.no .lug{color:#6f86a0}
+.det{padding:0 14px 14px;display:none}
+.at.abierto .det{display:block}
+.tw{overflow-x:auto;border:1px solid #1b3047;border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid #1b3047;text-align:right;white-space:nowrap}
+th{background:#11243a;color:#cfe2fa;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+th:first-child,td:first-child{text-align:left}
+td.p{color:var(--green);font-weight:800}
+td.neg{color:var(--red)}
+tr.np td{color:#6f86a0}
+.expl{font-size:13px;line-height:1.5;color:#d6e3f2;margin:10px 0 0}
+.mini{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;font-size:12px;color:var(--muted)}
+.mini b{color:var(--text)}
+.vacio-total{text-align:center;color:var(--muted);padding:50px 10px}
+@media(max-width:700px){.ganadores{grid-template-columns:1fr}h1{font-size:24px}}
+@media(max-width:480px){table{font-size:11px}th,td{padding:6px 4px}th{font-size:9.5px;letter-spacing:0}.det{padding:0 8px 12px}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="../../cliente/fuentes.js"></script>
+<script src="../../cliente/eficiencia.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">ÁGUILAS KC · GIMNASIA ARTÍSTICA VARONIL</div>
+  <h1>El atleta más eficiente de la copa</h1>
+  <p class="copa" id="copa">Cargando…</p>
+  <p class="sub" id="sub"></p>
+  <div id="contenido"></div>
+</div>
+<script>
+"use strict";
+const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
+const E=window.AKC_EFIC,APS=E.APS;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const f1=v=>v==null?'—':Number(v).toFixed(1);
+const f3=v=>v==null?'—':Number(v).toFixed(3);
+const pc=v=>v==null?'—':Number(v).toFixed(1)+'%';
+const sig=v=>v==null?'—':(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1);
+const GRUPOS={L:'Libres · niveles 7, 8, 9, 10 y FIG',O:'Obligatorios · niveles 3, 4, 5 y 6'};
+let db=null,ESTADO=null,COPA=null,RK=null,vista='L',fotos={},abiertos=new Set();
+
+function fechaTxt(f){if(!f)return '';const d=new Date(f+'T12:00:00');return isNaN(d)?f:d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}
+function mejor(c){return APS.map(([k,l])=>({k,l,x:c.ap[k]})).filter(z=>z.x).sort((a,b)=>b.x.p-a.x.p)}
+function porQue(f){
+  const ap=mejor(f.calc),top=ap[0],bajo=ap[ap.length-1];
+  let t=`Promedió <b>${pc(f.calc.ef)}</b> en los ${f.calc.n} aparato${f.calc.n===1?'':'s'} que presentó: su nota final quedó, en promedio, a ${(100-f.calc.ef).toFixed(1)} puntos porcentuales de la nota de partida que se buscaba.`;
+  if(top)t+=` Su mejor aparato fue <b>${top.l}</b> (${pc(top.x.p)}).`;
+  if(bajo&&bajo!==top)t+=` El que más le costó fue ${bajo.l} (${pc(bajo.x.p)}).`;
+  return t;
+}
+function explicacion(f){
+  if(!f.compitio)return 'No compitió en esta copa (lesión u otra situación): aparece con ceros y no entra al ranking.';
+  const ap=mejor(f.calc),bajo=ap[ap.length-1];let t=porQue(f);
+  if(bajo){
+    const x=bajo.x,partes=[];
+    if(x.dif!=null&&x.dif<0)partes.push(`el juez le dio ${f1(x.np)} de nota de partida contra ${f1(x.ref)} de su rutina (${sig(x.dif)})`);
+    if(x.ded>0)partes.push(`tuvo ${f3(x.ded)} de deducciones`);
+    if(partes.length)t+=` En ${bajo.l} ${partes.join(' y ')}.`;
+  }
+  const no=APS.filter(([k])=>!f.calc.ap[k]).map(([,l])=>l);
+  if(no.length)t+=` No presentó ${no.join(', ')}; esos aparatos no cuentan en su eficiencia.`;
+  return t;
+}
+function ganadorHTML(g){
+  const w=(RK[g]||[]).find(x=>x.compitio),src=fotos[g]||'';
+  if(!w)return `<article class="gan vacio"><div class="foto">🏆</div><div class="info"><div class="grp">${GRUPOS[g]}</div><div>Todavía no hay resultados de este grupo.</div></div></article>`;
+  return `<article class="gan"><div class="foto">${src?`<img src="${esc(src)}" alt="${esc(w.nombre)}">`:'🏆'}</div><div class="info">
+    <div class="grp">${GRUPOS[g]}</div><div class="nom">${esc(w.nombre)}</div><div class="niv">${esc(E.nivelTexto(w.nivel))}</div>
+    <div class="nums"><div class="ef"><span>Eficiencia</span><b>${pc(w.calc.ef)}</b></div><div><span>AA</span><b>${f3(w.calc.aa)}</b></div>${w.r&&w.r.lugar!=null?`<div><span>Lugar en la copa</span><b>${w.r.lugar}°${w.r.part?` <small style="font-size:12px;color:var(--muted)">de ${w.r.part}</small>`:''}</b></div>`:''}</div>
+    <div class="porque"><b>¿Por qué?</b> ${porQue(w)}</div></div></article>`;
+}
+function filaHTML(f){
+  const id=f.key,ab=abiertos.has(id);
+  const tabla=f.compitio?`<div class="tw"><table><thead><tr><th>Aparato</th><th title="Nota de partida de su rutina">NP rut.</th><th title="Nota de partida del juez">NP juez</th><th>Dif.</th><th>NF</th><th title="Deducción">Ded.</th><th>%</th></tr></thead><tbody>${APS.map(([k,l])=>{const x=f.calc.ap[k];return x?`<tr><td>${l}</td><td>${f1(x.ref)}</td><td>${f1(x.np)}</td><td class="${x.dif!=null&&x.dif<0?'neg':''}">${sig(x.dif)}</td><td>${f3(x.nf)}</td><td>${f3(x.ded)}</td><td class="p">${pc(x.p)}</td></tr>`:`<tr class="np"><td>${l}</td><td colspan="6">No presentó</td></tr>`}).join('')}</tbody></table></div>`:'';
+  return `<div class="at${f.lugar===1?' top1':''}${f.compitio?'':' no'}${ab?' abierto':''}" data-k="${esc(id)}"><button type="button" aria-expanded="${ab}">
+    <span class="lug">${f.compitio?f.lugar+'°':'—'}</span>
+    <span class="nm"><b>${esc(f.nombre)}</b><small>${esc(E.nivelTexto(f.nivel))||'—'}${f.compitio?` · AA ${f3(f.calc.aa)}`:' · No compitió'}</small><span class="barra"><i style="width:${f.compitio?f.calc.ef.toFixed(1):0}%"></i></span></span>
+    <span class="efi"><b>${f.compitio?pc(f.calc.ef):'0%'}</b><small>${ab?'Ocultar':'Ver por qué'}</small></span></button>
+    <div class="det">${tabla}<p class="expl">${explicacion(f)}</p>${f.r&&f.r.lugar!=null?`<div class="mini">Lugar en la copa: <b>${f.r.lugar}°${f.r.part?' de '+f.r.part:''}</b></div>`:''}</div></div>`;
+}
+function pintar(){
+  if(!COPA){$('copa').textContent='Todavía no hay resultados de una copa';$('sub').textContent='';$('contenido').innerHTML='<div class="vacio-total">En cuanto se suba la información de la próxima copa, aquí verás a los atletas más eficientes y el ranking completo.</div>';return}
+  $('copa').textContent=COPA.nombre;$('sub').textContent=[fechaTxt(COPA.fecha),'Un ganador de libres y uno de obligatorios'].filter(Boolean).join(' · ');
+  $('contenido').innerHTML=`<section class="ganadores">${ganadorHTML('L')}${ganadorHTML('O')}</section>
+  <details class="como"><summary>¿Cómo se calcula la eficiencia?</summary>
+   <p>Para cada aparato que presentó comparamos su <b>nota final (NF)</b> contra la <b>nota de partida</b> que se buscaba:</p>
+   <ul><li>Si el juez le dio una nota de partida <b>menor</b> que la de su rutina, el 100% es la nota de partida de su rutina (lo que se planeó presentar).</li>
+   <li>Si el juez le dio una nota de partida <b>mayor</b>, el 100% es la del juez.</li>
+   <li>% del aparato = NF ÷ ese 100%. Nunca pasa de 100%.</li>
+   <li>La eficiencia es el promedio de los aparatos que presentó. Si no presentó un aparato (por lesión u otra situación), no cuenta.</li></ul>
+   <p><b>Dif.</b> = nota de partida del juez menos la de su rutina (en rojo si le reconocieron menos). <b>Ded.</b> (deducción) = nota de partida del juez menos la nota final.</p></details>
+  <div class="tabs" role="group" aria-label="Grupo">${['L','O'].map(g=>`<button type="button" data-g="${g}" aria-pressed="${vista===g}">${g==='L'?'Libres':'Obligatorios'} <small style="font-weight:600">(${(RK[g]||[]).filter(x=>x.compitio).length})</small></button>`).join('')}</div>
+  <div class="lista">${(RK[vista]||[]).map(filaHTML).join('')||'<div class="vacio-total">Sin atletas en este grupo.</div>'}</div>`;
+}
+function cargarFotos(){
+  fotos={};if(!COPA)return;
+  ['L','O'].forEach(g=>db.collection('competenciasAKC').doc('foto_'+COPA.id+'_'+g).get().then(s=>{fotos[g]=s.exists?(s.data().src||''):'';pintar()}).catch(()=>{}));
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.tabs [data-g]');if(t){vista=t.dataset.g;pintar();return}
+  const b=e.target.closest('.at>button');if(b){const k=b.parentNode.dataset.k;abiertos.has(k)?abiertos.delete(k):abiertos.add(k);pintar()}
+});
+try{
+  if(!firebase.apps.length)firebase.initializeApp(FB);db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();
+  db.collection('competenciasAKC').doc('estado').onSnapshot(s=>{
+    ESTADO=s.exists?s.data():{};const u=E.ultima(ESTADO),cambio=!COPA||!u||COPA.id!==u.id;
+    COPA=u;RK=u?E.ranking(ESTADO,u.id):null;
+    if(cambio)cargarFotos();pintar();
+  },e=>{$('copa').textContent='No se pudo cargar la información.';});
+  // Las fotos se revisan cada minuto por si se suben mientras está abierta.
+  setInterval(cargarFotos,60000);
+}catch(e){$('copa').textContent='No se pudo cargar la información.'}
+</script>
+</body>
+</html>

@@ -1,5 +1,8 @@
 // Menú: algunas tarjetas muestran un adelanto de lo que tienen adentro (Manu, 26-oct-2026).
 //   MVP: las dos fotos de la semana (mvpAKC/foto1 y foto2).
+//   Desde que se sube la primera copa en «Subir información de competencia» (Manu, 14-nov-2026), esa tarjeta pasa a ser
+//   «El atleta más eficiente de la copa» con el nombre de la última copa (competenciasAKC/estado.ultima) y las fotos de
+//   sus dos ganadores (competenciasAKC/foto_<id>_L y _O). Hasta entonces sigue siendo el MVP. El módulo MVP no se borra.
 // Se leen de Firebase con su API pública (sin cargar todo Firebase en el menú) y se guardan en el celular: las fotos de
 // MVP solo se vuelven a bajar si cambiaron (primero se pide solo su fecha). Si algo
 // falla, la tarjeta se queda con su ícono.
@@ -33,8 +36,9 @@
     icono.replaceWith(vista);
   }
 
-  async function fotoMvp(n) {
-    const clave = "akcMenuMvp" + n, guardada = leer(clave), ruta = "mvpAKC" + SUFIJO + "/foto" + n;
+  async function fotoMvp(n) { return foto("akcMenuMvp" + n, "mvpAKC" + SUFIJO + "/foto" + n); }
+  async function foto(clave, ruta) {
+    const guardada = leer(clave);
     try {
       const fecha = (await pedir(ruta, ["updatedAt"])).fields?.updatedAt?.timestampValue || "";
       if (guardada && guardada.fecha === fecha && guardada.src) return guardada.src;
@@ -51,6 +55,37 @@
     ponerVista(document.querySelector(".menu .btn.mvp"), fotos, fotos.length > 1 ? "dos" : "una");
   }
 
-  function iniciar() { mvp(); }
+  // Tarjeta del MVP convertida en «El atleta más eficiente de la copa».
+  function ponerEficiente(btn, copa) {
+    if (!btn || !copa) return;
+    const s = btn.querySelector("strong"), sm = btn.querySelector("small");
+    if (s) s.textContent = "El atleta más eficiente de la copa";
+    if (sm) sm.textContent = copa.nombre || "";
+    btn.setAttribute("onclick", "openScreen('eficientes')");
+    btn.classList.add("eficiente");
+  }
+  async function ultimaCopa() {
+    try {
+      const f = (await pedir("competenciasAKC" + SUFIJO + "/estado", ["ultima"])).fields?.ultima?.mapValue?.fields;
+      const id = f?.id?.stringValue || "";
+      const copa = id ? { id, nombre: f?.nombre?.stringValue || "" } : null;
+      guardar("akcMenuCopa", copa);
+      return copa;
+    } catch (e) { return leer("akcMenuCopa"); }
+  }
+  async function iniciar() {
+    const btn = document.querySelector(".menu .btn.mvp");
+    const previa = leer("akcMenuCopa");
+    if (previa && previa.id) ponerEficiente(btn, previa);   // sin parpadeo mientras responde la nube
+    const copa = await ultimaCopa();
+    if (!copa || !copa.id) {
+      if (previa && previa.id) location.reload();            // se borró la última copa: vuelve el MVP
+      return mvp();
+    }
+    ponerEficiente(btn, copa);
+    const ruta = "competenciasAKC" + SUFIJO + "/foto_" + copa.id + "_";
+    const fotos = (await Promise.all([foto("akcMenuEf" + copa.id + "L", ruta + "L"), foto("akcMenuEf" + copa.id + "O", ruta + "O")])).filter(Boolean);
+    ponerVista(btn, fotos, fotos.length > 1 ? "dos" : "una");
+  }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
 })();

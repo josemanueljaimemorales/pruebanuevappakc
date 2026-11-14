@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reporte para entrenadores · AKC</title>
+<title>Subir información de competencia · AKC</title>
 <style>
 :root{--bg:#07111f;--panel:#0d1b2d;--panel2:#11243a;--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff;--green:#64d8b2;--gold:#ffd166;--red:#ff7b8b}
 *{box-sizing:border-box}
@@ -71,6 +71,13 @@ table.rk{border-collapse:collapse;width:100%;min-width:980px;font-size:12px}
 .rk tr.dns td{color:#6f86a0}
 .rk tr.dns td.nm{color:#8aa0b8}
 .empty{color:var(--muted);padding:30px;text-align:center}
+.fotos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.foto{background:#0a1726;border:1px solid #1e3550;border-radius:12px;padding:12px;display:grid;gap:8px;align-content:start}
+.foto h3{margin:0;font-size:14px}.foto .gan{font-size:13px;color:var(--gold);font-weight:800}
+.foto img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;background:#071321}
+.file-btn{display:inline-flex;justify-content:center;border-radius:10px;padding:11px 14px;font-weight:900;font-size:13px;cursor:pointer;background:#1266c9;color:#fff}
+.file-btn input{display:none}
+@media(max-width:620px){.fotos{grid-template-columns:1fr}}
 .legend{font-size:11px;color:var(--muted);line-height:1.5}
 @media print{
   @page{size:landscape;margin:8mm}
@@ -94,11 +101,12 @@ table.rk{border-collapse:collapse;width:100%;min-width:980px;font-size:12px}
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <script src="../../../cliente/fuentes.js"></script>
+<script src="../../../cliente/eficiencia.js"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <div><div class="eyebrow">ÁGUILAS KC · ENTRENADORES</div><h1>Reporte para entrenadores</h1><p>Resultados por competencia y ranking interno por eficiencia.</p></div>
+    <div><div class="eyebrow">ÁGUILAS KC · ENTRENADORES</div><h1>Subir información de competencia</h1><p>Resultados por competencia, ranking interno por eficiencia y fotos de los más eficientes.</p></div>
     <a class="back" href="../index.html">REPORTES</a>
   </div>
 
@@ -124,6 +132,12 @@ table.rk{border-collapse:collapse;width:100%;min-width:980px;font-size:12px}
       <button class="btn" type="button" id="btnCrear">Crear competencia</button>
     </div>
     <div class="hint">Al crearla queda disponible para todos los atletas.</div>
+
+    <div id="fotosBox" class="hidden" style="margin-top:16px">
+      <h2 style="margin-bottom:6px">Fotos de los más eficientes de esta copa</h2>
+      <div class="hint" style="margin-top:0">Súbelas cuando ya esté toda la información y sepas quién ganó. Salen en el menú y en «El atleta más eficiente de la copa» para los papás.</div>
+      <div class="fotos" id="fotosGrid"></div>
+    </div>
 
     <div id="capAtleta" class="hidden" style="margin-top:14px">
       <div class="row">
@@ -155,10 +169,8 @@ table.rk{border-collapse:collapse;width:100%;min-width:980px;font-size:12px}
 
 <script>
 "use strict";
-const APS=[['PISO','Piso'],['ARZON','Arzón'],['ANILLOS','Anillos'],['SALTO','Salto'],['PARALELAS','Paralelas'],['FIJA','Barra fija']];
+const APS=AKC_EFIC.APS;
 const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
-// Nombre de cada atleta en Estadísticas (historial individual). Clave: nombre en Rutinas.
-const ESTAD={'DIEGO J':'DIEGO JAIME','CHAMPI':'DIEGO RODRIGUEZ','ISAAC':'ISAAC MARTINEZ','VELA':'DIEGO VELA','CHAVEZ':'DIEGO CHAVEZ','MAX':'MAX DIAZ','SANTI LEE':'SANTI SIGLER','NICO CAPI':'NICO CAPITANACCI','CARLOS AZNAR':'CHARLY','EMI':'EMI GONZALEZ','DAVID RANGEL':'DAVID','JOSE MARIA':'CHEMA','MAURO REGAND':'MAURO','BRITAN AKIM':'BRITTAN','ALFREDO':'ALFRED'};
 // Nombre completo (lo que ven entrenadores y papás). Clave: nombre en Rutinas.
 const COMPLETO={'DIEGO J':'Diego Jaime','RICHIE':'Ricardo Jiménez','ALONSO':'Alonso Ahedo','MIKEL':'Mikel Larrinua','CHAMPI':'Diego Rodríguez','ISAAC':'Isaac Martínez','VELA':'Diego Vela','YERIK':'Yerik Guerra','FER':'Fernando Talavera','CHAVEZ':'Diego Chávez','MARIO':'Mario Bisteni','MAX':'Maximiliano Díaz','SANTI LEE':'Santiago Sigler','NICO CAPI':'Nicolás Capitanachi Vicentín','BRUNO JACOBO':'Bruno Jacobo','SANTI CAMACHO':'Santiago Camacho','LEO CAMACHO':'Leonardo Camacho','NICO FLORES':'Nicolás Flores','CARLOS AZNAR':'Carlos Aznar','EMI':'Emiliano González','DAVID RANGEL':'David Rangel','DIEGO CUEVAS':'Diego Cuevas','JOSE MARIA':'José María Robles','MAURO REGAND':'Mauro Regand','BRUNO BAEZ':'Bruno Báez','BRITAN AKIM':'Brittan Akin Robles','ALFREDO':'Alfredo Jacobo','ERIK':'Erik López','LEO LAZARO':'Leonardo García Lázaro','ISAAC RANGEL':'Isaac Rangel'};
 const $=id=>document.getElementById(id);
@@ -191,19 +203,7 @@ const nombre=k=>COMPLETO[k]||k.toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCas
 function compsOrdenadas(){
   return Object.entries(COMP.competencias||{}).map(([id,c])=>({id,...c})).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))||String(b.creada||'').localeCompare(String(a.creada||'')));
 }
-// Eficiencia por aparato presentado: NF ÷ (la NP más alta entre la de la rutina y la del juez) × 100, nunca más de 100.
-// Si el juez dio menos que la rutina, el 100% es la NP de la rutina; si dio más, el 100% es la del juez.
-// Los aparatos que no presentó no cuentan.
-function calcular(r){
-  const ap={};let suma=0,n=0,aa=0;
-  APS.forEach(([k])=>{
-    const np=r&&r.np?r.np[k]:null,nf=r&&r.nf?r.nf[k]:null,ref=r&&r.ref?r.ref[k]:null;
-    if(np==null||nf==null){ap[k]=null;return}
-    const base=ref!=null&&ref>0?Math.max(ref,np):np;const p=base>0?Math.min(100,nf/base*100):0;
-    ap[k]={np,nf,ref,ded:np-nf,p,sinRef:!(ref!=null&&ref>0)};suma+=p;n++;aa+=nf;
-  });
-  return {ap,n,aa,ef:n?suma/n:null};
-}
+const calcular=AKC_EFIC.calcular;  // regla de eficiencia en cliente/eficiencia.js
 
 // ---------- Firebase ----------
 function conectar(){
@@ -212,7 +212,7 @@ function conectar(){
   db.collection('rutinasAKC').doc('estado').get().then(s=>{RUT=s.exists?s.data():null;ROSTER=rosterDe(RUT);pintarTodo()}).catch(e=>{$('estado').textContent='No se pudieron leer las rutinas: '+e.message});
   db.collection('rutinasAKC').doc('estado').onSnapshot(s=>{RUT=s.exists?s.data():null;ROSTER=rosterDe(RUT);pintarTodo()},()=>{});
   db.collection('competenciasAKC').doc('estado').onSnapshot(s=>{
-    const d=s.exists?s.data():{};COMP={competencias:d.competencias||{},resultados:d.resultados||{}};
+    const d=s.exists?s.data():{};COMP={competencias:d.competencias||{},resultados:d.resultados||{},plantel:d.plantel||[]};
     $('estado').textContent='Sincronizado con la nube. Lo que se guarde aquí se ve al momento en todos los equipos.';
     pintarTodo();
   },e=>{$('estado').textContent='No se pudo leer la información de competencias: '+e.message});
@@ -286,19 +286,27 @@ async function guardar(sig){
   if(err.length){m.innerHTML=err.map(esc).join('<br>');m.className='msg err';return}
   const c=calcular(r);
   if(!c.n&&lugar==null){m.textContent='No hay notas que guardar. Si no compitió, no subas nada: aparecerá al final con ceros.';m.className='msg err';return}
-  const data={tipo:$('capTipo').value,nivel:$('capNivel').value.trim(),cat:$('capCat').value.trim(),np:r.np,nf:r.nf,ref:r.ref,lugar:lugar==null?null:Math.round(lugar),part:part==null?null:Math.round(part),guardado:new Date().toISOString()};
+  const data={nombre:nombre(capKey),tipo:$('capTipo').value,nivel:$('capNivel').value.trim(),cat:$('capCat').value.trim(),np:r.np,nf:r.nf,ref:r.ref,lugar:lugar==null?null:Math.round(lugar),part:part==null?null:Math.round(part),guardado:new Date().toISOString()};
   $('btnGuardar').disabled=$('btnGuardarSig').disabled=true;
   try{
-    await docComp().set({resultados:{[compSel]:{[capKey]:data}}},{merge:true});
+    await docComp().set({resultados:{[compSel]:{[capKey]:data}},...resumen(capKey,data)},{merge:true});
     $('btnBorrar').classList.remove('hidden');m.textContent='Guardado: '+nombre(capKey)+'. El concentrado y su historial ya lo incluyen.';m.className='msg ok';
     if(sig){const o=[...$('capAtl').options],i=o.findIndex(x=>x.value===capKey);if(i>=0&&i<o.length-1){$('capAtl').value=o[i+1].value;cargarCaptura();$('capMsg').textContent='Guardado. Sigue: '+nombre($('capAtl').value)+'.';$('capMsg').className='msg ok';}}
   }catch(e){m.textContent='No se pudo guardar: '+e.message;m.className='msg err'}
   $('btnGuardar').disabled=$('btnGuardarSig').disabled=false;
 }
+// Plantel (nombres completos de todos, para la vista de papás) y la última copa con resultados (cambia la tarjeta del menú).
+function plantel(){return ROSTER.map(a=>({key:a.key,nombre:nombre(a.key),nivel:a.nivel||'',tipo:a.tipo}))}
+function resumen(key,data){
+  const res=JSON.parse(JSON.stringify(COMP.resultados||{}));res[compSel]=res[compSel]||{};
+  if(data)res[compSel][key]=data;else delete res[compSel][key];
+  const u=AKC_EFIC.ultima({competencias:COMP.competencias,resultados:res});
+  return {plantel:plantel(),ultima:u?{id:u.id,nombre:u.nombre,fecha:u.fecha||''}:null};
+}
 async function borrar(){
   const m=$('capMsg');
   if(!confirm('¿Borrar el resultado de '+nombre(capKey)+' en esta competencia? Quedará como "no compitió".'))return;
-  try{await docComp().update(new firebase.firestore.FieldPath('resultados',compSel,capKey),firebase.firestore.FieldValue.delete());cargarCaptura();m.textContent='Resultado borrado: '+nombre(capKey)+' queda como «no compitió».';m.className='msg ok'}
+  try{await docComp().update(new firebase.firestore.FieldPath('resultados',compSel,capKey),firebase.firestore.FieldValue.delete());await docComp().set(resumen(capKey,null),{merge:true});cargarCaptura();m.textContent='Resultado borrado: '+nombre(capKey)+' queda como «no compitió».';m.className='msg ok'}
   catch(e){m.textContent='No se pudo borrar: '+e.message;m.className='msg err'}
 }
 async function crearComp(){
@@ -319,7 +327,7 @@ function pintarConcentrado(){
   if(!c){el.innerHTML='<div class="empty">Todavía no hay competencias. Toca «Subir información de competencia» para crear la primera.</div>';return}
   const res=(COMP.resultados||{})[compSel]||{};
   const keys=[...ROSTER.map(a=>a.key),...Object.keys(res).filter(k=>!ROSTER.some(a=>a.key===k))];
-  const filas=keys.map(k=>{const a=ROSTER.find(x=>x.key===k),r=res[k],calc=calcular(r);return {k,a,r,calc,tipo:r?r.tipo:(a?a.tipo:'L'),nivel:r?r.nivel:(a?a.nivel:'')}});
+  const filas=keys.map(k=>{const a=ROSTER.find(x=>x.key===k),r=res[k],calc=calcular(r),nivel=r?r.nivel:(a?a.nivel:''),tipo=r?r.tipo:(a?a.tipo:'L');return {k,a,r,calc,tipo:AKC_EFIC.grupo(nivel,tipo),nivel}});
   const tabla=(tipo,titulo)=>{
     const g=filas.filter(x=>x.tipo===tipo);if(!g.length)return '';
     const comp=g.filter(x=>x.calc.n).sort((a,b)=>b.calc.ef-a.calc.ef||b.calc.aa-a.calc.aa);
@@ -335,18 +343,44 @@ function pintarConcentrado(){
   };
   const subidos=Object.keys(res).length;
   el.innerHTML=`<div class="sheet-head"><div><div class="sheet-title">${esc(c.nombre)} · Ranking interno por eficiencia</div><div class="sheet-sub">${c.fecha?esc(c.fecha)+' · ':''}${subidos} atleta${subidos===1?'':'s'} con resultados · AKC Gimnasia Artística Varonil</div></div></div>`+
-    tabla('L','LIBRES')+tabla('O','OBLIGATORIOS')+
+    tabla('L','LIBRES · NIVELES 7, 8, 9, 10 Y FIG')+tabla('O','OBLIGATORIOS · NIVELES 3, 4, 5 Y 6')+
     `<div class="legend">NP = nota de partida del juez · NF = nota final · Rut. = NP de la rutina que debía presentar (editor de rutinas) · % = NF ÷ la NP más alta entre Rut. y la del juez × 100 (nunca pasa de 100).<br>% Eficiencia = promedio de los aparatos que presentó; los que no presentó no cuentan. Ranking interno: mayor eficiencia primero; si empatan, mayor AA. Quien no compitió va al final con ceros.${filas.some(x=>Object.values(x.calc.ap).some(z=>z&&z.sinRef))?'<br>* Sin NP de rutina guardada: se usó la NP del juez.':''}</div>`;
 }
-function pintarTodo(){llenarComps();if(!$('capPanel').classList.contains('hidden')&&compSel){const prev=capKey;llenarAtletas();if(prev!==capKey||!$('capAps').innerHTML)cargarCaptura();}pintarConcentrado();}
+// ---------- Fotos de los más eficientes (como en el MVP: comprimidas, en su propio documento) ----------
+const fotoCache={};
+const fotoDoc=(id,g)=>db.collection('competenciasAKC').doc('foto_'+id+'_'+g);
+function pintarFotos(){
+  const box=$('fotosBox');box.classList.toggle('hidden',!compSel||$('capPanel').classList.contains('hidden'));if(!compSel||!db)return;
+  const rk=AKC_EFIC.ranking({resultados:COMP.resultados,plantel:plantel()},compSel);
+  $('fotosGrid').innerHTML=[['L','Libres (7 a FIG)'],['O','Obligatorios (3 a 6)']].map(([g,t])=>{
+    const w=rk[g].find(x=>x.compitio);const src=(fotoCache[compSel+g]||{}).src||'';
+    return `<div class="foto"><h3>${t}</h3><div class="gan">${w?esc(w.nombre)+' · '+w.calc.ef.toFixed(1)+'%':'Todavía sin resultados'}</div>${src?`<img src="${esc(src)}" alt="Foto del más eficiente de ${t}">`:'<div class="hint" style="margin:0">Sin foto todavía.</div>'}<label class="file-btn">${src?'Cambiar foto':'Subir foto'}<input type="file" accept="image/*" data-foto="${g}"></label><span class="hint" style="margin:0" id="fotoMsg${g}"></span></div>`;
+  }).join('');
+  ['L','O'].forEach(g=>{const k=compSel+g;if(fotoCache[k])return;fotoCache[k]={src:''};fotoDoc(compSel,g).get().then(s=>{fotoCache[k]={src:s.exists?(s.data().src||''):''};if(fotoCache[k].src)pintarFotos()}).catch(()=>{})});
+}
+function comprimir(file){
+  return new Promise((ok,mal)=>{const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{
+    const max=1000,sc=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(img.width*sc));c.height=Math.max(1,Math.round(img.height*sc));
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',.78))};img.onerror=mal;img.src=r.result};r.onerror=mal;r.readAsDataURL(file)});
+}
+$('fotosGrid')?.addEventListener('change',async e=>{
+  const inp=e.target.closest('[data-foto]');if(!inp||!inp.files||!inp.files[0])return;const g=inp.dataset.foto,m=$('fotoMsg'+g);
+  m.textContent='Procesando…';
+  try{const src=await comprimir(inp.files[0]);await fotoDoc(compSel,g).set({src,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+    fotoCache[compSel+g]={src};pintarFotos();$('fotoMsg'+g).textContent='Foto guardada.';}
+  catch(err){m.textContent='No se pudo guardar la foto: '+(err.message||err)}
+});
+
+function pintarTodo(){llenarComps();pintarFotos();if(!$('capPanel').classList.contains('hidden')&&compSel){const prev=capKey;llenarAtletas();if(prev!==capKey||!$('capAps').innerHTML)cargarCaptura();}pintarConcentrado();}
 
 // ---------- Eventos ----------
 $('selComp').onchange=e=>{compSel=e.target.value;pintarTodo()};
-$('btnSubir').onclick=()=>{$('capPanel').classList.remove('hidden');llenarComps();if(compSel){llenarAtletas();cargarCaptura()}else{$('nuevaBox').classList.remove('hidden');$('ncNombre').focus()}$('capPanel').scrollIntoView({behavior:'smooth',block:'start'})};
-$('btnCerrar').onclick=()=>$('capPanel').classList.add('hidden');
+$('btnSubir').onclick=()=>{$('capPanel').classList.remove('hidden');llenarComps();pintarFotos();if(compSel){llenarAtletas();cargarCaptura()}else{$('nuevaBox').classList.remove('hidden');$('ncNombre').focus()}$('capPanel').scrollIntoView({behavior:'smooth',block:'start'})};
+$('btnCerrar').onclick=()=>{$('capPanel').classList.add('hidden');pintarFotos()};
 $('btnNueva').onclick=()=>{$('nuevaBox').classList.toggle('hidden');if(!$('nuevaBox').classList.contains('hidden'))$('ncNombre').focus()};
 $('btnCrear').onclick=crearComp;
-$('capComp').onchange=e=>{compSel=e.target.value;$('selComp').value=compSel;llenarAtletas();cargarCaptura();pintarConcentrado()};
+$('capComp').onchange=e=>{compSel=e.target.value;$('selComp').value=compSel;llenarAtletas();cargarCaptura();pintarConcentrado();pintarFotos()};
 $('capAtl').onchange=cargarCaptura;
 $('capAps').addEventListener('input',previa);
 $('btnGuardar').onclick=()=>guardar(false);
