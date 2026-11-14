@@ -54,6 +54,16 @@ button{font-family:inherit;cursor:pointer}
 .contador output.hay{color:var(--red)}
 .ded{width:76px;height:42px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-size:18px;font-weight:800;text-align:center}
 .vacio{color:var(--muted);font-size:14px;padding:10px 2px}
+.extra{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.plant{height:44px;border-radius:10px;border:2px solid #31506f;background:#071321;color:#9eb1c8;font-weight:900;font-size:12px;padding:0 10px}
+.plant[aria-pressed="true"]{background:#1d4ed8;border-color:#60a5fa;color:#fff}
+.nopres{height:32px;border-radius:9px;border:1px solid #5b3040;background:#1b0f16;color:#ff9aa8;font-weight:800;font-size:11px;padding:0 9px}
+.nopres[aria-pressed="true"]{background:#7f1d1d;border-color:#ef4444;color:#fff}
+.vsel{height:44px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-weight:800;font-size:13px;padding:0 8px;max-width:210px}
+.nota{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#cfe2fa;border-top:1px dashed #1e3550;padding-top:7px}
+.nota b{font-size:16px}.nota .nf b{color:#8ff0b8}
+.atl.fuera{opacity:.55}
+.atl.fuera .bonos,.atl.fuera .campo,.atl.fuera .plant,.atl.fuera .vsel{pointer-events:none;opacity:.4}
 .formula{font-size:13px;color:#d6e3f2;line-height:1.6}
 .formula input{width:64px;padding:6px;border-radius:8px;border:1px solid #31506f;background:#071321;color:#fff;font-weight:800;font-size:15px;text-align:center}
 .tw{overflow-x:auto;border:1px solid #1e3550;border-radius:12px}
@@ -128,7 +138,7 @@ small.n{display:block;color:var(--muted);font-size:11px}
 
   <section class="panel oculto" id="paso3">
     <h2>Resultado de este all around</h2>
-    <p class="formula">Puntos = bonos × <b>0.3</b> − caídas × <b class="solo-imp" id="valCaidaTxt"></b><input id="valCaida" type="number" step="0.1" min="0" inputmode="decimal" aria-label="Lo que resta cada caída"> − deducciones.<br>Gana quien tenga más puntos; si empatan, quien presentó más bonos y luego quien tuvo menos caídas.</p>
+    <p class="formula"><b>Nota de partida</b> de cada aparato = 9.0 + 0.3 por bono (máximo 3) + 0.1 si plantó (máximo 10). En salto: el valor del salto de su nivel + 0.1 si plantó.<br><b>Nota final</b> = nota de partida − deducciones − caídas × <b class="solo-imp" id="valCaidaTxt"></b><input id="valCaida" type="number" step="0.1" min="0" inputmode="decimal" aria-label="Lo que resta cada caída">. <b>All around</b> = suma de las notas finales.<br>Gana la nota de all around más alta; si empatan, quien presentó más bonos y luego quien tuvo menos caídas.</p>
     <div class="filtro" id="filtro"></div>
     <div class="tw"><table id="tabla"></table></div>
     <h2 style="margin-top:16px">Por aparato</h2>
@@ -139,9 +149,11 @@ small.n{display:block;color:var(--muted);font-size:11px}
 <script>
 "use strict";
 // All around de obligatorios (Manu, 14-nov-2026). Se eligen los atletas (niveles 3 a 6 de trabajo_gav.xlsx), por aparato se
-// registran bonos 1-3, caídas y deducciones, y el resultado ordena por puntos = bonos × 0.3 − caídas × (valor editable) −
-// deducciones. Se guarda en herramientasAKC/allaroundO: {actual: {id, fecha, atletas: [{k, apodo, nombre, nivel, grupo}],
-// datos: {k: {AP: {b: [0|1,0|1,0|1], c, d}}}, caida}, anteriores: [...]}. Los nombres vienen del Excel: siempre escapados.
+// registran bonos 1-3, si plantó, caídas y deducciones. Nota de partida (como el editor de rutinas en obligatorios) = 9.0 +
+// 0.3 por bono + 0.1 si plantó, máximo 10; salto = valor de su salto (obligatorios.json) + 0.1 si plantó. Nota final =
+// partida − deducciones − caídas × (valor editable, 1.0); all around = suma de notas finales. Se guarda en
+// herramientasAKC/allaroundO: {actual: {id, fecha, atletas: [{k, apodo, nombre, nivel, grupo}], datos: {k: {AP: {b: [0|1 ×3],
+// p (plantó), x (no presentó), s (salto elegido), c, d}}}, caida}, anteriores: [...]}. Los nombres vienen del Excel: escapados.
 const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 const APS=[["PISO","Piso"],["ARZON","Arzón"],["ANILLOS","Anillos"],["SALTO","Salto"],["PARALELAS","Paralelas"],["FIJA","Fija"]];
 const BONO=0.3, CAIDA_DEF=1;
@@ -150,11 +162,27 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const clave=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g,"_").replace(/^_|_$/g,"");
 const hoy=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fechaTxt=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"})};
-let ref=null, plantel=[], doc={}, actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
+let SALTOS={}, ref=null, plantel=[], doc={}, actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
 
 function estado(t,c){const e=$("estado");e.textContent=t;e.className="estado"+(c?" "+c:"")}
 function nuevaSesion(){return {id:"aa"+Date.now(),fecha:hoy(),creada:new Date().toISOString(),atletas:[],datos:{},caida:CAIDA_DEF}}
-function dato(k,a){const d=(actual.datos[k]=actual.datos[k]||{});return d[a]=d[a]||{b:[0,0,0],c:0,d:0}}
+function dato(k,a){const d=(actual.datos[k]=actual.datos[k]||{});return d[a]=d[a]||{b:[0,0,0],c:0,d:0,p:0,x:0}}
+const r1=v=>Math.round(v*1000)/1000;
+const nivelDe=a=>(String(a.nivel).match(/\d+/)||[""])[0];
+const saltosDe=a=>SALTOS[nivelDe(a)]||[];
+// Nota de partida y final de un aparato.
+function notaAp(a,k,d){
+  d=d||{b:[0,0,0],c:0,d:0,p:0,x:0};
+  if(d.x)return {np:0,nf:0,nb:0,fuera:true};
+  const nb=k==="SALTO"?0:(d.b||[]).filter(Boolean).length;
+  let base=9;
+  if(k==="SALTO"){const ops=saltosDe(a);const s=ops.find(o=>o[0]===d.s)||ops[0];base=s?Number(s[2]):9.9}
+  const np=r1(Math.min(10,base+nb*BONO+(d.p?0.1:0)));
+  const nf=r1(Math.max(0,np-(d.d||0)-(d.c||0)*Number(actual.caida??CAIDA_DEF)));
+  return {np,nf,nb};
+}
+const f2=v=>Number(v).toFixed(2).replace(/0$/,"");
+function notaHTML(a,k,d){const n=notaAp(a,k,d);return n.fuera?'<span>No presentó este aparato</span>':`<span>Partida <b>${f2(n.np)}</b></span><span class="nf">Final <b>${f2(n.nf)}</b></span>`}
 
 // ---- Guardado: cada cambio se manda en cuanto se toca (lo de deducciones, al dejar de escribir) ----
 function guardar(campos,inmediato){
@@ -185,7 +213,7 @@ $("lista").addEventListener("click",e=>{const g=e.target.closest("[data-todo]");
 
 // ---- Paso 2: registro por aparato ----
 function pintarAps(){
-  $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>{const d=(actual.datos[a.k]||{})[k];return d&&(d.b.some(Boolean)||d.c||d.d)}).length;
+  $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>{const d=(actual.datos[a.k]||{})[k];return d&&(d.b.some(Boolean)||d.c||d.d||d.p||d.x)}).length;
     return `<button type="button" data-ap="${k}" aria-pressed="${k===ap}">${l}<small>${n}/${(actual.atletas||[]).length}</small></button>`}).join("");
 }
 function pintarRegistro(){
@@ -194,31 +222,38 @@ function pintarRegistro(){
   if(!at.length){$("registro").innerHTML='<div class="vacio">Primero elige a los atletas en el paso 1.</div>';return}
   $("registro").innerHTML=at.map(a=>{const d=dato(a.k,ap);
     return `<div class="atl" data-k="${esc(a.k)}"><div class="nom"><b>${esc(a.apodo)}</b><small>${esc(a.grupo)} · Nivel ${esc(a.nivel)}</small></div>
-    <div class="bonos">${[0,1,2].map(i=>`<button type="button" class="bono" data-b="${i}" aria-pressed="${!!d.b[i]}">B${i+1}</button>`).join("")}</div>
+    <div class="bonos">${ap==="SALTO"?(saltosDe(a).length>1?`<select class="vsel" aria-label="Salto que hizo">${saltosDe(a).map(o=>`<option value="${esc(o[0])}"${(d.s||saltosDe(a)[0][0])===o[0]?" selected":""}>${esc(o[1])} (${esc(o[2])})</option>`).join("")}</select>`:`<span class="nopres" style="border:0;background:none;color:#9eb1c8">${esc((saltosDe(a)[0]||[,"Salto",9.9])[1])} · ${esc((saltosDe(a)[0]||[,,9.9])[2])}</span>`):[0,1,2].map(i=>`<button type="button" class="bono" data-b="${i}" aria-pressed="${!!d.b[i]}">B${i+1}</button>`).join("")}<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">Plantó +0.1</button></div>
     <div class="campo"><label>CAÍDAS</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>
-    <div class="campo"><label>DEDUCCIONES</label><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"></div></div>`}).join("");
+    <div class="campo"><label>DEDUCCIONES</label><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"></div>
+    <div class="nota">${notaHTML(a,ap,d)}<button type="button" class="nopres" data-x="1" aria-pressed="${!!d.x}" style="margin-left:auto">No presentó</button></div></div>`}).join("");
+  document.querySelectorAll("#registro .atl").forEach(f=>{const d=dato(f.dataset.k,ap);f.classList.toggle("fuera",!!d.x)});
 }
 $("aps").addEventListener("click",e=>{const b=e.target.closest("[data-ap]");if(!b)return;ap=b.dataset.ap;pintarRegistro()});
 $("registro").addEventListener("click",e=>{
   const fila=e.target.closest(".atl");if(!fila)return;const k=fila.dataset.k,d=dato(k,ap);
-  const b=e.target.closest("[data-b]"),c=e.target.closest("[data-c]");
+  const b=e.target.closest("[data-b]"),c=e.target.closest("[data-c]"),pl=e.target.closest("[data-p]"),x=e.target.closest("[data-x]");
   if(b){const i=+b.dataset.b;d.b[i]=d.b[i]?0:1;b.setAttribute("aria-pressed",!!d.b[i])}
+  else if(pl){d.p=d.p?0:1;pl.setAttribute("aria-pressed",!!d.p)}
+  else if(x){d.x=d.x?0:1;x.setAttribute("aria-pressed",!!d.x);fila.classList.toggle("fuera",!!d.x)}
   else if(c){d.c=Math.max(0,(d.c||0)+(+c.dataset.c));const o=fila.querySelector("output");o.textContent=d.c;o.className=d.c?"hay":""}
   else return;
-  guardar({["actual.datos."+k+"."+ap]:d},true);pintarAps();
+  actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true);pintarAps();
 });
+function actualizarNota(fila,k,d){const a=(actual.atletas||[]).find(x=>x.k===k);const n=fila.querySelector(".nota");if(!a||!n)return;const bx=n.querySelector("[data-x]");n.innerHTML=notaHTML(a,ap,d);n.appendChild(bx)}
+$("registro").addEventListener("change",e=>{if(!e.target.classList.contains("vsel"))return;const fila=e.target.closest(".atl"),k=fila.dataset.k,d=dato(k,ap);d.s=e.target.value;actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true)});
 $("registro").addEventListener("input",e=>{
   if(!e.target.classList.contains("ded"))return;const k=e.target.closest(".atl").dataset.k,d=dato(k,ap);
   const v=parseFloat(String(e.target.value).replace(",","."));d.d=isFinite(v)&&v>0?Math.round(v*1000)/1000:0;
-  guardar({["actual.datos."+k+"."+ap]:d});pintarAps();
+  actualizarNota(e.target.closest(".atl"),k,d);guardar({["actual.datos."+k+"."+ap]:d});pintarAps();
 });
 
 // ---- Paso 3: resultado ----
 function totales(a){
-  let bonos=0,caidas=0,ded=0;const por={};
-  APS.forEach(([k])=>{const d=(actual.datos[a.k]||{})[k]||{b:[0,0,0],c:0,d:0};const nb=d.b.filter(Boolean).length;bonos+=nb;caidas+=d.c||0;ded+=d.d||0;por[k]={nb,c:d.c||0,d:d.d||0}});
-  const vc=Number(actual.caida??CAIDA_DEF);
-  return {a,bonos,caidas,ded,por,pts:Math.round((bonos*BONO-caidas*vc-ded)*1000)/1000};
+  let bonos=0,caidas=0,ded=0,aa=0;const por={};
+  APS.forEach(([k])=>{const d=(actual.datos[a.k]||{})[k];const n=notaAp(a,k,d);const dd=d||{};
+    if(!n.fuera){bonos+=n.nb;caidas+=dd.c||0;ded+=dd.d||0;aa+=n.nf}
+    por[k]={...n,c:dd.c||0,d:dd.d||0,p:!!dd.p}});
+  return {a,bonos,caidas,ded,por,aa:r1(aa)};
 }
 function pintarResultado(){
   $("valCaida").value=actual.caida??CAIDA_DEF;$("valCaidaTxt").textContent=actual.caida??CAIDA_DEF;
@@ -227,11 +262,11 @@ function pintarResultado(){
   if(filtroNivel&&!niveles.includes(filtroNivel))filtroNivel="";
   $("filtro").innerHTML=niveles.length>1?[["","General"],...niveles.map(n=>[n,"Nivel "+n])].map(([v,l])=>`<button type="button" data-n="${esc(v)}" aria-pressed="${v===filtroNivel}">${esc(l)}</button>`).join(""):"";
   const filas=at.filter(a=>!filtroNivel||String(a.nivel)===filtroNivel).map(totales)
-    .sort((x,y)=>y.pts-x.pts||y.bonos-x.bonos||x.caidas-y.caidas||x.ded-y.ded||x.a.apodo.localeCompare(y.a.apodo,"es"));
-  let lugar=0,prev=null;filas.forEach((f,i)=>{const id=[f.pts,f.bonos,f.caidas,f.ded].join("|");if(id!==prev){lugar=i+1;prev=id}f.lugar=lugar});
+    .sort((x,y)=>y.aa-x.aa||y.bonos-x.bonos||x.caidas-y.caidas||x.ded-y.ded||x.a.apodo.localeCompare(y.a.apodo,"es"));
+  let lugar=0,prev=null;filas.forEach((f,i)=>{const id=[f.aa,f.bonos,f.caidas,f.ded].join("|");if(id!==prev){lugar=i+1;prev=id}f.lugar=lugar});
   const f3=v=>String(Math.round(Number(v)*100)/100);
-  $("tabla").innerHTML=filas.length?`<thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>Bonos</th><th>Caídas</th><th>Ded.</th><th>Puntos</th></tr></thead><tbody>${filas.map(f=>`<tr class="${f.lugar<=3?"m"+f.lugar:""}"><td class="lg">${f.lugar===1?"🥇":f.lugar===2?"🥈":f.lugar===3?"🥉":f.lugar}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">${esc(f.a.grupo)} · N${esc(f.a.nivel)}</small></td><td>${f.bonos} <small class="n">+${(f.bonos*BONO).toFixed(1)}</small></td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td class="${f.ded?"neg":""}">${f3(f.ded)}</td><td class="pts">${f.pts>0?"+":""}${f.pts.toFixed(2)}</td></tr>`).join("")}</tbody>`:'<tbody><tr><td class="vacio">Todavía no hay atletas en este all around.</td></tr></tbody>';
-  $("detalle").innerHTML=filas.length?`<thead><tr><th class="izq">Atleta</th>${APS.map(([,l])=>`<th>${l}<small class="n">B · C · D</small></th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr><td class="izq"><b>${esc(f.a.apodo)}</b></td>${APS.map(([k])=>{const p=f.por[k];return `<td>${p.nb} · <span class="${p.c?"neg":""}">${p.c}</span> · ${p.d?f3(p.d):"0"}</td>`}).join("")}</tr>`).join("")}</tbody>`:"";
+  $("tabla").innerHTML=filas.length?`<thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>Bonos</th><th>Caídas</th><th>Ded.</th><th>All around</th></tr></thead><tbody>${filas.map(f=>`<tr class="${f.lugar<=3?"m"+f.lugar:""}"><td class="lg">${f.lugar===1?"🥇":f.lugar===2?"🥈":f.lugar===3?"🥉":f.lugar}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">${esc(f.a.grupo)} · N${esc(f.a.nivel)}</small></td><td>${f.bonos}</td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td class="${f.ded?"neg":""}">${f3(f.ded)}</td><td class="pts">${f.aa.toFixed(3)}</td></tr>`).join("")}</tbody>`:'<tbody><tr><td class="vacio">Todavía no hay atletas en este all around.</td></tr></tbody>';
+  $("detalle").innerHTML=filas.length?`<thead><tr><th class="izq">Atleta</th>${APS.map(([,l])=>`<th>${l}<small class="n">partida → final</small></th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr><td class="izq"><b>${esc(f.a.apodo)}</b></td>${APS.map(([k])=>{const p=f.por[k];return p.fuera?'<td><small class="n">No presentó</small></td>':`<td>${f2(p.np)} → <b>${f2(p.nf)}</b><small class="n">${k==="SALTO"?"":p.nb+"B · "}${p.p?"plantó · ":""}${p.c}C · ${p.d?f3(p.d):"0"}D</small></td>`}).join("")}</tr>`).join("")}</tbody>`:"";
 }
 $("filtro").addEventListener("click",e=>{const b=e.target.closest("[data-n]");if(!b)return;filtroNivel=b.dataset.n;pintarResultado()});
 $("valCaida").addEventListener("change",e=>{const v=parseFloat(String(e.target.value).replace(",","."));actual.caida=isFinite(v)&&v>=0?v:CAIDA_DEF;guardar({"actual.caida":actual.caida},true);pintarResultado()});
@@ -269,6 +304,7 @@ async function cargarPlantel(){
     if(!firebase.apps.length)firebase.initializeApp(FB);const db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();
     ref=db.collection("herramientasAKC").doc("allaroundO");
     try{plantel=await cargarPlantel()}catch(e){console.error(e);estado("No se pudo leer la lista de atletas (trabajo_gav.xlsx).","err")}
+    try{const r=await fetch("../rutinas/obligatorios.json",{cache:"no-store"});SALTOS=(await r.json()).salto||{}}catch(e){console.warn("Saltos de obligatorios:",e)}
     const s=await ref.get();doc=s.exists?s.data():{};
     if(!doc.actual){actual=nuevaSesion();await ref.set({actual},{merge:true})}else actual=doc.actual;
     actual.datos=actual.datos||{};actual.atletas=actual.atletas||[];
