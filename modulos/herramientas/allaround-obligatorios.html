@@ -54,6 +54,11 @@ button{font-family:inherit;cursor:pointer}
 .contador output.hay{color:var(--red)}
 .ded{width:76px;height:42px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-size:18px;font-weight:800;text-align:center}
 .vacio{color:var(--muted);font-size:14px;padding:10px 2px}
+.dedfila{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center}
+.dbtn{height:42px;min-width:44px;border-radius:10px;border:1px solid #7a3b48;background:#2a1018;color:#ffb3bf;font-weight:900;font-size:15px}
+.dbtn:active{background:#7f1d1d;color:#fff}
+.dbtn.undo{border-color:#31506f;background:#11243a;color:#cfe2fa;min-width:40px}
+.dbtn:disabled{opacity:.35}
 .extra{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .plant{height:44px;border-radius:10px;border:2px solid #31506f;background:#071321;color:#9eb1c8;font-weight:900;font-size:12px;padding:0 10px}
 .plant[aria-pressed="true"]{background:#1d4ed8;border-color:#60a5fa;color:#fff}
@@ -88,6 +93,7 @@ small.n{display:block;color:var(--muted);font-size:11px}
   .atl .nom{grid-column:1/-1}
   .atl .bonos{grid-column:1/-1;justify-content:space-between}
   .bono{flex:1;width:auto}
+  .atl .campo.dedc{grid-column:1/-1}.dedfila{flex-wrap:nowrap;width:100%}.dedfila .ded{flex:1;min-width:0}.dbtn{flex:1}
 }
 @media print{
   body{background:#fff;color:#000}
@@ -154,7 +160,7 @@ small.n{display:block;color:var(--muted);font-size:11px}
 // 0.3 por bono + 0.1 si plantó, máximo 10; salto = valor de su salto (obligatorios.json) + 0.1 si plantó. Nota final =
 // partida − deducciones − caídas × (valor editable, 1.0); all around = suma de notas finales. Se guarda en
 // herramientasAKC/allaroundO: {actual: {id, fecha, atletas: [{k, apodo, nombre, nivel, grupo}], datos: {k: {AP: {b: [0|1 ×3],
-// p (plantó), x (no presentó), s (salto elegido), c, d}}}, caida}, anteriores: [...]}. Los nombres vienen del Excel: escapados.
+// p (plantó), x (no presentó), s (salto elegido), c, o (omitidas), d, h (toques de +.1/+.2/+.3 para deshacer)}}}, caida}, anteriores: [...]}. Los nombres vienen del Excel: escapados.
 const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 const APS=[["PISO","Piso"],["ARZON","Arzón"],["ANILLOS","Anillos"],["SALTO","Salto"],["PARALELAS","Paralelas"],["FIJA","Fija"]];
 const BONO=0.3, CAIDA_DEF=0.5, OMITIDA=1;  // Manual de Competencia Juvenil (Dic 2024), tabla de deducciones de obligatorios: caída 0.5, parte omitida 1.0
@@ -226,7 +232,7 @@ function pintarRegistro(){
     <div class="bonos">${ap==="SALTO"?(saltosDe(a).length>1?`<select class="vsel" aria-label="Salto que hizo">${saltosDe(a).map(o=>`<option value="${esc(o[0])}"${(d.s||saltosDe(a)[0][0])===o[0]?" selected":""}>${esc(o[1])} (${esc(o[2])})</option>`).join("")}</select>`:`<span class="nopres" style="border:0;background:none;color:#9eb1c8">${esc((saltosDe(a)[0]||[,"Salto",9.9])[1])} · ${esc((saltosDe(a)[0]||[,,9.9])[2])}</span>`):[0,1,2].map(i=>`<button type="button" class="bono" data-b="${i}" aria-pressed="${!!d.b[i]}">B${i+1}</button>`).join("")}<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">Plantó +0.1</button></div>
     <div class="campo"><label>CAÍDAS</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>
     <div class="campo"><label>PARTES OMITIDAS</label><div class="contador"><button type="button" data-o="-1" aria-label="Quitar parte omitida">−</button><output class="${d.o?"hay":""}" data-out="o">${d.o||0}</output><button type="button" data-o="1" aria-label="Sumar parte omitida">+</button></div></div>
-    <div class="campo"><label>DEDUCCIONES</label><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"></div>
+    <div class="campo dedc"><label>DEDUCCIONES</label><div class="dedfila"><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"><button type="button" class="dbtn" data-dd="0.1">+.1</button><button type="button" class="dbtn" data-dd="0.2">+.2</button><button type="button" class="dbtn" data-dd="0.3">+.3</button><button type="button" class="dbtn undo" data-dd="undo" aria-label="Deshacer la última deducción" ${(d.h||[]).length?"":"disabled"}>↶</button></div></div>
     <div class="nota">${notaHTML(a,ap,d)}<button type="button" class="nopres" data-x="1" aria-pressed="${!!d.x}" style="margin-left:auto">No presentó</button></div></div>`}).join("");
   document.querySelectorAll("#registro .atl").forEach(f=>{const d=dato(f.dataset.k,ap);f.classList.toggle("fuera",!!d.x)});
 }
@@ -238,6 +244,9 @@ $("registro").addEventListener("click",e=>{
   else if(pl){d.p=d.p?0:1;pl.setAttribute("aria-pressed",!!d.p)}
   else if(x){d.x=d.x?0:1;x.setAttribute("aria-pressed",!!d.x);fila.classList.toggle("fuera",!!d.x)}
   else if(c){d.c=Math.max(0,(d.c||0)+(+c.dataset.c));const o=c.parentNode.querySelector("output");o.textContent=d.c;o.className=d.c?"hay":""}
+  else if(e.target.closest("[data-dd]")){const bd=e.target.closest("[data-dd]"),v=bd.dataset.dd;d.h=Array.isArray(d.h)?d.h:[];
+    if(v==="undo"){const u=d.h.pop();if(u==null)return;d.d=r1(Math.max(0,(d.d||0)-u))}else{d.h.push(+v);d.d=r1((d.d||0)+(+v))}
+    fila.querySelector(".ded").value=d.d||"";fila.querySelector(".undo").disabled=!d.h.length}
   else if(e.target.closest("[data-o]")){const bo=e.target.closest("[data-o]");d.o=Math.max(0,(d.o||0)+(+bo.dataset.o));const o=bo.parentNode.querySelector("output");o.textContent=d.o;o.className=d.o?"hay":""}
   else return;
   actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true);pintarAps();
@@ -246,7 +255,7 @@ function actualizarNota(fila,k,d){const a=(actual.atletas||[]).find(x=>x.k===k);
 $("registro").addEventListener("change",e=>{if(!e.target.classList.contains("vsel"))return;const fila=e.target.closest(".atl"),k=fila.dataset.k,d=dato(k,ap);d.s=e.target.value;actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true)});
 $("registro").addEventListener("input",e=>{
   if(!e.target.classList.contains("ded"))return;const k=e.target.closest(".atl").dataset.k,d=dato(k,ap);
-  const v=parseFloat(String(e.target.value).replace(",","."));d.d=isFinite(v)&&v>0?Math.round(v*1000)/1000:0;
+  const v=parseFloat(String(e.target.value).replace(",","."));d.d=isFinite(v)&&v>0?Math.round(v*1000)/1000:0;d.h=[];const ub=e.target.closest(".atl").querySelector(".undo");if(ub)ub.disabled=true;
   actualizarNota(e.target.closest(".atl"),k,d);guardar({["actual.datos."+k+"."+ap]:d});pintarAps();
 });
 
