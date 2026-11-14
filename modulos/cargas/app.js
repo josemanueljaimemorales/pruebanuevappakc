@@ -183,3 +183,5 @@ async function salirEdicion(){
 
 loadLocal();
 cargar();
+// Desde Herramientas del entrenador: #edicion abre la edición (ya no hay botón en Carga semanal; Manu, 14-nov-2026).
+window.addEventListener("load",()=>{if(location.hash!=="#edicion")return;let n=0;const t=setInterval(()=>{n++;if((typeof data==="object"&&data&&Object.keys(data).length)||n>50){clearInterval(t);login();}},200);});

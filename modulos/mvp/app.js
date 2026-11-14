@@ -238,3 +238,5 @@ document.addEventListener("click",e=>{
   const b=e.target.closest(".rec-plus");if(b){addScore(b.dataset.name,selDay,1);avisoMas(b.dataset.name,selDay);}
 });
 window.addEventListener("load",initCloud);
+// Desde Herramientas del entrenador: #registros y #fotos abren su panel (en el MVP ya no están esos botones; Manu, 14-nov-2026).
+window.addEventListener("load",()=>{const a={"#registros":"records","#fotos":"upload"}[location.hash];if(a)setTimeout(()=>askPassword(a),900);});

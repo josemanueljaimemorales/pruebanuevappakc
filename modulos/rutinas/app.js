@@ -101,8 +101,6 @@ function showHome(){
         '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v6M12 13.5l-4 6M12 13.5l4 6M5 9.5l7-1.5 7 1.5"/></svg>')}
       ${card('obligatorios','obl','02','Obligatorios','Rutina oficial por nivel y lo que presenta cada atleta',
         '<svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 9l1.6 1.6L13 7.7M8.5 15h7M15 9.5h.5"/></svg>')}
-      ${card('editor','editor','03','Editor de rutinas','Crear y ajustar rutinas · acceso protegido',
-        '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>')}
     </div>`;
 }
 
