@@ -59,7 +59,8 @@
     plantel.forEach(p => filas.set(p.key, {key: p.key, nombre: p.nombre || p.key, nivel: p.nivel || "", tipo: p.tipo, gav: p.gav || ""}));
     Object.entries(res).forEach(([k, r]) => {
       const f = filas.get(k) || {key: k, nombre: k, tipo: r.tipo};
-      f.nombre = r.nombre || f.nombre; f.nivel = r.nivel || f.nivel; f.tipo = r.tipo || f.tipo; f.gav = r.gav || f.gav || ""; f.r = r;
+      // El nombre del plantel (el vigente) manda sobre el guardado con el resultado.
+      f.nombre = (filas.has(k) && f.nombre !== k ? f.nombre : "") || r.nombre || f.nombre; f.nivel = r.nivel || f.nivel; f.tipo = r.tipo || f.tipo; f.gav = r.gav || f.gav || ""; f.r = r;
       filas.set(k, f);
     });
     const out = {L: [], O: []};
