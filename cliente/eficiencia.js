@@ -126,11 +126,15 @@
 .efc .ley i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin:0 3px 0 8px}
 @media(max-width:600px){.efc td.nm{min-width:130px;max-width:160px;font-size:14px}}
 @media print{
- .efc table{min-width:0;font-size:8.5px;color:#000}
+ .efc table{min-width:0;font-size:7.8px;color:#000}
  .efc .tw{overflow:visible;border:1px solid #999;border-radius:0}
- .efc th,.efc td{border:1px solid #999;padding:2px 3px}
+ .efc th,.efc td{border:1px solid #999;padding:2px 2px}
  .efc td.nm{font-size:12.5px;min-width:0}
  .efc td.nm small{font-size:8.5px}
+ .efc .c{gap:0 2px}.efc .c span{font-size:6.5px}.efc .p{margin-top:1px;padding:1px 0}
+ .efc td.lg,.efc thead tr:last-child th:first-child{width:30px;min-width:30px}
+ .efc td.ef{font-size:10.5px}
+ .efc thead th{font-size:7px;white-space:normal}
  .efc th{background:#e6e6e6!important;color:#000}.efc th.grp{background:#cfd8e3!important;color:#000}
  .efc .t-V{color:#00873d}.efc .t-A{color:#a37c00}.efc .t-R{color:#d00000}
  .efc .ley{color:#222}
