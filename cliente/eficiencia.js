@@ -77,12 +77,12 @@
   // Semáforo: verde = listo para la siguiente competencia, amarillo = a mitad del proceso, rojo = por debajo.
   const SEM = {V: "Listo", A: "En proceso", R: "Por debajo"};
   function semPct(g, p){ return g === "O" ? (p >= 90 ? "V" : p >= 80 ? "A" : "R") : (p >= 85 ? "V" : p >= 75 ? "A" : "R"); }
-  // Obligatorios: entre más cerca de 10, más cerca del objetivo (9.9 o 10 verde, 9.6 amarillo, 9.3 o menos rojo).
+  // Obligatorios: entre más cerca de 10, más cerca del objetivo (9.9 o 10 verde, 9.6 a 9.8 amarillo, 9.5 o menos rojo).
   function semNP(g, np){ return g === "O" ? (np >= 9.9 - 1e-9 ? "V" : np >= 9.6 - 1e-9 ? "A" : "R") : ""; }
   // Deducción (NP del juez − NF). Obligatorios: hasta 1.0 bien, más de 1.0 amarillo, 1.8 o más rojo.
   // Libres: como en el Excel (menos de 1.5 bien, de 1.5 a 1.99 en proceso, 2 o más rojo).
   function semDed(g, d){ return g === "O" ? (d <= 1 + 1e-9 ? "V" : d < 1.8 - 1e-9 ? "A" : "R") : (d < 1.5 ? "V" : d < 2 ? "A" : "R"); }
-  function semEf(e){ return e >= 85 ? "V" : e >= 78 ? "A" : "R"; }
+  function semEf(e){ return e >= 85 ? "V" : e >= 75 ? "A" : "R"; }
   const NIVEL_COLOR = {"3": "#FFE699", "4": "#2E75B5", "5": "#548135", "6": "#ED7D31", "7": "#F4B083", "8": "#BDD6EE", "9": "#D0CECE", "10": "#A8D08D", "FIG": "#C55A11"};
   const GAV_COLOR = {"GAV 3": "#FFF2CC", "GAV 4": "#9DC3E6", "GAV 5": "#FFC000", "GAV 6": "#F8CBAD", "GAV 9": "#AEABAB", "GAV FIG": "#A9D18E"};
   const GAVS = Object.keys(GAV_COLOR);
@@ -171,8 +171,8 @@
     return `<div class="efc">${tabla("L", "LIBRES · NIVELES 7, 8, 9, 10 Y FIG")}${tabla("O", "OBLIGATORIOS · NIVELES 3, 4, 5 Y 6")}
 <div class="ley"><b>Colores:</b>${sw("#00B050")}Verde = listo para la siguiente competencia${sw("#FFFF00")}Amarillo = a mitad del proceso${sw("#FF0000")}Rojo = por debajo.<br>
 <b>% del aparato</b> (NF ÷ la NP más alta entre la de la rutina y la del juez; nunca más de 100): libres verde ≥ 85 %, amarillo 75 a 84.9 %, rojo &lt; 75 % · obligatorios verde ≥ 90 %, amarillo 80 a 89.9 %, rojo &lt; 80 %.<br>
-<b>NP del juez</b> en obligatorios (color de la letra): verde 9.9 o 10, amarillo 9.6, rojo 9.3 o menos. <b>Ded.</b> = NP del juez − NF: obligatorios verde hasta 1.0, amarillo más de 1.0, rojo 1.8 o más · libres verde menos de 1.5, amarillo 1.5 a 1.99, rojo 2 o más.<br>
-<b>% Eficiencia</b> = promedio de los aparatos que presentó (los que no presentó no cuentan): verde ≥ 85 %, amarillo 78 a 84.9 %, rojo &lt; 78 %. Lugar interno: ${sw("#BF9000")}1.º ${sw("#C8C8C8")}2.º ${sw("#BD0000")}3.º; si empatan, gana el de mayor AA. Rut. = NP de la rutina (editor de rutinas)${'' }.<br>
+<b>NP del juez</b> en obligatorios (color de la letra): verde 9.9 o 10, amarillo 9.6 a 9.8, rojo 9.5 o menos. <b>Ded.</b> = NP del juez − NF: obligatorios verde hasta 1.0, amarillo más de 1.0, rojo 1.8 o más · libres verde menos de 1.5, amarillo 1.5 a 1.99, rojo 2 o más.<br>
+<b>% Eficiencia</b> = promedio de los aparatos que presentó (los que no presentó no cuentan): verde ≥ 85 %, amarillo 75 a 84.9 %, rojo &lt; 75 %. Lugar interno: ${sw("#BF9000")}1.º ${sw("#C8C8C8")}2.º ${sw("#BD0000")}3.º; si empatan, gana el de mayor AA. Rut. = NP de la rutina (editor de rutinas)${'' }.<br>
 <b>Nombre</b> con el color de su grupo:${GAVS.map(k => sw(GAV_COLOR[k]) + k.replace("GAV FIG", "GAV FIG y Élite")).join("")}. <b>Nivel</b> con el color de su nivel.</div></div>`;
   }
 
