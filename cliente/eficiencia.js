@@ -123,6 +123,7 @@
 .efc tr[data-k]{cursor:pointer}
 .efc .np0{font-size:11px;opacity:.7}
 .efc .ley{font-size:11.5px;line-height:1.55;color:#c9d6e4}
+.efc tr.prom td{border-top:3px solid #54a7ff;font-weight:900}.efc tr.prom td.pt{text-align:right;font-size:13px;padding-right:8px}.efc tr.prom .p{font-size:14px;padding:4px 0}.efc .po{font-size:11px;margin-top:2px;opacity:.85}
 .efc .ley i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin:0 3px 0 8px}
 @media(max-width:600px){.efc td.nm{min-width:130px;max-width:160px;font-size:14px}}
 @media print{
@@ -137,7 +138,8 @@
  .efc thead th{font-size:7px;white-space:normal}
  .efc th{background:#e6e6e6!important;color:#000}.efc th.grp{background:#cfd8e3!important;color:#000}
  .efc .t-V{color:#00873d}.efc .t-A{color:#a37c00}.efc .t-R{color:#d00000}
- .efc .ley{color:#222}
+ .efc .ley{display:none}
+ .efc tr.prom td{border-top:2px solid #000}.efc tr.prom td.pt{font-size:9px}.efc tr.prom .p{font-size:10px;padding:2px 0}.efc .po{font-size:8px;color:#000;opacity:1}
  .efc *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
  .efc tr{break-inside:avoid}
  .efc td.lg,.efc td.nm,.efc th{position:static!important}
@@ -171,6 +173,18 @@
              `<td class="ef ${f.compitio ? "s-" + semEf(f.calc.ef) : ""}">${f.compitio ? f.calc.ef.toFixed(1) + "%" : "0%"}</td>` +
              `<td>${f.r && f.r.lugar != null ? `<b>${f.r.lugar}°</b>${f.r.part != null ? " de " + f.r.part : ""}` : "—"}</td></tr>`;
       });
+      // Fila de promedios: % promedio de cada aparato (solo quienes lo presentaron) y su orden de mayor a menor.
+      const prom = {}; APS.forEach(([k]) => {
+        const v = filas.filter(f => f.compitio && f.calc.ap[k]).map(f => f.calc.ap[k].p);
+        if (v.length) prom[k] = v.reduce((a, b) => a + b, 0) / v.length;
+      });
+      const orden = Object.keys(prom).sort((a, b) => prom[b] - prom[a]);
+      const efs = filas.filter(f => f.compitio).map(f => f.calc.ef);
+      const efP = efs.length ? efs.reduce((a, b) => a + b, 0) / efs.length : null;
+      h += `<tr class="prom"><td colspan="3" class="pt">Promedio del aparato</td>` +
+        APS.map(([k]) => prom[k] == null ? `<td class="np0">—</td>` :
+          `<td><div class="p s-${semPct(g, prom[k])}">${prom[k].toFixed(1)}%</div><div class="po">${orden.indexOf(k) + 1}.º</div></td>`).join("") +
+        `<td></td><td class="ef ${efP == null ? "" : "s-" + semEf(efP)}">${efP == null ? "—" : efP.toFixed(1) + "%"}</td><td></td></tr>`;
       return h + "</tbody></table></div>";
     };
     const sw = c => `<i style="background:${c}"></i>`;
