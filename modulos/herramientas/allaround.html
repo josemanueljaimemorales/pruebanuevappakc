@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>All around en el gimnasio · AKC</title>
+<style>
+:root{--panel:#0c1a2b;--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff;--green:#2fbf71;--gold:#ffd166;--red:#ff8a8a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 70px}
+.back{display:inline-block;border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;text-decoration:none}
+.eyebrow{color:#68b4ff;font-size:11px;font-weight:800;letter-spacing:.16em;margin-top:12px}
+h1{margin:4px 0 2px;font-size:25px}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.estado{font-size:12px;color:var(--muted);margin-left:auto}
+.estado.ok{color:#8ff0b8}.estado.err{color:var(--red)}
+button{font-family:inherit;cursor:pointer}
+.btn{border:1px solid #31506f;background:#11243a;color:#fff;border-radius:11px;padding:10px 14px;font-weight:800;font-size:14px}
+.btn.prim{background:#1266c9;border-color:#1266c9}
+.btn.verde{background:#15803d;border-color:#15803d}
+.btn:disabled{opacity:.45;cursor:default}
+.pasos{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}
+.pasos button{flex:1 1 150px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:12px;padding:11px;font-weight:900;font-size:13px}
+.pasos button[aria-pressed="true"]{background:#163a60;color:#fff;border-color:#3b79b5}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.panel h2{margin:0 0 10px;font-size:16px}
+.grupo{margin-bottom:12px}
+.grupo .gcab{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.grupo .gcab b{font-size:13px;letter-spacing:.06em;color:#cfe2fa}
+.grupo .gcab button{border:0;background:none;color:var(--blue);font-weight:800;font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:flex;align-items:center;gap:7px;border:1px solid #31506f;border-radius:12px;padding:9px 12px;background:#071321;cursor:pointer;font-size:14px;font-weight:700}
+.chip small{display:block;color:var(--muted);font-size:10px;font-weight:600}
+.chip input{width:18px;height:18px;accent-color:#2fbf71}
+.chip:has(input:checked){border-color:var(--green);background:#123d2a}
+.aps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.aps button{border:1px solid var(--line);background:var(--panel);color:#cfe2fa;border-radius:12px;padding:10px 4px;font-weight:900;font-size:13px}
+.aps button[aria-pressed="true"]{background:#1266c9;border-color:#1266c9;color:#fff}
+.aps button small{display:block;font-weight:600;font-size:10px;color:#9eb1c8}
+.aps button[aria-pressed="true"] small{color:#dbeafe}
+.atl{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(260px,1.4fr);gap:10px;align-items:center;background:#0a1726;border:1px solid #1e3550;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.atl .nom b{display:block;font-size:15px}
+.atl .nom small{color:var(--muted);font-size:11px}
+.bonos{display:flex;gap:6px}
+.bono{width:46px;height:44px;border-radius:10px;border:2px solid #31506f;background:#071321;color:#9eb1c8;font-weight:900;font-size:13px}
+.bono[aria-pressed="true"]{background:#15803d;border-color:#22c55e;color:#fff}
+.campo{display:flex;flex-direction:column;align-items:center;gap:3px}
+.campo label{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.05em}
+.contador{display:flex;align-items:center;gap:4px}
+.contador button{width:36px;height:40px;border-radius:10px;border:1px solid #31506f;background:#11243a;color:#fff;font-size:20px;font-weight:900}
+.contador output{min-width:26px;text-align:center;font-size:20px;font-weight:900}
+.contador output.hay{color:var(--red)}
+.ded{width:76px;height:42px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-size:18px;font-weight:800;text-align:center}
+.vacio{color:var(--muted);font-size:14px;padding:10px 2px}
+.bej{color:#ffd166;font-weight:800}.nota .neg{color:#ff8a8a}
+.elems{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.abrirEl{border:1px solid #7a5b20;background:#2a2010;color:#ffd166;border-radius:12px;padding:12px;font-weight:900;font-size:14px;text-align:left;display:flex;justify-content:space-between;gap:8px;min-height:48px}
+.elsum{display:flex;flex-wrap:wrap;gap:6px}.mk{font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px}.mk.nr{background:#5b1520;color:#fecaca}.mk.fe{background:#3b2a07;color:#ffd166}
+.elpanel{display:flex;flex-direction:column;gap:6px;background:#071321;border:1px solid #1e3550;border-radius:12px;padding:10px}
+.elrow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;border-top:1px solid #12263b;padding-top:6px}.elrow:first-of-type{border-top:0}
+.eln{font-size:14px;font-weight:700}.eln small{display:block;color:#9eb1c8;font-size:11px}
+.elb{min-height:44px;border-radius:10px;border:1px solid #7a3b48;background:#2a1018;color:#ffb3bf;font-weight:800;font-size:12px;padding:0 10px}
+.elb[aria-pressed="true"]{background:#b91c1c;border-color:#ef4444;color:#fff}
+.elb.fe{border-color:#7a5b20;background:#2a2010;color:#ffd166}.elb.fe[aria-pressed="true"]{background:#b45309;border-color:#f59e0b;color:#fff}
+.elab{width:100%;font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.03em}
+.el{border:1px solid #31506f;background:#071321;color:#d6e3f2;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;text-align:left;min-height:44px}
+.el small{display:block;color:#9eb1c8;font-size:10px;font-weight:700}
+.el[aria-pressed="true"]{background:#5b1520;border-color:#ef4444;color:#fff;text-decoration:line-through}
+.el[aria-pressed="true"] small{color:#fecaca}
+.atl .extra{grid-column:1/-1}
+.hses{display:flex;gap:10px;align-items:center;background:#0a1726;border:1px solid #1e3550;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.hses.sel{border-color:#2fbf71;background:#0f2a1e}
+.hchk{display:flex;gap:10px;align-items:flex-start;flex:1;cursor:pointer;min-width:0}
+.hchk input{width:20px;height:20px;accent-color:#2fbf71;margin-top:2px;flex:none}
+.hchk b{font-size:15px}.hchk small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.tagc{font-size:10px;font-weight:800;background:#ffd166;color:#06131f;border-radius:999px;padding:2px 7px;margin-left:4px}
+.hver{padding:8px 12px;font-size:13px;flex:none}
+.h3{font-size:14px;margin:14px 0 6px;color:#cfe2fa}
+.resumen-mejora{font-size:14px;color:#d6e3f2;line-height:1.5;background:#0d1d31;border-radius:10px;padding:10px 12px}
+.sube{color:#8ff0b8;font-weight:900}.baja{color:#ff8a8a;font-weight:900}.igual{color:var(--muted)}
+.dedfila{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center}
+.dbtn{height:56px;min-width:58px;border-radius:12px;border:2px solid #7a3b48;background:#2a1018;color:#ffb3bf;font-weight:900;font-size:20px}
+.dbtn:active{background:#7f1d1d;color:#fff}
+.dbtn.undo{border-color:#31506f;background:#11243a;color:#cfe2fa;min-width:52px}
+.dbtn:disabled{opacity:.35}
+.extra{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.plant{height:44px;border-radius:10px;border:2px solid #31506f;background:#071321;color:#9eb1c8;font-weight:900;font-size:12px;padding:0 10px}
+.plant[aria-pressed="true"]{background:#1d4ed8;border-color:#60a5fa;color:#fff}
+.nopres{height:32px;border-radius:9px;border:1px solid #5b3040;background:#1b0f16;color:#ff9aa8;font-weight:800;font-size:11px;padding:0 9px}
+.nopres[aria-pressed="true"]{background:#7f1d1d;border-color:#ef4444;color:#fff}
+.vsel{height:44px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-weight:800;font-size:13px;padding:0 8px;max-width:210px}
+.nota{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#cfe2fa;border-top:1px dashed #1e3550;padding-top:7px}
+.nota b{font-size:16px}.nota .nf b{color:#8ff0b8}
+.atl.fuera{opacity:.55}
+.atl.fuera .bonos,.atl.fuera .campo,.atl.fuera .plant,.atl.fuera .vsel{pointer-events:none;opacity:.4}
+.formula{font-size:13px;color:#d6e3f2;line-height:1.6}
+.formula input{width:64px;padding:6px;border-radius:8px;border:1px solid #31506f;background:#071321;color:#fff;font-weight:800;font-size:15px;text-align:center}
+.tw{overflow-x:auto;border:1px solid #1e3550;border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 8px;border-bottom:1px solid #1b3047;text-align:center;white-space:nowrap}
+th{background:#11243a;color:#cfe2fa;font-size:11px;letter-spacing:.04em}
+td.izq,th.izq{text-align:left}
+td.lg{font-weight:900;font-size:17px}
+tr.m1 td.lg{color:#e6b422}tr.m2 td.lg{color:#c8c8c8}tr.m3 td.lg{color:#d08a5a}
+td.pts{font-weight:900;font-size:16px;color:#8ff0b8}
+td.neg{color:var(--red)}
+small.n{display:block;color:var(--muted);font-size:11px}
+.filtro{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.filtro button{border:1px solid var(--line);background:#071321;color:#cfe2fa;border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px}
+.filtro button[aria-pressed="true"]{background:#163a60;border-color:#3b79b5;color:#fff}
+.det td,.det th{font-size:12px;padding:6px 5px}
+.oculto{display:none!important}
+@media(max-width:640px){
+  #tabla th,#tabla td{padding:8px 3px;font-size:13px}#tabla th{font-size:10px;letter-spacing:0}#tabla td.lg{font-size:15px}#tabla small.n{font-size:10px}
+  .aps{grid-template-columns:repeat(3,1fr)}
+  .atl{grid-template-columns:1fr 1fr;gap:8px}
+  .atl .nom{grid-column:1/-1}
+  .atl .bonos{grid-column:1/-1;justify-content:space-between}
+  .bono{flex:1;width:auto}
+  .atl .campo.dedc{grid-column:1/-1}.dedfila{flex-wrap:nowrap;width:100%}.dedfila .ded{flex:1;min-width:0;height:56px;font-size:20px}.dbtn{flex:1;min-width:0}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .back,.barra,.pasos,#paso1,#paso2,.filtro,.formula input{display:none!important}
+  .panel{border:0;background:#fff;padding:0}
+  .tw{border:1px solid #999}
+  th{background:#e6e6e6!important;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td{color:#000;border-bottom:1px solid #bbb}
+  td.pts{color:#000}td.neg{color:#b00}
+  small.n{color:#444}
+  .eyebrow{color:#000}
+  .formula,.sub,h2{color:#000}.no-imp{display:none!important}.solo-imp{display:inline!important}
+}
+.solo-imp{display:none}
+
+.tipo{display:inline-block;font-size:10px;font-weight:900;letter-spacing:.05em;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.tipo.O{background:#1e3a8a;color:#bfdbfe}.tipo.L{background:#14532d;color:#bbf7d0}
+.secc{font-size:13px;letter-spacing:.1em;color:#cfe2fa;margin:16px 0 8px;border-bottom:1px solid #213a55;padding-bottom:4px}
+#resL .secc{margin-top:26px}
+details.reglas{background:#0d1d31;border-radius:10px;padding:10px 12px;margin:0 0 10px}details.reglas summary{cursor:pointer;font-weight:800;color:#cfe2fa;font-size:13px}
+details.reglas p{font-size:12.5px;color:#d6e3f2;line-height:1.5;margin:8px 0 0}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="../../cliente/fuentes.js"></script>
+<script src="../../cliente/xlsx-reader.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Herramientas</a>
+  <div class="eyebrow">HERRAMIENTAS DEL ENTRENADOR · ALL AROUND</div>
+  <h1>All around en el gimnasio</h1>
+  <p class="sub" id="fechaTxt">Obligatorios y libres</p>
+  <div class="barra">
+    <button class="btn" id="btnNuevo" type="button">＋ Nuevo all around</button>
+    <span class="estado" id="estado" role="status">Cargando…</span>
+  </div>
+  <div class="pasos" role="tablist">
+    <button type="button" data-paso="1" aria-pressed="true">1 · Atletas</button>
+    <button type="button" data-paso="2" aria-pressed="false">2 · Registrar por aparato</button>
+    <button type="button" data-paso="3" aria-pressed="false">3 · Resultado</button>
+    <button type="button" data-paso="4" aria-pressed="false">📜 Historial</button>
+  </div>
+
+  <section class="panel" id="paso1">
+    <h2>Selecciona los atletas que participarán en el all around</h2>
+    <p class="sub" style="margin:-4px 0 10px">Puedes mezclar obligatorios y libres: cada uno se califica con su método.</p>
+    <div id="lista"></div>
+    <button class="btn prim" type="button" id="btnListo" style="width:100%;margin-top:8px">Listo, registrar por aparato →</button>
+  </section>
+
+  <section class="panel oculto" id="paso2">
+    <div class="aps" id="aps"></div>
+    <details class="reglas"><summary>¿Cómo se califica?</summary>
+      <p><span class="tipo O">OBLIGATORIOS</span> Nota de partida = 9.0 + 0.3 por bono (máx. 3) + 0.1 si plantó (máx. 10; salto: el valor de su salto + 0.1). Caída −0.5, parte omitida −1.0, parte a medias −0.5 (en deducciones); el bono no cuenta si hubo caída o error grande en ese elemento (Manual de Competencia Juvenil, p. 19).</p>
+      <p><span class="tipo L">LIBRES</span> Nota de partida = la de su rutina (editor de rutinas). Caída −1.0 (Código FIG; N7 y N8 también, por el manual USAG). «Elemento no presentado o caída»: no lo presentó resta su valor (si quedan menos de 6: N7 y N8 −1.0 por cada uno que falte; 9, 10 y FIG con la tabla FIG); se cayó cuenta la caída y el elemento conserva su valor. «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D+ +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4).</p>
+    </details>
+    <div id="registro"></div>
+    <button class="btn verde" type="button" id="btnResultado" style="width:100%;margin-top:6px">Ver resultado del all around →</button>
+  </section>
+
+  <section class="panel oculto" id="paso4">
+    <h2>Historial de all arounds</h2>
+    <p class="sub" style="margin:-4px 0 10px">Cada all around queda guardado al empezar uno nuevo (también los de antes, de obligatorios y de libres). Marca dos o más para compararlos.</p>
+    <div id="hLista"></div>
+    <div id="hVer"></div>
+    <div id="hComp"></div>
+  </section>
+
+  <section class="panel oculto" id="paso3">
+    <h2>Resultado de este all around</h2>
+    <p class="formula">Caída: obligatorios × <b class="solo-imp" id="valCaidaOTxt"></b><input id="valCaidaO" type="number" step="0.1" min="0" inputmode="decimal" aria-label="Caída en obligatorios"> · libres × <b class="solo-imp" id="valCaidaLTxt"></b><input id="valCaidaL" type="number" step="0.1" min="0" inputmode="decimal" aria-label="Caída en libres">. <b>All around</b> = suma de las notas finales. En libres, <b>eficiencia</b> = suma de notas finales ÷ suma de notas de partida de su rutina.</p>
+    <div class="filtro" id="filtro"></div>
+    <div id="resO"></div>
+    <div id="resL"></div>
+    <button class="btn no-imp" type="button" style="margin-top:12px" onclick="print()">🖨️ Imprimir resultado</button>
+  </section>
+</div>
+<script>
+"use strict";
+// All around en el gimnasio (Manu, 14-nov-2026): un solo all around con atletas de obligatorios (niveles 3 a 6 de trabajo_gav.xlsx)
+// y de libres (editor de rutinas), cada uno con su método:
+//  · Obligatorios (tipo "O"): partida = 9.0 + 0.3 por bono (máx. 3) + 0.1 si plantó (máx. 10; salto = su salto de
+//    obligatorios.json + 0.1); final = partida − deducciones − caídas × caidaO (0.5) − partes omitidas × 1.0 (Manual de
+//    Competencia Juvenil, p. 19).
+//  · Libres (tipo "L"): partida = la de su rutina (rutinasAKC/estado.atletas[n].vista; copia al elegirlos) − elementos no
+//    presentados (nr) − rutina corta + plantó; caídas × caidaL (1.0) contando las de un elemento (fe); N8 bono por ejecución.
+// Nube: herramientasAKC/allaround {actual: {id, fecha, atletas: [{k, tipo, apodo, nivel, grupo, vista?, pe?}], datos[k][AP],
+// caidaO, caidaL}, anteriores}. El historial muestra también los de allaroundO y allaroundL (antes eran dos herramientas).
+// Los nombres vienen de los datos: siempre escapados.
+const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
+const APS=[["PISO","Piso"],["ARZON","Arzón"],["ANILLOS","Anillos"],["SALTO","Salto"],["PARALELAS","Paralelas"],["FIJA","Fija"]];
+const BONO=0.3, OMITIDA=1, CAIDA_O=0.5, CAIDA_L=1;
+const LETRAS="ABCDEFGHIJ", N8_SALIDA={B:0.2,C:0.3}, N8_SALTO=[["MA","Mortal agrupado o carpado",0.2],["EX","Extendido o con medio giro",0.3],["AG","Agrupado con giro",0.3],["EG","Extendido con 1 giro o más",0.4]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const clave=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g,"_").replace(/^_|_$/g,"");
+const hoy=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fechaTxt=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"})};
+const r1=v=>Math.round(v*1000)/1000;
+const f2=v=>Number(v).toFixed(2).replace(/0$/,"");
+const f3=v=>String(Math.round(Number(v)*100)/100);
+let SALTOS={}, modoRk="total", abiertos=new Set(), ref=null, plantel=[], doc={}, viejos=[], actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
+
+function estado(t,c){const e=$("estado");e.textContent=t;e.className="estado"+(c?" "+c:"")}
+function nuevaSesion(){return {id:"aa"+Date.now(),fecha:hoy(),creada:new Date().toISOString(),atletas:[],datos:{},caidaO:CAIDA_O,caidaL:CAIDA_L}}
+function dato(k,a){const d=(actual.datos[k]=actual.datos[k]||{});return d[a]=d[a]||{b:[0,0,0],nr:[],fe:[],c:0,o:0,d:0,p:0,x:0,s:"",sb:""}}
+const tipoDe=a=>a.tipo==="L"?"L":"O";
+const nivelDe=a=>{const t=String(a.nivel||"").toUpperCase();const m=t.match(/\d+/);return /FIG|JR|JUV|MAY|ELITE/.test(t)?"FIG":(m?m[0]:t)};
+const caidaDe=(ses,t)=>Number(t==="L"?(ses.caidaL??CAIDA_L):(ses.caidaO??ses.caida??CAIDA_O));
+
+// ---- Obligatorios ----
+const saltosDe=a=>SALTOS[nivelDe(a)]||[];
+function notaO(a,k,d,ses){
+  d=d||{};if(d.x)return {np:0,nf:0,nb:0,fuera:true,base:0};
+  const nb=k==="SALTO"?0:(d.b||[]).filter(Boolean).length;
+  let base=9;if(k==="SALTO"){const ops=saltosDe(a);const s=ops.find(o=>o[0]===d.s)||ops[0];base=s?Number(s[2]):9.9}
+  const np=r1(Math.min(10,base+nb*BONO+(d.p?0.1:0)));
+  const nf=r1(Math.max(0,np-(d.d||0)-(d.c||0)*caidaDe(ses,"O")-(d.o||0)*OMITIDA));
+  return {np,nf,nb,base:np};
+}
+// ---- Libres ----
+const vistaDe=(a,k)=>((a.vista||{})[k])||{np:0,rows:[]};
+const letraSalida=(a,k)=>{const r=vistaDe(a,k).rows||[];return String((r[r.length-1]||{}).l||"").toUpperCase()};
+const cOMas=l=>LETRAS.indexOf(l)>=2;
+function plantEditor(a,k){const nv=nivelDe(a);if(nv==="7"||nv==="8"||!(a.pe||{})[k])return 0;if(k==="ARZON")return 0;return k==="SALTO"||cOMas(letraSalida(a,k))?0.1:0}
+function bonoPlant(a,k,d){
+  const nv=nivelDe(a);if(!d||!d.p||nv==="7")return 0;
+  if(nv==="8"){if(k==="SALTO"){const o=N8_SALTO.find(x=>x[0]===d.sb)||N8_SALTO[0];return o[2]}const l=letraSalida(a,k);return N8_SALIDA[l]!=null?N8_SALIDA[l]:(LETRAS.indexOf(l)>=3?0.4:0)}
+  if(k==="ARZON")return 0;return k==="SALTO"||cOMas(letraSalida(a,k))?0.1:0;
+}
+function etiquetaPlant(a,k,d){if(tipoDe(a)==="O")return "Plantó +0.1";const nv=nivelDe(a);if(nv==="7")return "";const v=bonoPlant(a,k,{...(d||{}),p:1});return v>0?`Plantó +${v.toFixed(1)}`:"Plantó (sin bono)"}
+function notaL(a,k,d,ses){
+  d=d||{};if(d.x)return {np:0,nf:0,nb:0,fuera:true,base:0};
+  const v=vistaDe(a,k),rows=v.rows||[];
+  const nr=(d.nr||[]).filter(i=>rows[i]);
+  const menos=nr.reduce((s,i)=>s+(Number(rows[i].vd)||0),0);
+  const base=r1(Math.max(0,(Number(v.np)||0)-plantEditor(a,k)));
+  const nv=nivelDe(a);let corta=0;
+  if(k!=="SALTO"){const T={5:3,4:4,3:5,2:6,1:7,0:10};const nd=n=>n>=6?0:(nv==="7"||nv==="8"?(6-n):T[n]);corta=nd(rows.length-nr.length)-nd(rows.length)}
+  const np=r1(Math.max(0,base-menos-corta+bonoPlant(a,k,d)));
+  const caidas=(d.c||0)+(d.fe||[]).filter(i=>rows[i]).length;
+  const ej=r1(10-(d.d||0)-caidas*caidaDe(ses,"L"));
+  const bej=nv==="8"?(ej>=9.5?0.4:ej>=9.2?0.3:ej>=8.9?0.2:ej>=8.6?0.1:0):0;
+  const nf=r1(Math.max(0,np-(10-ej)+bej));
+  return {np,nf,nb:nr.length,base,ej,bej,corta};
+}
+function notaAp(a,k,d,ses){ses=ses||actual;return tipoDe(a)==="L"?notaL(a,k,d,ses):notaO(a,k,d,ses)}
+function notaHTML(a,k,d){const n=notaAp(a,k,d);if(n.fuera)return '<span>No presentó este aparato</span>';
+  if(tipoDe(a)==="O")return `<span>Partida <b>${f2(n.np)}</b></span><span class="nf">Final <b>${f2(n.nf)}</b></span>`;
+  return `<span>Partida <b>${f2(n.np)}</b></span><span>Ejecución <b>${f2(n.ej)}</b>${n.bej?` <small class="bej">+${n.bej.toFixed(1)} bono N8</small>`:""}</span>${n.corta?`<span class="neg">Rutina corta −${n.corta.toFixed(1)}</span>`:""}<span class="nf">Final <b>${f2(n.nf)}</b></span>`}
+
+// ---- Guardado ----
+function guardar(campos,inmediato){Object.assign(pendientes,campos);clearTimeout(timer);estado("Guardando…");timer=setTimeout(enviar,inmediato?0:500)}
+async function enviar(){const p=pendientes;pendientes={};if(!Object.keys(p).length)return;
+  try{await ref.update(p);estado("Guardado ✓","ok")}catch(e){Object.assign(pendientes,p);estado("No se pudo guardar: "+e.message+" (se reintenta al siguiente cambio)","err")}}
+
+// ---- Paso 1: atletas ----
+function pintarLista(){
+  const sel=new Set((actual.atletas||[]).map(a=>a.k));
+  const grupos=[];plantel.forEach(a=>{let g=grupos.find(x=>x.n===a.grupo);if(!g)grupos.push(g={n:a.grupo,t:tipoDe(a),l:[]});g.l.push(a)});
+  let ult="";
+  $("lista").innerHTML=plantel.length?grupos.map(g=>{const cab=g.t!==ult?`<div class="secc">${g.t==="O"?"OBLIGATORIOS · NIVELES 3 A 6":"LIBRES · NIVELES 7 A FIG"}</div>`:"";ult=g.t;
+    return cab+`<div class="grupo"><div class="gcab"><b>${esc(g.n)}</b><button type="button" data-todo="1">Todo el grupo</button></div><div class="chips">${g.l.map(a=>`<label class="chip"><input type="checkbox" data-k="${esc(a.k)}"${sel.has(a.k)?" checked":""}><span>${esc(a.apodo)}<small>Nivel ${esc(nivelDe(a))}</small></span></label>`).join("")}</div></div>`}).join(""):'<div class="vacio">No se encontraron atletas.</div>';
+}
+function leerSeleccion(){
+  const ks=[...document.querySelectorAll("#lista input[data-k]:checked")].map(x=>x.dataset.k);
+  actual.atletas=plantel.filter(a=>ks.includes(a.k));
+  guardar({"actual.atletas":actual.atletas},true);
+}
+$("lista").addEventListener("change",leerSeleccion);
+$("lista").addEventListener("click",e=>{const g=e.target.closest("[data-todo]");if(!g)return;
+  const ins=[...e.target.closest(".grupo").querySelectorAll("input[data-k]")];const todos=ins.every(i=>i.checked);ins.forEach(i=>i.checked=!todos);leerSeleccion()});
+
+// ---- Paso 2: registro por aparato ----
+const tocado=d=>d&&((d.b||[]).some(Boolean)||(d.nr||[]).length||(d.fe||[]).length||d.c||d.o||d.d||d.p||d.x);
+function pintarAps(){
+  $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>tocado((actual.datos[a.k]||{})[k])).length;
+    return `<button type="button" data-ap="${k}" aria-pressed="${k===ap}">${l}<small>${n}/${(actual.atletas||[]).length}</small></button>`}).join("");
+}
+const contador=(et,attr,v)=>`<div class="campo"><label>${et}</label><div class="contador"><button type="button" ${attr}="-1" aria-label="Quitar">−</button><output class="${v?"hay":""}">${v||0}</output><button type="button" ${attr}="1" aria-label="Sumar">+</button></div></div>`;
+function controlesO(a,d){
+  return `<div class="bonos">${ap==="SALTO"?(saltosDe(a).length>1?`<select class="vsel" data-sel="s" aria-label="Salto que hizo">${saltosDe(a).map(o=>`<option value="${esc(o[0])}"${(d.s||saltosDe(a)[0][0])===o[0]?" selected":""}>${esc(o[1])} (${esc(o[2])})</option>`).join("")}</select>`:`<span class="elab">${esc((saltosDe(a)[0]||[,"Salto",9.9])[1])} · ${esc((saltosDe(a)[0]||[,,9.9])[2])}</span>`):[0,1,2].map(i=>`<button type="button" class="bono" data-b="${i}" aria-pressed="${!!(d.b||[])[i]}">B${i+1}</button>`).join("")}<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">Plantó +0.1</button></div>
+    ${contador("CAÍDAS (−"+caidaDe(actual,"O")+")","data-c",d.c)}${contador("PARTES OMITIDAS (−1.0)","data-o",d.o)}`;
+}
+function controlesL(a,d){
+  const rows=vistaDe(a,ap).rows||[];
+  const nr=d.nr||[],fe=d.fe||[],marc=nr.length+fe.length,abierto=abiertos.has(a.k+"|"+ap);
+  const elems=!rows.length?'<span class="elab">Sin rutina cargada en este aparato (editor de rutinas).</span>':
+    `<button type="button" class="abrirEl" data-abrir="1" aria-expanded="${abierto}">⚠️ Elemento no presentado o caída${marc?` <b>(${marc})</b>`:""} <span>${abierto?"▲":"▼"}</span></button>`+
+    (marc?`<div class="elsum">${nr.map(i=>rows[i]?`<span class="mk nr">✗ ${esc(rows[i].n)} · no lo presentó</span>`:"").join("")}${fe.map(i=>rows[i]?`<span class="mk fe">⬇ ${esc(rows[i].n)} · se cayó</span>`:"").join("")}</div>`:"")+
+    (abierto?`<div class="elpanel"><span class="elab">Elige el elemento · NP de su rutina ${f2(vistaDe(a,ap).np||0)}</span>${rows.map((r,i)=>`<div class="elrow"><span class="eln">${esc(r.n)}<small>${esc(r.l||"")}${r.l?" · ":""}${esc(r.vd||"")}</small></span><button type="button" class="elb" data-nr="${i}" aria-pressed="${nr.includes(i)}">No lo presentó</button><button type="button" class="elb fe" data-fe="${i}" aria-pressed="${fe.includes(i)}">Se cayó</button></div>`).join("")}</div>`:"");
+  return `<div class="elems">${elems}</div>
+    <div class="extra">${nivelDe(a)==="7"?'<span class="elab">N7: sin bono por plantar</span>':`<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">${esc(etiquetaPlant(a,ap,d))}</button>${nivelDe(a)==="8"&&ap==="SALTO"?`<select class="vsel" data-sel="sb" aria-label="Tipo de salto">${N8_SALTO.map(o=>`<option value="${o[0]}"${(d.sb||"MA")===o[0]?" selected":""}>${esc(o[1])} +${o[2]}</option>`).join("")}</select>`:""}`}</div>
+    <div class="campo"><label>CAÍDAS (−${caidaDe(actual,"L")})${fe.length?` <span class="bej">+${fe.length} en elementos</span>`:""}</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c||0}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>`;
+}
+function pintarRegistro(){
+  pintarAps();
+  const at=actual.atletas||[];
+  if(!at.length){$("registro").innerHTML='<div class="vacio">Primero elige a los atletas en el paso 1.</div>';return}
+  $("registro").innerHTML=at.map(a=>{const d=dato(a.k,ap),t=tipoDe(a);
+    return `<div class="atl" data-k="${esc(a.k)}"><div class="nom"><b>${esc(a.apodo)}<span class="tipo ${t}">${t==="O"?"OBLIGATORIOS":"LIBRES"}</span></b><small>${t==="O"?esc(a.grupo)+" · ":""}Nivel ${esc(nivelDe(a))}</small></div>
+    ${t==="O"?controlesO(a,d):controlesL(a,d)}
+    <div class="campo dedc"><label>DEDUCCIONES</label><div class="dedfila"><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"><button type="button" class="dbtn" data-dd="0.1">+.1</button><button type="button" class="dbtn" data-dd="0.2">+.2</button><button type="button" class="dbtn" data-dd="0.3">+.3</button><button type="button" class="dbtn undo" data-dd="undo" aria-label="Deshacer la última deducción" ${(d.h||[]).length?"":"disabled"}>↶</button></div></div>
+    <div class="nota">${notaHTML(a,ap,d)}<button type="button" class="nopres" data-x="1" aria-pressed="${!!d.x}" style="margin-left:auto">No presentó</button></div></div>`}).join("");
+  document.querySelectorAll("#registro .atl").forEach(f=>{const d=dato(f.dataset.k,ap);f.classList.toggle("fuera",!!d.x)});
+}
+function actualizarNota(fila,k,d){const a=(actual.atletas||[]).find(x=>x.k===k);const n=fila.querySelector(".nota");if(!a||!n)return;const bx=n.querySelector("[data-x]");n.innerHTML=notaHTML(a,ap,d);n.appendChild(bx)}
+$("aps").addEventListener("click",e=>{const b=e.target.closest("[data-ap]");if(!b)return;ap=b.dataset.ap;pintarRegistro()});
+$("registro").addEventListener("click",e=>{
+  const fila=e.target.closest(".atl");if(!fila)return;const k=fila.dataset.k,d=dato(k,ap);
+  const q=s=>e.target.closest(s);
+  if(q("[data-abrir]")){const key=k+"|"+ap;abiertos.has(key)?abiertos.delete(key):abiertos.add(key);pintarRegistro();return}
+  const bnr=q("[data-nr]"),bfe=q("[data-fe]");
+  if(bnr||bfe){const i=+(bnr||bfe).dataset[bnr?"nr":"fe"];d.nr=Array.isArray(d.nr)?d.nr:[];d.fe=Array.isArray(d.fe)?d.fe:[];
+    if(bnr){d.fe=d.fe.filter(x=>x!==i);d.nr=d.nr.includes(i)?d.nr.filter(x=>x!==i):d.nr.concat(i)}else{d.nr=d.nr.filter(x=>x!==i);d.fe=d.fe.includes(i)?d.fe.filter(x=>x!==i):d.fe.concat(i)}
+    guardar({["actual.datos."+k+"."+ap]:d},true);pintarRegistro();return}
+  const b=q("[data-b]"),pl=q("[data-p]"),x=q("[data-x]"),c=q("[data-c]"),o=q("[data-o]"),dd=q("[data-dd]");
+  if(b){const i=+b.dataset.b;d.b=Array.isArray(d.b)?d.b:[0,0,0];d.b[i]=d.b[i]?0:1;b.setAttribute("aria-pressed",!!d.b[i])}
+  else if(pl){d.p=d.p?0:1;pl.setAttribute("aria-pressed",!!d.p)}
+  else if(x){d.x=d.x?0:1;x.setAttribute("aria-pressed",!!d.x);fila.classList.toggle("fuera",!!d.x)}
+  else if(c){d.c=Math.max(0,(d.c||0)+(+c.dataset.c));const out=c.parentNode.querySelector("output");out.textContent=d.c;out.className=d.c?"hay":""}
+  else if(o){d.o=Math.max(0,(d.o||0)+(+o.dataset.o));const out=o.parentNode.querySelector("output");out.textContent=d.o;out.className=d.o?"hay":""}
+  else if(dd){const v=dd.dataset.dd;d.h=Array.isArray(d.h)?d.h:[];
+    if(v==="undo"){const u=d.h.pop();if(u==null)return;d.d=r1(Math.max(0,(d.d||0)-u))}else{d.h.push(+v);d.d=r1((d.d||0)+(+v))}
+    fila.querySelector(".ded").value=d.d||"";fila.querySelector(".undo").disabled=!d.h.length}
+  else return;
+  actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true);pintarAps();
+});
+$("registro").addEventListener("change",e=>{const s=e.target.closest("[data-sel]");if(!s)return;const fila=e.target.closest(".atl"),k=fila.dataset.k,d=dato(k,ap);d[s.dataset.sel]=s.value;
+  const pb=fila.querySelector("[data-p]"),a=(actual.atletas||[]).find(x=>x.k===k);if(pb&&tipoDe(a)==="L")pb.textContent=etiquetaPlant(a,ap,d);actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true)});
+$("registro").addEventListener("input",e=>{
+  if(!e.target.classList.contains("ded"))return;const fila=e.target.closest(".atl"),k=fila.dataset.k,d=dato(k,ap);
+  const v=parseFloat(String(e.target.value).replace(",","."));d.d=isFinite(v)&&v>0?r1(v):0;d.h=[];const ub=fila.querySelector(".undo");if(ub)ub.disabled=true;
+  actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d});pintarAps();
+});
+
+// ---- Paso 3: resultado (obligatorios y libres por separado) ----
+function totales(a,ses){
+  ses=ses||actual;const t=tipoDe(a);
+  let bonos=0,noHizo=0,caidas=0,omit=0,ded=0,aa=0,sumNp=0,nAp=0,posibles=0;const por={};
+  APS.forEach(([k])=>{const d=((ses.datos||{})[a.k]||{})[k];const n=notaAp(a,k,d,ses);const dd=d||{};
+    const c=(dd.c||0)+(t==="L"?(dd.fe||[]).length:0);
+    if(!n.fuera){if(t==="O"){bonos+=n.nb;omit+=dd.o||0;if(k!=="SALTO")posibles+=3}else{noHizo+=n.nb;posibles+=(vistaDe(a,k).rows||[]).length}
+      caidas+=c;ded+=dd.d||0;aa+=n.nf;sumNp+=n.base;nAp++}
+    por[k]={...n,c,o:dd.o||0,d:dd.d||0,p:!!dd.p}});
+  return {a,t,bonos,noHizo,caidas,omit,ded,por,aa:r1(aa),nAp,posibles,ef:sumNp>0?Math.min(100,aa/sumNp*100):0};
+}
+const medalla=l=>l===1?"🥇":l===2?"🥈":l===3?"🥉":l;
+function ranking(filas,t){
+  filas.sort((x,y)=>(t==="L"&&modoRk==="ef"?y.ef-x.ef||y.aa-x.aa:y.aa-x.aa||(t==="O"?y.bonos-x.bonos:y.ef-x.ef))||x.caidas-y.caidas||x.omit-y.omit||x.ded-y.ded||x.a.apodo.localeCompare(y.a.apodo,"es"));
+  let lugar=0,prev=null;filas.forEach((f,i)=>{const id=(t==="L"&&modoRk==="ef"?[f.ef.toFixed(2),f.aa]:[f.aa,t==="O"?f.bonos:f.ef.toFixed(2)]).concat([f.caidas,f.ded]).join("|");if(id!==prev){lugar=i+1;prev=id}f.lugar=lugar});
+  return filas;
+}
+function tablaO(filas){
+  return `<div class="tw"><table><thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>Bonos</th><th>Caídas</th><th>Omit.</th><th>Ded.</th><th>All around</th></tr></thead><tbody>${filas.map(f=>`<tr class="${f.lugar<=3?"m"+f.lugar:""}"><td class="lg">${medalla(f.lugar)}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">${esc(f.a.grupo)} · N${esc(nivelDe(f.a))}</small></td><td>${f.bonos}</td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td class="${f.omit?"neg":""}">${f.omit}</td><td class="${f.ded?"neg":""}">${f3(f.ded)}</td><td class="pts">${f.aa.toFixed(3)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function tablaL(filas){
+  return `<div class="tw"><table><thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>No hizo</th><th>Caídas</th><th>Ded.</th><th>Total</th><th>Efic.</th></tr></thead><tbody>${filas.map(f=>`<tr class="${f.lugar<=3?"m"+f.lugar:""}"><td class="lg">${medalla(f.lugar)}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">Nivel ${esc(nivelDe(f.a))}</small></td><td class="${f.noHizo?"neg":""}">${f.noHizo}</td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td class="${f.ded?"neg":""}">${f3(f.ded)}</td><td class="${modoRk==="ef"?"":"pts"}">${f.aa.toFixed(3)}</td><td class="${modoRk==="ef"?"pts":""}">${f.ef.toFixed(1)}%</td></tr>`).join("")}</tbody></table></div>`;
+}
+function tablaAp(filas){
+  return `<div class="tw"><table class="det"><thead><tr><th class="izq">Atleta</th>${APS.map(([,l])=>`<th>${l}<small class="n">partida → final</small></th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr><td class="izq"><b>${esc(f.a.apodo)}</b></td>${APS.map(([k])=>{const p=f.por[k];return p.fuera?'<td><small class="n">No presentó</small></td>':`<td>${f2(p.np)} → <b>${f2(p.nf)}</b><small class="n">${f.t==="O"?(k==="SALTO"?"":p.nb+"B · "):(p.nb?p.nb+" no hizo · ":"")}${p.p?"plantó · ":""}${p.c}C · ${p.o?p.o+"O · ":""}${p.d?f3(p.d):"0"}D</small></td>`}).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+function pintarResultado(){
+  ["O","L"].forEach(t=>{const v=caidaDe(actual,t);$("valCaida"+t).value=v;$("valCaida"+t+"Txt").textContent=v});
+  const at=actual.atletas||[];
+  const niveles=[...new Set(at.map(a=>nivelDe(a)))].sort((x,y)=>(+x||99)-(+y||99));
+  if(filtroNivel&&!niveles.includes(filtroNivel))filtroNivel="";
+  $("filtro").innerHTML=niveles.length>1?[["","Todos"],...niveles.map(n=>[n,"Nivel "+n])].map(([v,l])=>`<button type="button" data-n="${esc(v)}" aria-pressed="${v===filtroNivel}">${esc(l)}</button>`).join(""):"";
+  const vis=at.filter(a=>!filtroNivel||nivelDe(a)===filtroNivel);
+  const fO=ranking(vis.filter(a=>tipoDe(a)==="O").map(a=>totales(a)),"O"),fL=ranking(vis.filter(a=>tipoDe(a)==="L").map(a=>totales(a)),"L");
+  $("resO").innerHTML=fO.length?`<h2 class="secc">🤸‍♂️ OBLIGATORIOS · ganador ${esc(fO[0].a.apodo)}</h2>${tablaO(fO)}<h3 class="h3">Por aparato</h3>${tablaAp(fO)}`:"";
+  $("resL").innerHTML=fL.length?`<h2 class="secc">🏅 LIBRES · ganador ${modoRk==="ef"?"por eficiencia":"por nota total"}: ${esc(fL[0].a.apodo)}</h2><div class="filtro"><button type="button" data-rk="total" aria-pressed="${modoRk==="total"}">🏆 Por nota total</button><button type="button" data-rk="ef" aria-pressed="${modoRk==="ef"}">🎯 Por eficiencia</button></div>${tablaL(fL)}<h3 class="h3">Por aparato</h3>${tablaAp(fL)}`:"";
+  if(!fO.length&&!fL.length)$("resO").innerHTML='<div class="vacio">Todavía no hay atletas en este all around.</div>';
+}
+$("resL").addEventListener("click",e=>{const b=e.target.closest("[data-rk]");if(!b)return;modoRk=b.dataset.rk;pintarResultado()});
+$("filtro").addEventListener("click",e=>{const b=e.target.closest("[data-n]");if(!b)return;filtroNivel=b.dataset.n;pintarResultado()});
+["O","L"].forEach(t=>$("valCaida"+t).addEventListener("change",e=>{const v=parseFloat(String(e.target.value).replace(",","."));const val=isFinite(v)&&v>=0?v:(t==="O"?CAIDA_O:CAIDA_L);actual["caida"+t]=val;guardar({["actual.caida"+t]:val},true);pintarResultado()}));
+
+// ---- Historial ----
+let hSel=new Set(), hVer="";
+function sesiones(){
+  const l=[];if(actual&&(actual.atletas||[]).length)l.push({...actual,enCurso:true});
+  (Array.isArray(doc.anteriores)?doc.anteriores:[]).concat(viejos).forEach(x=>{if(x&&x.id&&(x.atletas||[]).length&&!l.some(y=>y.id===x.id))l.push(x)});
+  return l.sort((a,b)=>String(b.fecha||b.creada||"").localeCompare(String(a.fecha||a.creada||""))||String(b.creada||"").localeCompare(String(a.creada||"")));
+}
+function resumen(ses){
+  const filas=(ses.atletas||[]).map(a=>totales(a,ses)).filter(f=>f.nAp);
+  const parte=t=>{const fs=ranking(filas.filter(f=>f.t===t),t);const n=fs.length,s=k=>fs.reduce((a,f)=>a+f[k],0);
+    return {filas:fs,n,prom:n?s("aa")/n:0,ef:n?s("ef")/n:0,caidas:s("caidas"),gan:fs[0]}};
+  const ef=filas.length?filas.reduce((a,f)=>a+f.ef,0)/filas.length:0;
+  return {filas,n:filas.length,O:parte("O"),L:parte("L"),ef,caidas:filas.reduce((a,f)=>a+f.caidas,0)};
+}
+const fCorta=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"})};
+const flechaInv=(v,dec)=>v<-0.0005?`<span class="sube">▼ ${v.toFixed(dec)}</span>`:v>0.0005?`<span class="baja">▲ +${v.toFixed(dec)}</span>`:`<span class="igual">＝</span>`;
+const flecha=(v,dec)=>v>0.0005?`<span class="sube">▲ +${v.toFixed(dec)}</span>`:v<-0.0005?`<span class="baja">▼ ${v.toFixed(dec)}</span>`:`<span class="igual">＝</span>`;
+function pintarHistorial(){
+  const ls=sesiones();
+  [...hSel].forEach(id=>{if(!ls.some(x=>x.id===id))hSel.delete(id)});
+  $("hLista").innerHTML=ls.length?ls.map(x=>{const r=resumen(x);const gan=(p,et)=>p.n?`${et}: ${esc(p.gan.a.apodo)} (${p.gan.aa.toFixed(3)})`:"";
+    return `<div class="hses${hSel.has(x.id)?" sel":""}"><label class="hchk"><input type="checkbox" data-hs="${esc(x.id)}"${hSel.has(x.id)?" checked":""}><span><b>${esc(fCorta(x.fecha))}</b>${x.enCurso?' <span class="tagc">En curso</span>':""}<small>${r.n} atletas${r.O.n?` · ${r.O.n} obligatorios`:""}${r.L.n?` · ${r.L.n} libres`:""}</small><small>${[gan(r.O,"Obligatorios"),gan(r.L,"Libres")].filter(Boolean).join(" · ")||"—"}</small><small>Eficiencia ${r.ef.toFixed(1)}% · ${r.caidas} caídas</small></span></label><button type="button" class="btn hver" data-hv="${esc(x.id)}">${hVer===x.id?"Ocultar":"Ver"}</button></div>`}).join(""):'<div class="vacio">Todavía no hay all arounds guardados.</div>';
+  const v=ls.find(x=>x.id===hVer);
+  $("hVer").innerHTML=v?(()=>{const r=resumen(v);return `<h2 style="margin-top:14px">All around del ${esc(fechaTxt(v.fecha))}</h2>${r.O.n?`<h3 class="h3">Obligatorios</h3>${tablaO(ranking(r.O.filas.slice(),"O"))}`:""}${r.L.n?`<h3 class="h3">Libres</h3>${tablaL(ranking(r.L.filas.slice(),"L"))}`:""}`})():"";
+  const sel=ls.filter(x=>hSel.has(x.id)).reverse();
+  if(sel.length<2){$("hComp").innerHTML=ls.length>1?'<p class="sub" style="margin-top:12px">Marca dos o más all arounds para compararlos.</p>':"";return}
+  const rs=sel.map(resumen);
+  const ks=[];sel.forEach(x=>(x.atletas||[]).forEach(a=>{const id=tipoDe(a)+"|"+clave(a.apodo);if(!ks.some(y=>y.id===id))ks.push({id,a})}));
+  const filaAt=ks.map(({id,a})=>{const vals=rs.map(r=>r.filas.find(f=>tipoDe(f.a)+"|"+clave(f.a.apodo)===id)||null);const hay=vals.filter(Boolean);
+    return {a,vals,dAA:hay.length>1?hay[hay.length-1].aa-hay[0].aa:null,dEf:hay.length>1?hay[hay.length-1].ef-hay[0].ef:null}}).sort((x,y)=>(y.dEf??-999)-(x.dEf??-999));
+  const mejoran=filaAt.filter(x=>x.dEf!=null&&x.dEf>0.0005).length,comparables=filaAt.filter(x=>x.dEf!=null).length;
+  const cab=sel.map(x=>`<th>${esc(fCorta(x.fecha))}</th>`).join("");
+  const filaEq=(l,fn,dec,menos,suf)=>{const vs=rs.map(fn);const ok=vs.filter(v=>v!=null);const d=ok.length>1?ok[ok.length-1]-ok[0]:null;
+    return `<tr><td class="izq">${l}</td>${vs.map(v=>`<td>${v==null?"—":v.toFixed(dec)+(suf||"")}</td>`).join("")}<td>${d==null?"—":(menos?flechaInv(d,dec):flecha(d,dec))}</td></tr>`};
+  $("hComp").innerHTML=`<h2 style="margin-top:16px">Comparación</h2>
+  <p class="resumen-mejora">${comparables?`<b>${mejoran} de ${comparables}</b> atletas mejoraron su eficiencia entre el primero y el último all around elegido.`:"Ningún atleta aparece en dos de los all arounds elegidos."}</p>
+  <h3 class="h3">Equipo</h3><div class="tw"><table class="det"><thead><tr><th class="izq"></th>${cab}<th>Cambio</th></tr></thead><tbody>
+  ${filaEq("Promedio all around · obligatorios",r=>r.O.n?r.O.prom:null,3)}${filaEq("Promedio all around · libres",r=>r.L.n?r.L.prom:null,3)}${filaEq("Eficiencia promedio",r=>r.n?r.ef:null,1,false,"%")}${filaEq("Caídas por atleta",r=>r.n?r.caidas/r.n:null,2,true)}</tbody></table></div>
+  <h3 class="h3">Por atleta</h3><div class="tw"><table class="det"><thead><tr><th class="izq">Atleta</th>${cab}<th>Cambio AA</th><th>Cambio efic.</th></tr></thead><tbody>
+  ${filaAt.map(x=>`<tr><td class="izq"><b>${esc(x.a.apodo)}</b><small class="n">${tipoDe(x.a)==="O"?"Oblig.":"Libres"} · N${esc(nivelDe(x.a))}</small></td>${x.vals.map(v=>`<td>${v?`<b>${v.aa.toFixed(3)}</b><small class="n">${v.ef.toFixed(1)}%</small>`:'<small class="n">—</small>'}</td>`).join("")}<td>${x.dAA==null?"—":flecha(x.dAA,3)}</td><td>${x.dEf==null?"—":flecha(x.dEf,1)}</td></tr>`).join("")}</tbody></table></div>
+  <p class="sub" style="margin-top:8px">El cambio compara el primer y el último all around elegidos en que aparece cada uno. En caídas, bajar es mejorar.</p>`;
+}
+$("hLista").addEventListener("change",e=>{const c=e.target.closest("[data-hs]");if(!c)return;c.checked?hSel.add(c.dataset.hs):hSel.delete(c.dataset.hs);pintarHistorial()});
+$("hLista").addEventListener("click",e=>{const b=e.target.closest("[data-hv]");if(!b)return;hVer=hVer===b.dataset.hv?"":b.dataset.hv;pintarHistorial()});
+
+// ---- Navegación ----
+function irA(p){paso=p;document.querySelectorAll(".pasos button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.paso===p));
+  ["1","2","3","4"].forEach(n=>$("paso"+n).classList.toggle("oculto",n!==p));pintar();window.scrollTo({top:0,behavior:"smooth"})}
+document.querySelector(".pasos").addEventListener("click",e=>{const b=e.target.closest("[data-paso]");if(b)irA(b.dataset.paso)});
+$("btnListo").onclick=()=>irA("2");$("btnResultado").onclick=()=>irA("3");
+function pintar(){
+  $("fechaTxt").textContent="Obligatorios y libres · "+fechaTxt(actual.fecha);
+  if(paso==="1")pintarLista();else if(paso==="2")pintarRegistro();else if(paso==="4")pintarHistorial();else pintarResultado();
+}
+$("btnNuevo").onclick=async()=>{
+  if((actual.atletas||[]).length&&!confirm("¿Empezar un all around nuevo? El actual se guarda en el historial."))return;
+  const ant=Array.isArray(doc.anteriores)?doc.anteriores:[];
+  const viejo=(actual.atletas||[]).length?[actual]:[];
+  actual=nuevaSesion();
+  try{await ref.set({actual,anteriores:viejo.concat(ant).slice(0,60)},{merge:true});estado("Nuevo all around listo ✓","ok")}catch(e){estado("No se pudo guardar: "+e.message,"err")}
+  irA("1");
+};
+
+// ---- Carga ----
+async function plantelO(){
+  const rows=await AKC_XLSX.read("../gav-training/trabajo_gav.xlsx");
+  const h=rows[0].map(v=>String(v??"").trim().toUpperCase()),col={};h.forEach((x,i)=>{if(x)col[x]=i});
+  const out=[];
+  rows.slice(1).forEach(r=>{const apodo=String(r[col.NOMBRE]??"").trim();if(!apodo)return;
+    const nivel=String(r[col.NIVEL]??"").trim(),m=nivel.match(/\d+/);if(!m||+m[0]<3||+m[0]>6)return;
+    out.push({k:"O_"+clave(apodo),tipo:"O",apodo,nombre:String((col["NOMBRE COMPLETO"]!=null?r[col["NOMBRE COMPLETO"]]:"")??"").trim()||apodo,nivel,grupo:String(r[col.GRUPO]??"").trim()||"Obligatorios"})});
+  return out;
+}
+async function plantelL(db){
+  const sn=await db.collection("rutinasAKC").doc("estado").get();const R=sn.exists?sn.data():{};
+  const bajas=new Set((R.bajas||[]).map(String)),orden=R.orden||[],at=R.atletas||{};
+  const titulo=n=>String(n).toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
+  const ordNiv={"7":1,"8":2,"9":3,"10":4,"FIG":5};
+  return Object.keys(at).filter(n=>!bajas.has(n)&&!/^PRUEBA/i.test(n)&&at[n]&&at[n].vista).map(n=>{const a=at[n],v={};
+      APS.forEach(([k])=>{const x=(a.vista||{})[k];if(x)v[k]={np:Number(x.np)||0,rows:(x.rows||[]).map(r=>({n:String(r.n||""),vd:String(r.vd??r.l??""),l:String(r.l||"")}))}});
+      const o={k:"L_"+clave(n),tipo:"L",apodo:titulo(n),nombre:n,nivel:String(a.nivel||""),vista:v,pe:a.p||{}};o.grupo="Libres · Nivel "+nivelDe(o);return o})
+    .sort((x,y)=>(ordNiv[nivelDe(x)]||9)-(ordNiv[nivelDe(y)]||9)||(orden.indexOf(x.nombre)-orden.indexOf(y.nombre))||x.apodo.localeCompare(y.apodo,"es"));
+}
+// All arounds de antes (dos herramientas): se muestran en el historial con su tipo.
+async function anterioresViejos(db){
+  const out=[];
+  for(const [id,t] of [["allaroundO","O"],["allaroundL","L"]]){
+    try{const s=await db.collection("herramientasAKC").doc(id).get();if(!s.exists)continue;const d=s.data();
+      [d.actual].concat(d.anteriores||[]).forEach(x=>{if(!x||!x.id||!(x.atletas||[]).length)return;
+        const c=JSON.parse(JSON.stringify(x));c.atletas=c.atletas.map(a=>({...a,tipo:t}));c["caida"+t]=x.caida??(t==="O"?CAIDA_O:CAIDA_L);c.id=t+"_"+c.id;out.push(c)});
+    }catch(e){console.warn("Historial anterior",id,e)}
+  }
+  return out;
+}
+(async()=>{
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FB);const db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();
+    ref=db.collection("herramientasAKC").doc("allaround");
+    const [pO,pL]=await Promise.all([plantelO().catch(e=>{console.error(e);return []}),plantelL(db).catch(e=>{console.error(e);return []})]);
+    plantel=pO.concat(pL);
+    try{const r=await fetch("../rutinas/obligatorios.json",{cache:"no-store"});SALTOS=(await r.json()).salto||{}}catch(e){console.warn("Saltos de obligatorios:",e)}
+    viejos=await anterioresViejos(db);
+    const s=await ref.get();doc=s.exists?s.data():{};
+    if(!doc.actual){actual=nuevaSesion();await ref.set({actual},{merge:true})}else actual=doc.actual;
+    actual.datos=actual.datos||{};actual.atletas=actual.atletas||[];
+    estado((actual.atletas.length?"All around en curso":"Listo")+" ✓","ok");
+    if(actual.atletas.length)paso="2";irA(paso);
+    ref.onSnapshot(sn=>{if(!sn.exists)return;doc=sn.data();const nv=doc.actual;if(!nv||Object.keys(pendientes).length)return;
+      actual=nv;actual.datos=actual.datos||{};actual.atletas=actual.atletas||[];
+      const foco=document.activeElement;if(foco&&foco.classList&&(foco.classList.contains("ded")||/^valCaida/.test(foco.id||"")))return;
+      pintar()});
+  }catch(e){console.error(e);estado("No se pudo cargar: "+e.message,"err")}
+})();
+</script>
+</body>
+</html>
