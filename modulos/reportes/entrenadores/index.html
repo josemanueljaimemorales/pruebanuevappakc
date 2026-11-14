@@ -145,6 +145,7 @@ table.rk{border-collapse:collapse;width:100%;min-width:980px;font-size:12px}
         <div><label for="capTipo">Rutina</label><select id="capTipo"><option value="L">Libre</option><option value="O">Obligatoria</option></select></div>
         <div style="flex:0 1 110px"><label for="capNivel">Nivel</label><input id="capNivel" inputmode="text" autocomplete="off"></div>
         <div style="flex:0 1 110px"><label for="capCat">Categoría</label><input id="capCat" autocomplete="off"></div>
+        <div style="flex:0 1 140px"><label for="capGav">Grupo</label><select id="capGav"><option value="">—</option></select></div>
       </div>
       <div class="hint">Por aparato: la <b>NP de la rutina</b> es la del editor de rutinas (lo que debe presentar). Escribe la <b>NP del juez</b> y la <b>NF</b>. Si no presentó un aparato, déjalo vacío: no cuenta en su eficiencia.</div>
       <div class="cap" id="capAps"></div>
@@ -173,6 +174,8 @@ const APS=AKC_EFIC.APS;
 const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 // Nombre completo (lo que ven entrenadores y papás). Clave: nombre en Rutinas.
 const COMPLETO={'DIEGO J':'Diego Jaime','RICHIE':'Ricardo Jiménez','ALONSO':'Alonso Ahedo','MIKEL':'Mikel Larrinua','CHAMPI':'Diego Rodríguez','ISAAC':'Isaac Martínez','VELA':'Diego Vela','YERIK':'Yerik Guerra','FER':'Fernando Talavera','CHAVEZ':'Diego Chávez','MARIO':'Mario Bisteni','MAX':'Maximiliano Díaz','SANTI LEE':'Santiago Sigler','NICO CAPI':'Nicolás Capitanachi Vicentín','BRUNO JACOBO':'Bruno Jacobo','SANTI CAMACHO':'Santiago Camacho','LEO CAMACHO':'Leonardo Camacho','NICO FLORES':'Nicolás Flores','CARLOS AZNAR':'Carlos Aznar','EMI':'Emiliano González','DAVID RANGEL':'David Rangel','DIEGO CUEVAS':'Diego Cuevas','JOSE MARIA':'José María Robles','MAURO REGAND':'Mauro Regand','BRUNO BAEZ':'Bruno Báez','BRITAN AKIM':'Brittan Akin Robles','ALFREDO':'Alfredo Jacobo','ERIK':'Erik López','LEO LAZARO':'Leonardo García Lázaro','ISAAC RANGEL':'Isaac Rangel'};
+// Grupo de entrenamiento (Manu, 21-oct-2026; GAV FIG Élite va con GAV FIG). Se guarda con cada resultado.
+const GRUPO_GAV={'ISAAC':'GAV FIG','ALONSO':'GAV FIG','VELA':'GAV FIG','CHAMPI':'GAV FIG','MIKEL':'GAV FIG','RICHIE':'GAV FIG','DIEGO J':'GAV FIG','BRUNO JACOBO':'GAV 9','CHAVEZ':'GAV 9','FER':'GAV 9','SANTI LEE':'GAV 9','MARIO':'GAV 9','MAX':'GAV 9','NICO CAPI':'GAV 9','YERIK':'GAV 9','ALFREDO':'GAV 6','BRITAN AKIM':'GAV 6','BRUNO BAEZ':'GAV 6','ERIK':'GAV 6','JOSE MARIA':'GAV 6','MAURO REGAND':'GAV 6','CARLOS AZNAR':'GAV 5','DAVID RANGEL':'GAV 5','DIEGO CUEVAS':'GAV 5','EMI':'GAV 5','LEO CAMACHO':'GAV 5','NICO FLORES':'GAV 5','SANTI CAMACHO':'GAV 5','ISAAC RANGEL':'GAV 4','LEO LAZARO':'GAV 4'};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const num=v=>{if(v===null||v===undefined)return null;const t=String(v).trim().replace(',','.');if(t==='')return null;const n=Number(t);return Number.isFinite(n)?n:NaN};
@@ -245,7 +248,7 @@ function cargarCaptura(){
   capKey=$('capAtl').value;$('capMsg').textContent='';$('capMsg').className='msg';
   const a=ROSTER.find(x=>x.key===capKey)||{key:capKey,tipo:'L',nivel:'',np:{}};
   const r=((COMP.resultados||{})[compSel]||{})[capKey];
-  $('capTipo').value=r?r.tipo:a.tipo;$('capNivel').value=r?(r.nivel||''):(a.nivel||'');$('capCat').value=r?(r.cat||''):'';
+  $('capTipo').value=r?r.tipo:a.tipo;$('capNivel').value=r?(r.nivel||''):(a.nivel||'');$('capCat').value=r?(r.cat||''):'';$('capGav').value=(r&&r.gav)||GRUPO_GAV[capKey]||'';
   $('capLugar').value=r&&r.lugar!=null?r.lugar:'';$('capPart').value=r&&r.part!=null?r.part:'';
   $('btnBorrar').classList.toggle('hidden',!r);
   $('capAps').innerHTML=APS.map(([k,l])=>{
@@ -286,7 +289,7 @@ async function guardar(sig){
   if(err.length){m.innerHTML=err.map(esc).join('<br>');m.className='msg err';return}
   const c=calcular(r);
   if(!c.n&&lugar==null){m.textContent='No hay notas que guardar. Si no compitió, no subas nada: aparecerá al final con ceros.';m.className='msg err';return}
-  const data={nombre:nombre(capKey),tipo:$('capTipo').value,nivel:$('capNivel').value.trim(),cat:$('capCat').value.trim(),np:r.np,nf:r.nf,ref:r.ref,lugar:lugar==null?null:Math.round(lugar),part:part==null?null:Math.round(part),guardado:new Date().toISOString()};
+  const data={nombre:nombre(capKey),tipo:$('capTipo').value,nivel:$('capNivel').value.trim(),cat:$('capCat').value.trim(),gav:$('capGav').value,np:r.np,nf:r.nf,ref:r.ref,lugar:lugar==null?null:Math.round(lugar),part:part==null?null:Math.round(part),guardado:new Date().toISOString()};
   $('btnGuardar').disabled=$('btnGuardarSig').disabled=true;
   try{
     await docComp().set({resultados:{[compSel]:{[capKey]:data}},...resumen(capKey,data)},{merge:true});
@@ -296,7 +299,7 @@ async function guardar(sig){
   $('btnGuardar').disabled=$('btnGuardarSig').disabled=false;
 }
 // Plantel (nombres completos de todos, para la vista de papás) y la última copa con resultados (cambia la tarjeta del menú).
-function plantel(){return ROSTER.map(a=>({key:a.key,nombre:nombre(a.key),nivel:a.nivel||'',tipo:a.tipo}))}
+function plantel(){return ROSTER.map(a=>({key:a.key,nombre:nombre(a.key),nivel:a.nivel||'',tipo:a.tipo,gav:GRUPO_GAV[a.key]||''}))}
 function resumen(key,data){
   const res=JSON.parse(JSON.stringify(COMP.resultados||{}));res[compSel]=res[compSel]||{};
   if(data)res[compSel][key]=data;else delete res[compSel][key];
@@ -325,26 +328,11 @@ function pintarConcentrado(){
   const el=$('sheet');
   const c=COMP.competencias&&COMP.competencias[compSel];
   if(!c){el.innerHTML='<div class="empty">Todavía no hay competencias. Toca «Subir información de competencia» para crear la primera.</div>';return}
-  const res=(COMP.resultados||{})[compSel]||{};
-  const keys=[...ROSTER.map(a=>a.key),...Object.keys(res).filter(k=>!ROSTER.some(a=>a.key===k))];
-  const filas=keys.map(k=>{const a=ROSTER.find(x=>x.key===k),r=res[k],calc=calcular(r),nivel=r?r.nivel:(a?a.nivel:''),tipo=r?r.tipo:(a?a.tipo:'L');return {k,a,r,calc,tipo:AKC_EFIC.grupo(nivel,tipo),nivel}});
-  const tabla=(tipo,titulo)=>{
-    const g=filas.filter(x=>x.tipo===tipo);if(!g.length)return '';
-    const comp=g.filter(x=>x.calc.n).sort((a,b)=>b.calc.ef-a.calc.ef||b.calc.aa-a.calc.aa);
-    const dns=g.filter(x=>!x.calc.n).sort((a,b)=>nombre(a.k).localeCompare(nombre(b.k),'es'));
-    let h=`<div class="tw"><table class="rk"><thead><tr><th class="grp" colspan="${APS.length+6}">${titulo}</th></tr><tr><th>Lugar</th><th>Nombre</th><th>Nivel</th>${APS.map(([,l])=>`<th>${l}</th>`).join('')}<th>AA</th><th>% Eficiencia</th><th>Lugar en la competencia</th></tr></thead><tbody>`;
-    comp.forEach((x,i)=>{
-      h+=`<tr><td class="lg">${i+1}</td><td class="nm">${esc(nombre(x.k))}${x.r&&x.r.cat?`<small>Cat. ${esc(x.r.cat)}</small>`:''}</td><td>${esc(x.nivel||'—')}</td>${APS.map(([k])=>{const z=x.calc.ap[k];return z?`<td><div class="cell"><span>NP</span><b>${f1(z.np)}</b><span>NF</span><b>${f3(z.nf)}</b><span>Rut.</span><b>${f1(z.ref!=null?z.ref:null)}${z.sinRef?'*':''}</b><span>%</span><b class="p">${z.p.toFixed(1)}</b></div></td>`:`<td class="np0">No presentó</td>`}).join('')}<td class="aa">${x.calc.aa.toFixed(3)}</td><td class="ef">${x.calc.ef.toFixed(1)}%</td><td>${x.r&&x.r.lugar!=null?`<b>${x.r.lugar}°</b>${x.r.part!=null?' de '+x.r.part:''}`:'—'}</td></tr>`;
-    });
-    dns.forEach(x=>{
-      h+=`<tr class="dns"><td class="lg">—</td><td class="nm">${esc(nombre(x.k))}<small>No compitió</small></td><td>${esc(x.nivel||'—')}</td>${APS.map(()=>`<td class="np0">0</td>`).join('')}<td class="aa">0</td><td class="ef">0%</td><td>—</td></tr>`;
-    });
-    return h+'</tbody></table></div>';
-  };
-  const subidos=Object.keys(res).length;
+  const res=(COMP.resultados||{})[compSel]||{},subidos=Object.keys(res).length;
+  const sinRef=Object.values(res).some(r=>Object.values(calcular(r).ap).some(z=>z&&z.sinRef));
+  // El mismo concentrado con colores que ven los papás (cliente/eficiencia.js).
   el.innerHTML=`<div class="sheet-head"><div><div class="sheet-title">${esc(c.nombre)} · Ranking interno por eficiencia</div><div class="sheet-sub">${c.fecha?esc(c.fecha)+' · ':''}${subidos} atleta${subidos===1?'':'s'} con resultados · AKC Gimnasia Artística Varonil</div></div></div>`+
-    tabla('L','LIBRES · NIVELES 7, 8, 9, 10 Y FIG')+tabla('O','OBLIGATORIOS · NIVELES 3, 4, 5 Y 6')+
-    `<div class="legend">NP = nota de partida del juez · NF = nota final · Rut. = NP de la rutina que debía presentar (editor de rutinas) · % = NF ÷ la NP más alta entre Rut. y la del juez × 100 (nunca pasa de 100).<br>% Eficiencia = promedio de los aparatos que presentó; los que no presentó no cuentan. Ranking interno: mayor eficiencia primero; si empatan, mayor AA. Quien no compitió va al final con ceros.${filas.some(x=>Object.values(x.calc.ap).some(z=>z&&z.sinRef))?'<br>* Sin NP de rutina guardada: se usó la NP del juez.':''}</div>`;
+    AKC_EFIC.concentrado({resultados:COMP.resultados,plantel:plantel()},compSel)+(sinRef?'<div class="legend">* Sin NP de rutina guardada: se usó la NP del juez.</div>':'');
 }
 // ---------- Fotos de los más eficientes (como en el MVP: comprimidas, en su propio documento) ----------
 const fotoCache={};
@@ -387,6 +375,7 @@ $('btnGuardar').onclick=()=>guardar(false);
 $('btnGuardarSig').onclick=()=>guardar(true);
 $('btnBorrar').onclick=borrar;
 $('btnPrint').onclick=()=>{if(!compSel){alert('Elige una competencia.');return}window.print()};
+$('capGav').innerHTML+=AKC_EFIC.GAVS.map(g=>`<option>${g}</option>`).join('');
 conectar();
 </script>
 </body>

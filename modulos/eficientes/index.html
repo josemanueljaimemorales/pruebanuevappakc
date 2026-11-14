@@ -62,6 +62,10 @@ tr.np td{color:#6f86a0}
 .mini{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;font-size:12px;color:var(--muted)}
 .mini b{color:var(--text)}
 .vacio-total{text-align:center;color:var(--muted);padding:50px 10px}
+.conc-t{font-size:18px;margin:22px 0 4px}
+.porque-box{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.porque-box h3{margin:0 0 10px;font-size:16px}
+table.det-t{min-width:0}
 @media(max-width:700px){.ganadores{grid-template-columns:1fr}h1{font-size:24px}}
 @media(max-width:480px){table{font-size:11px}th,td{padding:6px 4px}th{font-size:9.5px;letter-spacing:0}.det{padding:0 8px 12px}}
 </style>
@@ -89,7 +93,7 @@ const f3=v=>v==null?'—':Number(v).toFixed(3);
 const pc=v=>v==null?'—':Number(v).toFixed(1)+'%';
 const sig=v=>v==null?'—':(v>0?'+':v<0?'−':'')+Math.abs(v).toFixed(1);
 const GRUPOS={L:'Libres · niveles 7, 8, 9, 10 y FIG',O:'Obligatorios · niveles 3, 4, 5 y 6'};
-let db=null,ESTADO=null,COPA=null,RK=null,vista='L',fotos={},abiertos=new Set();
+let db=null,ESTADO=null,COPA=null,RK=null,fotos={},sel='';
 
 function fechaTxt(f){if(!f)return '';const d=new Date(f+'T12:00:00');return isNaN(d)?f:d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}
 function mejor(c){return APS.map(([k,l])=>({k,l,x:c.ap[k]})).filter(z=>z.x).sort((a,b)=>b.x.p-a.x.p)}
@@ -121,15 +125,6 @@ function ganadorHTML(g){
     <div class="nums"><div class="ef"><span>Eficiencia</span><b>${pc(w.calc.ef)}</b></div><div><span>AA</span><b>${f3(w.calc.aa)}</b></div>${w.r&&w.r.lugar!=null?`<div><span>Lugar en la copa</span><b>${w.r.lugar}°${w.r.part?` <small style="font-size:12px;color:var(--muted)">de ${w.r.part}</small>`:''}</b></div>`:''}</div>
     <div class="porque"><b>¿Por qué?</b> ${porQue(w)}</div></div></article>`;
 }
-function filaHTML(f){
-  const id=f.key,ab=abiertos.has(id);
-  const tabla=f.compitio?`<div class="tw"><table><thead><tr><th>Aparato</th><th title="Nota de partida de su rutina">NP rut.</th><th title="Nota de partida del juez">NP juez</th><th>Dif.</th><th>NF</th><th title="Deducción">Ded.</th><th>%</th></tr></thead><tbody>${APS.map(([k,l])=>{const x=f.calc.ap[k];return x?`<tr><td>${l}</td><td>${f1(x.ref)}</td><td>${f1(x.np)}</td><td class="${x.dif!=null&&x.dif<0?'neg':''}">${sig(x.dif)}</td><td>${f3(x.nf)}</td><td>${f3(x.ded)}</td><td class="p">${pc(x.p)}</td></tr>`:`<tr class="np"><td>${l}</td><td colspan="6">No presentó</td></tr>`}).join('')}</tbody></table></div>`:'';
-  return `<div class="at${f.lugar===1?' top1':''}${f.compitio?'':' no'}${ab?' abierto':''}" data-k="${esc(id)}"><button type="button" aria-expanded="${ab}">
-    <span class="lug">${f.compitio?f.lugar+'°':'—'}</span>
-    <span class="nm"><b>${esc(f.nombre)}</b><small>${esc(E.nivelTexto(f.nivel))||'—'}${f.compitio?` · AA ${f3(f.calc.aa)}`:' · No compitió'}</small><span class="barra"><i style="width:${f.compitio?f.calc.ef.toFixed(1):0}%"></i></span></span>
-    <span class="efi"><b>${f.compitio?pc(f.calc.ef):'0%'}</b><small>${ab?'Ocultar':'Ver por qué'}</small></span></button>
-    <div class="det">${tabla}<p class="expl">${explicacion(f)}</p>${f.r&&f.r.lugar!=null?`<div class="mini">Lugar en la copa: <b>${f.r.lugar}°${f.r.part?' de '+f.r.part:''}</b></div>`:''}</div></div>`;
-}
 function pintar(){
   if(!COPA){$('copa').textContent='Todavía no hay resultados de una copa';$('sub').textContent='';$('contenido').innerHTML='<div class="vacio-total">En cuanto se suba la información de la próxima copa, aquí verás a los atletas más eficientes y el ranking completo.</div>';return}
   $('copa').textContent=COPA.nombre;$('sub').textContent=[fechaTxt(COPA.fecha),'Un ganador de libres y uno de obligatorios'].filter(Boolean).join(' · ');
@@ -141,16 +136,24 @@ function pintar(){
    <li>% del aparato = NF ÷ ese 100%. Nunca pasa de 100%.</li>
    <li>La eficiencia es el promedio de los aparatos que presentó. Si no presentó un aparato (por lesión u otra situación), no cuenta.</li></ul>
    <p><b>Dif.</b> = nota de partida del juez menos la de su rutina (en rojo si le reconocieron menos). <b>Ded.</b> (deducción) = nota de partida del juez menos la nota final.</p></details>
-  <div class="tabs" role="group" aria-label="Grupo">${['L','O'].map(g=>`<button type="button" data-g="${g}" aria-pressed="${vista===g}">${g==='L'?'Libres':'Obligatorios'} <small style="font-weight:600">(${(RK[g]||[]).filter(x=>x.compitio).length})</small></button>`).join('')}</div>
-  <div class="lista">${(RK[vista]||[]).map(filaHTML).join('')||'<div class="vacio-total">Sin atletas en este grupo.</div>'}</div>`;
+  <h2 class="conc-t">Concentrado de la copa · ranking interno por eficiencia</h2>
+  <p class="sub" style="margin:0 0 10px">Toca el nombre de un atleta para ver por qué quedó en ese lugar. En celular, desliza la tabla hacia los lados.</p>
+  ${E.concentrado(ESTADO,COPA.id,{sel})}
+  <div id="porque" class="porque-box">${sel?explicacionDe(sel):'<span class="sub">Toca un nombre en la tabla para ver la explicación.</span>'}</div>`;
 }
 function cargarFotos(){
   fotos={};if(!COPA)return;
   ['L','O'].forEach(g=>db.collection('competenciasAKC').doc('foto_'+COPA.id+'_'+g).get().then(s=>{fotos[g]=s.exists?(s.data().src||''):'';pintar()}).catch(()=>{}));
 }
+function explicacionDe(k){
+  const f=[...(RK.L||[]),...(RK.O||[])].find(x=>x.key===k);if(!f)return '';
+  const tabla=f.compitio?`<div class="tw"><table class="det-t"><thead><tr><th>Aparato</th><th>NP rut.</th><th>NP juez</th><th>Dif.</th><th>NF</th><th>Ded.</th><th>%</th></tr></thead><tbody>${APS.map(([k2,l])=>{const x=f.calc.ap[k2];return x?`<tr><td>${l}</td><td>${f1(x.ref)}</td><td>${f1(x.np)}</td><td class="${x.dif!=null&&x.dif<0?'neg':''}">${sig(x.dif)}</td><td>${f3(x.nf)}</td><td>${f3(x.ded)}</td><td class="p">${pc(x.p)}</td></tr>`:`<tr class="np"><td>${l}</td><td colspan="6">No presentó</td></tr>`}).join('')}</tbody></table></div>`:'';
+  return `<h3>${esc(f.nombre)}${f.compitio?` · ${f.lugar}° interno · ${pc(f.calc.ef)}`:''}</h3>${tabla}<p class="expl">${explicacion(f)}</p>`;
+}
 document.addEventListener('click',e=>{
-  const t=e.target.closest('.tabs [data-g]');if(t){vista=t.dataset.g;pintar();return}
-  const b=e.target.closest('.at>button');if(b){const k=b.parentNode.dataset.k;abiertos.has(k)?abiertos.delete(k):abiertos.add(k);pintar()}
+  const tr=e.target.closest('.efc tr[data-k]');if(!tr)return;
+  sel=sel===tr.dataset.k?'':tr.dataset.k;pintar();
+  if(sel)$('porque').scrollIntoView({behavior:'smooth',block:'nearest'});
 });
 try{
   if(!firebase.apps.length)firebase.initializeApp(FB);db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();
