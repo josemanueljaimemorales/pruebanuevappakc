@@ -104,8 +104,8 @@
 .efc th,.efc td{border:1px solid #1b3047;padding:5px;text-align:center;vertical-align:middle}
 .efc th{background:#11243a;color:#cfe2fa;font-size:10.5px;text-transform:uppercase}
 .efc th.grp{background:#163a60;color:#fff;text-align:left;font-size:13px;letter-spacing:.08em}
-.efc td.nm{text-align:left;font-weight:800;min-width:150px}
-.efc td.nm small{display:block;font-weight:600;font-size:10px;opacity:.8;color:inherit}
+.efc td.nm{text-align:left;font-weight:900;font-size:15px;line-height:1.2;min-width:170px}
+.efc td.nm small{display:block;font-weight:600;font-size:10.5px;opacity:.8;color:inherit;margin-top:2px}
 .efc td.lg,.efc thead tr:last-child th:first-child{position:sticky;left:0;z-index:1;width:46px;min-width:46px}
 .efc td.nm,.efc thead tr:last-child th:nth-child(2){position:sticky;left:46px;z-index:1}
 .efc td.lg:not(.m1):not(.m2):not(.m3),.efc td.nm:not([style*=background]){background:#0c1a2b}
@@ -124,11 +124,13 @@
 .efc .np0{font-size:11px;opacity:.7}
 .efc .ley{font-size:11.5px;line-height:1.55;color:#c9d6e4}
 .efc .ley i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin:0 3px 0 8px}
-@media(max-width:600px){.efc td.nm{min-width:118px;max-width:140px;font-size:11.5px}}
+@media(max-width:600px){.efc td.nm{min-width:130px;max-width:160px;font-size:14px}}
 @media print{
  .efc table{min-width:0;font-size:8.5px;color:#000}
  .efc .tw{overflow:visible;border:1px solid #999;border-radius:0}
  .efc th,.efc td{border:1px solid #999;padding:2px 3px}
+ .efc td.nm{font-size:12.5px;min-width:0}
+ .efc td.nm small{font-size:8.5px}
  .efc th{background:#e6e6e6!important;color:#000}.efc th.grp{background:#cfd8e3!important;color:#000}
  .efc .t-V{color:#00873d}.efc .t-A{color:#a37c00}.efc .t-R{color:#d00000}
  .efc .ley{color:#222}
