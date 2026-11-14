@@ -75,7 +75,7 @@
   }
 
   // ---------- Colores (Manu, 14-nov-2026; los mismos de su Excel del Nacional) ----------
-  // Semáforo: verde = listo para la siguiente competencia, amarillo = a mitad del proceso, rojo = por debajo.
+  // Semáforo: verde = cumple con el parámetro más alto, amarillo = cercano al objetivo, rojo = mayor área de oportunidad.
   const SEM = {V: "Listo", A: "En proceso", R: "Por debajo"};
   function semPct(g, p){ return g === "O" ? (p >= 90 ? "V" : p >= 80 ? "A" : "R") : (p >= 85 ? "V" : p >= 75 ? "A" : "R"); }
   // Obligatorios: entre más cerca de 10, más cerca del objetivo (9.9 o 10 verde, 9.6 a 9.8 amarillo, 9.5 o menos rojo).
@@ -190,7 +190,7 @@
     };
     const sw = c => `<i style="background:${c}"></i>`;
     return `<div class="efc">${tabla("L", "LIBRES · NIVELES 7, 8, 9, 10 Y FIG")}${tabla("O", "OBLIGATORIOS · NIVELES 3, 4, 5 Y 6")}
-<div class="ley"><b>Colores:</b>${sw("#00B050")}Verde = listo para la siguiente competencia${sw("#FFFF00")}Amarillo = a mitad del proceso${sw("#FF0000")}Rojo = por debajo.<br>
+<div class="ley"><b>Colores:</b>${sw("#00B050")}Verde = cumple con el parámetro más alto${sw("#FFFF00")}Amarillo = cercano al objetivo${sw("#FF0000")}Rojo = mayor área de oportunidad.<br>
 <b>% del aparato</b> (NF ÷ la NP más alta entre la de la rutina y la del juez; nunca más de 100): libres verde ≥ 85 %, amarillo 75 a 84.9 %, rojo &lt; 75 % · obligatorios verde ≥ 90 %, amarillo 80 a 89.9 %, rojo &lt; 80 %.<br>
 <b>NP del juez</b> en obligatorios (color de la letra): verde 9.9 o 10, amarillo 9.6 a 9.8, rojo 9.5 o menos. <b>Ded.</b> = NP del juez − NF: obligatorios verde hasta 1.0, amarillo más de 1.0, rojo 1.8 o más · libres verde menos de 1.5, amarillo 1.5 a 1.99, rojo 2 o más.<br>
 <b>% Eficiencia</b> = promedio de los aparatos que presentó (los que no presentó no cuentan): verde ≥ 85 %, amarillo 75 a 84.9 %, rojo &lt; 75 %. Lugar interno: ${sw("#BF9000")}1.º ${sw("#C8C8C8")}2.º ${sw("#BD0000")}3.º; si empatan, gana el de mayor AA. Rut. = NP de la rutina (editor de rutinas)${'' }.<br>
