@@ -58,6 +58,8 @@ button{font-family:inherit;cursor:pointer}
 .elems{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
 .abrirEl{border:1px solid #7a5b20;background:#2a2010;color:#ffd166;border-radius:12px;padding:12px;font-weight:900;font-size:14px;text-align:left;display:flex;justify-content:space-between;gap:8px;min-height:48px}
 .elsum{display:flex;flex-wrap:wrap;gap:6px}.mk{font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px}.mk.nr{background:#5b1520;color:#fecaca}.mk.fe{background:#3b2a07;color:#ffd166}
+.abrirEl.neu{border-color:#33507a;background:#0f1d33;color:#bcd7ff}.mk.nu{background:#1e3a5f;color:#cfe2fa}
+.nurow{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;border-top:1px solid #12263b;padding-top:6px}.nurow:first-of-type{border-top:0}.nurow output{min-width:26px;text-align:center;font-weight:900}.nurow .nb:disabled{opacity:.35}.nurow .nb{width:44px;height:44px;border-radius:10px;border:1px solid #31506f;background:#11243a;color:#cfe2fa;font-size:20px;font-weight:900}
 .elpanel{display:flex;flex-direction:column;gap:6px;background:#071321;border:1px solid #1e3550;border-radius:12px;padding:10px}
 .elrow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;border-top:1px solid #12263b;padding-top:6px}.elrow:first-of-type{border-top:0}
 .eln{font-size:14px;font-weight:700}.eln small{display:block;color:#9eb1c8;font-size:11px}
@@ -175,7 +177,7 @@ details.reglas p{font-size:12.5px;color:#d6e3f2;line-height:1.5;margin:8px 0 0}
     <div class="aps" id="aps"></div>
     <details class="reglas"><summary>¿Cómo se califica?</summary>
       <p><span class="tipo O">OBLIGATORIOS</span> Nota de partida = 9.0 + 0.3 por bono (máx. 3) + 0.1 si plantó (máx. 10; salto: el valor de su salto + 0.1). Caída −0.5, parte omitida −1.0, parte a medias −0.5 (en deducciones); el bono no cuenta si hubo caída o error grande en ese elemento (Manual de Competencia Juvenil, p. 19).</p>
-      <p><span class="tipo L">LIBRES</span> Nota de partida = la de su rutina (editor de rutinas). Caída −1.0 (Código FIG; N7 y N8 también, por el manual USAG). «Elemento no presentado o caída»: no lo presentó resta su valor (si quedan menos de 6: N7 y N8 −1.0 por cada uno que falte; 9, 10 y FIG con la tabla FIG); se cayó cuenta la caída y el elemento conserva su valor. «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D+ +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4).</p>
+      <p><span class="tipo L">LIBRES</span> Nota de partida = la de su rutina (editor de rutinas). Caída −1.0 (Código FIG; N7 y N8 también, por el manual USAG). «Elemento no presentado o caída»: no lo presentó resta su valor (si quedan menos de 6: N7 y N8 −1.0 por cada uno que falte; 9, 10 y FIG con la tabla FIG); se cayó cuenta la caída y el elemento conserva su valor. «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D+ +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4). Deducciones de ejecución como en el Código FIG: pequeña 0.1, mediana 0.3, grande 0.5 (el manual USAG solo las cambia a 0.1/0.2/0.3 en obligatorios). «Deducciones neutrales» (se restan de la nota final): salirse del área en piso o caer fuera de la zona en salto (0.1 un pie o mano; 0.3 dos pies, dos manos u otra parte del cuerpo) y, si lo tenía en su rutina, no presentar la balanza (0.3), el mortal doble (0.3, 9, 10 y FIG) o el impulso al apoyo invertido en anillos (0.3, 9, 10 y FIG).</p>
     </details>
     <div id="registro"></div>
     <button class="btn verde" type="button" id="btnResultado" style="width:100%;margin-top:6px">Ver resultado del all around →</button>
@@ -222,6 +224,15 @@ const fechaTxt=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDat
 const r1=v=>Math.round(v*1000)/1000;
 const f2=v=>Number(v).toFixed(2).replace(/0$/,"");
 const f3=v=>String(Math.round(Number(v)*100)/100);
+// Deducciones neutrales del jurado D y de línea (Código FIG 2025-2028; las mismas que usa el editor de rutinas):
+// se restan de la nota final, no de la ejecución. Las de requisito solo cuentan si estaba en su rutina (si no, ya
+// vienen descontadas en la nota de partida). La de la balanza aplica en todos; doble mortal e impulso, en 9, 10 y FIG.
+function neutrales(a,k){const nv=nivelDe(a),fig=!(nv==="7"||nv==="8");const l=[];
+  if(k==="PISO"){l.push(["s1","Se salió del área: un pie o una mano",0.1],["s3","Se salió del área: dos pies, dos manos u otra parte del cuerpo / cayó fuera",0.3],["bal","No presentó la balanza (arabesca) que tenía su rutina",0.3,1]);if(fig)l.push(["dob","No hizo el mortal doble que tenía su rutina",0.3,1])}
+  else if(k==="SALTO")l.push(["s1","Cayó fuera de la zona: un pie o una mano",0.1],["s3","Cayó fuera de la zona: dos pies, dos manos u otra parte del cuerpo",0.3]);
+  else if(k==="ANILLOS"&&fig)l.push(["imp","No hizo el impulso al apoyo invertido que tenía su rutina",0.3,1]);
+  return l}
+const sumaNeu=(a,k,d)=>r1(neutrales(a,k).reduce((t,[id,,v])=>t+v*(Number(((d||{}).n||{})[id])||0),0));
 let SALTOS={}, modoRk="total", abiertos=new Set(), ref=null, plantel=[], doc={}, viejos=[], actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
 
 function estado(t,c){const e=$("estado");e.textContent=t;e.className="estado"+(c?" "+c:"")}
@@ -264,13 +275,14 @@ function notaL(a,k,d,ses){
   const caidas=(d.c||0)+(d.fe||[]).filter(i=>rows[i]).length;
   const ej=r1(10-(d.d||0)-caidas*caidaDe(ses,"L"));
   const bej=nv==="8"?(ej>=9.5?0.4:ej>=9.2?0.3:ej>=8.9?0.2:ej>=8.6?0.1:0):0;
-  const nf=r1(Math.max(0,np-(10-ej)+bej));
-  return {np,nf,nb:nr.length,base,ej,bej,corta};
+  const neu=sumaNeu(a,k,d);
+  const nf=r1(Math.max(0,np-(10-ej)+bej-neu));
+  return {np,nf,nb:nr.length,base,ej,bej,corta,neu};
 }
 function notaAp(a,k,d,ses){ses=ses||actual;return tipoDe(a)==="L"?notaL(a,k,d,ses):notaO(a,k,d,ses)}
 function notaHTML(a,k,d){const n=notaAp(a,k,d);if(n.fuera)return '<span>No presentó este aparato</span>';
   if(tipoDe(a)==="O")return `<span>Partida <b>${f2(n.np)}</b></span><span class="nf">Final <b>${f2(n.nf)}</b></span>`;
-  return `<span>Partida <b>${f2(n.np)}</b></span><span>Ejecución <b>${f2(n.ej)}</b>${n.bej?` <small class="bej">+${n.bej.toFixed(1)} bono N8</small>`:""}</span>${n.corta?`<span class="neg">Rutina corta −${n.corta.toFixed(1)}</span>`:""}<span class="nf">Final <b>${f2(n.nf)}</b></span>`}
+  return `<span>Partida <b>${f2(n.np)}</b></span><span>Ejecución <b>${f2(n.ej)}</b>${n.bej?` <small class="bej">+${n.bej.toFixed(1)} bono N8</small>`:""}</span>${n.corta?`<span class="neg">Rutina corta −${n.corta.toFixed(1)}</span>`:""}${n.neu?`<span class="neg">Neutrales −${n.neu.toFixed(1)}</span>`:""}<span class="nf">Final <b>${f2(n.nf)}</b></span>`}
 
 // ---- Guardado ----
 function guardar(campos,inmediato){Object.assign(pendientes,campos);clearTimeout(timer);estado("Guardando…");timer=setTimeout(enviar,inmediato?0:500)}
@@ -295,7 +307,7 @@ $("lista").addEventListener("click",e=>{const g=e.target.closest("[data-todo]");
   const ins=[...e.target.closest(".grupo").querySelectorAll("input[data-k]")];const todos=ins.every(i=>i.checked);ins.forEach(i=>i.checked=!todos);leerSeleccion()});
 
 // ---- Paso 2: registro por aparato ----
-const tocado=d=>d&&((d.b||[]).some(Boolean)||(d.nr||[]).length||(d.fe||[]).length||d.c||d.o||d.d||d.p||d.x);
+const tocado=d=>d&&(Object.values(d.n||{}).some(Boolean)||(d.b||[]).some(Boolean)||(d.nr||[]).length||(d.fe||[]).length||d.c||d.o||d.d||d.p||d.x);
 function pintarAps(){
   $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>tocado((actual.datos[a.k]||{})[k])).length;
     return `<button type="button" data-ap="${k}" aria-pressed="${k===ap}">${l}<small>${n}/${(actual.atletas||[]).length}</small></button>`}).join("");
@@ -312,7 +324,11 @@ function controlesL(a,d){
     `<button type="button" class="abrirEl" data-abrir="1" aria-expanded="${abierto}">⚠️ Elemento no presentado o caída${marc?` <b>(${marc})</b>`:""} <span>${abierto?"▲":"▼"}</span></button>`+
     (marc?`<div class="elsum">${nr.map(i=>rows[i]?`<span class="mk nr">✗ ${esc(rows[i].n)} · no lo presentó</span>`:"").join("")}${fe.map(i=>rows[i]?`<span class="mk fe">⬇ ${esc(rows[i].n)} · se cayó</span>`:"").join("")}</div>`:"")+
     (abierto?`<div class="elpanel"><span class="elab">Elige el elemento · NP de su rutina ${f2(vistaDe(a,ap).np||0)}</span>${rows.map((r,i)=>`<div class="elrow"><span class="eln">${esc(r.n)}<small>${esc(r.l||"")}${r.l?" · ":""}${esc(r.vd||"")}</small></span><button type="button" class="elb" data-nr="${i}" aria-pressed="${nr.includes(i)}">No lo presentó</button><button type="button" class="elb fe" data-fe="${i}" aria-pressed="${fe.includes(i)}">Se cayó</button></div>`).join("")}</div>`:"");
-  return `<div class="elems">${elems}</div>
+  const ns=neutrales(a,ap),nn=d.n||{},nTot=ns.reduce((t,[id])=>t+(Number(nn[id])||0),0),nAb=abiertos.has(a.k+"|"+ap+"|n");
+  const neu=!ns.length?"":`<button type="button" class="abrirEl neu" data-abrirn="1" aria-expanded="${nAb}">⚖️ Deducciones neutrales${nTot?` <b>(−${sumaNeu(a,ap,d).toFixed(1)})</b>`:""} <span>${nAb?"▲":"▼"}</span></button>`+
+    (nTot&&!nAb?`<div class="elsum">${ns.filter(([id])=>nn[id]).map(([id,t,v])=>`<span class="mk nu">${esc(t)} −${v.toFixed(1)}${nn[id]>1?" ×"+nn[id]:""}</span>`).join("")}</div>`:"")+
+    (nAb?`<div class="elpanel"><span class="elab">Se restan de la nota final. Las de «no presentó» solo si lo tenía en su rutina.</span>${ns.map(([id,t,v,uno])=>`<div class="nurow"><span class="eln">${esc(t)}<small>−${v.toFixed(1)}${uno?"":" cada vez"}</small></span><button type="button" class="nb" data-nu="${id}" data-dv="-1" aria-label="Quitar">−</button><output>${nn[id]||0}</output><button type="button" class="nb" data-nu="${id}" data-dv="1" aria-label="Sumar"${uno&&nn[id]?" disabled":""}>+</button></div>`).join("")}</div>`:"");
+  return `<div class="elems">${elems}${neu}</div>
     <div class="extra">${nivelDe(a)==="7"?'<span class="elab">N7: sin bono por plantar</span>':`<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">${esc(etiquetaPlant(a,ap,d))}</button>${nivelDe(a)==="8"&&ap==="SALTO"?`<select class="vsel" data-sel="sb" aria-label="Tipo de salto">${N8_SALTO.map(o=>`<option value="${o[0]}"${(d.sb||"MA")===o[0]?" selected":""}>${esc(o[1])} +${o[2]}</option>`).join("")}</select>`:""}`}</div>
     <div class="campo"><label>CAÍDAS (−${caidaDe(actual,"L")})${fe.length?` <span class="bej">+${fe.length} en elementos</span>`:""}</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c||0}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>`;
 }
@@ -323,7 +339,7 @@ function pintarRegistro(){
   $("registro").innerHTML=at.map(a=>{const d=dato(a.k,ap),t=tipoDe(a);
     return `<div class="atl" data-k="${esc(a.k)}"><div class="nom"><b>${esc(a.apodo)}<span class="tipo ${t}">${t==="O"?"OBLIGATORIOS":"LIBRES"}</span></b><small>${t==="O"?esc(a.grupo)+" · ":""}Nivel ${esc(nivelDe(a))}</small></div>
     ${t==="O"?controlesO(a,d):controlesL(a,d)}
-    <div class="campo dedc"><label>DEDUCCIONES</label><div class="dedfila"><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"><button type="button" class="dbtn" data-dd="0.1">+.1</button><button type="button" class="dbtn" data-dd="0.2">+.2</button><button type="button" class="dbtn" data-dd="0.3">+.3</button><button type="button" class="dbtn undo" data-dd="undo" aria-label="Deshacer la última deducción" ${(d.h||[]).length?"":"disabled"}>↶</button></div></div>
+    <div class="campo dedc"><label>DEDUCCIONES</label><div class="dedfila"><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0">${(t==="L"?[0.1,0.3,0.5]:[0.1,0.2,0.3]).map(v=>`<button type="button" class="dbtn" data-dd="${v}">+${String(v).slice(1)}</button>`).join("")}<button type="button" class="dbtn undo" data-dd="undo" aria-label="Deshacer la última deducción" ${(d.h||[]).length?"":"disabled"}>↶</button></div></div>
     <div class="nota">${notaHTML(a,ap,d)}<button type="button" class="nopres" data-x="1" aria-pressed="${!!d.x}" style="margin-left:auto">No presentó</button></div></div>`}).join("");
   document.querySelectorAll("#registro .atl").forEach(f=>{const d=dato(f.dataset.k,ap);f.classList.toggle("fuera",!!d.x)});
 }
@@ -332,6 +348,11 @@ $("aps").addEventListener("click",e=>{const b=e.target.closest("[data-ap]");if(!
 $("registro").addEventListener("click",e=>{
   const fila=e.target.closest(".atl");if(!fila)return;const k=fila.dataset.k,d=dato(k,ap);
   const q=s=>e.target.closest(s);
+  if(q("[data-abrirn]")){const key=k+"|"+ap+"|n";abiertos.has(key)?abiertos.delete(key):abiertos.add(key);pintarRegistro();return}
+  const bn=q("[data-nu]");
+  if(bn){const id=bn.dataset.nu,a=(actual.atletas||[]).find(x=>x.k===k),it=neutrales(a,ap).find(x=>x[0]===id);d.n=d.n&&typeof d.n==="object"?d.n:{};
+    let v=Math.max(0,(Number(d.n[id])||0)+(+bn.dataset.dv));if(it&&it[3])v=Math.min(1,v);d.n[id]=v;
+    guardar({["actual.datos."+k+"."+ap]:d},true);pintarRegistro();return}
   if(q("[data-abrir]")){const key=k+"|"+ap;abiertos.has(key)?abiertos.delete(key):abiertos.add(key);pintarRegistro();return}
   const bnr=q("[data-nr]"),bfe=q("[data-fe]");
   if(bnr||bfe){const i=+(bnr||bfe).dataset[bnr?"nr":"fe"];d.nr=Array.isArray(d.nr)?d.nr:[];d.fe=Array.isArray(d.fe)?d.fe:[];
@@ -364,7 +385,7 @@ function totales(a,ses){
   APS.forEach(([k])=>{const d=((ses.datos||{})[a.k]||{})[k];const n=notaAp(a,k,d,ses);const dd=d||{};
     const c=(dd.c||0)+(t==="L"?(dd.fe||[]).length:0);
     if(!n.fuera){if(t==="O"){bonos+=n.nb;omit+=dd.o||0;if(k!=="SALTO")posibles+=3}else{noHizo+=n.nb;posibles+=(vistaDe(a,k).rows||[]).length}
-      caidas+=c;ded+=dd.d||0;aa+=n.nf;sumNp+=n.base;nAp++}
+      caidas+=c;ded+=(dd.d||0)+(n.neu||0);aa+=n.nf;sumNp+=n.base;nAp++}
     por[k]={...n,c,o:dd.o||0,d:dd.d||0,p:!!dd.p}});
   return {a,t,bonos,noHizo,caidas,omit,ded,por,aa:r1(aa),nAp,posibles,ef:sumNp>0?Math.min(100,aa/sumNp*100):0};
 }
@@ -381,7 +402,7 @@ function tablaL(filas){
   return `<div class="tw"><table><thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>No hizo</th><th>Caídas</th><th>Ded.</th><th>Total</th><th>Efic.</th></tr></thead><tbody>${filas.map(f=>`<tr class="${f.lugar<=3?"m"+f.lugar:""}"><td class="lg">${medalla(f.lugar)}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">Nivel ${esc(nivelDe(f.a))}</small></td><td class="${f.noHizo?"neg":""}">${f.noHizo}</td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td class="${f.ded?"neg":""}">${f3(f.ded)}</td><td class="${modoRk==="ef"?"":"pts"}">${f.aa.toFixed(3)}</td><td class="${modoRk==="ef"?"pts":""}">${f.ef.toFixed(1)}%</td></tr>`).join("")}</tbody></table></div>`;
 }
 function tablaAp(filas){
-  return `<div class="tw"><table class="det"><thead><tr><th class="izq">Atleta</th>${APS.map(([,l])=>`<th>${l}<small class="n">partida → final</small></th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr><td class="izq"><b>${esc(f.a.apodo)}</b></td>${APS.map(([k])=>{const p=f.por[k];return p.fuera?'<td><small class="n">No presentó</small></td>':`<td>${f2(p.np)} → <b>${f2(p.nf)}</b><small class="n">${f.t==="O"?(k==="SALTO"?"":p.nb+"B · "):(p.nb?p.nb+" no hizo · ":"")}${p.p?"plantó · ":""}${p.c}C · ${p.o?p.o+"O · ":""}${p.d?f3(p.d):"0"}D</small></td>`}).join("")}</tr>`).join("")}</tbody></table></div>`;
+  return `<div class="tw"><table class="det"><thead><tr><th class="izq">Atleta</th>${APS.map(([,l])=>`<th>${l}<small class="n">partida → final</small></th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr><td class="izq"><b>${esc(f.a.apodo)}</b></td>${APS.map(([k])=>{const p=f.por[k];return p.fuera?'<td><small class="n">No presentó</small></td>':`<td>${f2(p.np)} → <b>${f2(p.nf)}</b><small class="n">${f.t==="O"?(k==="SALTO"?"":p.nb+"B · "):(p.nb?p.nb+" no hizo · ":"")}${p.p?"plantó · ":""}${p.c}C · ${p.o?p.o+"O · ":""}${p.d?f3(p.d):"0"}D${p.neu?" · N −"+p.neu.toFixed(1):""}</small></td>`}).join("")}</tr>`).join("")}</tbody></table></div>`;
 }
 function pintarResultado(){
   ["O","L"].forEach(t=>{const v=caidaDe(actual,t);$("valCaida"+t).value=v;$("valCaida"+t+"Txt").textContent=v});
