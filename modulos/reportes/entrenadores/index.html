@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reporte para entrenadores · AKC</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--panel2:#11243a;--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff;--green:#64d8b2;--gold:#ffd166;--red:#ff7b8b}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:1250px;margin:auto;padding:22px 16px 60px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:20px}
+.eyebrow{color:#68b4ff;font-size:11px;font-weight:800;letter-spacing:.16em}
+h1{margin:5px 0;font-size:28px}
+.top p{margin:0;color:var(--muted)}
+.back{display:inline-flex;align-items:center;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:#eaf4ff;text-decoration:none;font-weight:800;font-size:13px;flex-shrink:0}
+.panel{background:#0c1a2b;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px}
+.panel h2{font-size:17px;margin:0 0 12px}
+label{display:block;color:var(--muted);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+select,input{width:100%;background:#071321;color:var(--text);border:1px solid #31506f;border-radius:10px;padding:11px;font-size:15px;outline:none}
+select:focus,input:focus{border-color:var(--blue)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1 1 180px;min-width:0}
+.btn{border:0;border-radius:10px;padding:12px 16px;font-weight:900;font-size:13px;cursor:pointer;background:#1266c9;color:#fff;white-space:nowrap}
+.btn:hover{background:#1b82ef}
+.btn.big{font-size:15px;padding:14px 20px}
+.btn.ghost{background:transparent;border:1px solid #31506f;color:#d8e9fb}
+.btn.danger{background:transparent;border:1px solid #6b2a35;color:var(--red)}
+.btn:disabled{opacity:.45;cursor:default}
+.hidden{display:none!important}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}
+.msg{margin-top:10px;font-size:13px;font-weight:700}
+.msg.ok{color:var(--green)}.msg.err{color:var(--red)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.toolbar>div{flex:1 1 260px;min-width:0}
+/* Formulario de captura */
+.cap{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+.ap{background:#0a1726;border:1px solid #1e3550;border-radius:12px;padding:10px;display:grid;gap:7px;min-width:0}
+.ap h3{margin:0;font-size:14px}
+.ap .ref{font-size:12px;color:var(--muted)}
+.ap .ref b{color:var(--gold)}
+.ap input{padding:9px;font-size:15px}
+.ap .pct{font-size:12px;color:var(--muted);min-height:16px}
+.ap .pct b{color:var(--green)}
+.ap.off{opacity:.75}
+.prev{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.prev div{background:#101f32;border-radius:10px;padding:9px 12px}
+.prev span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;font-weight:800}
+.prev b{font-size:18px}
+@media(max-width:900px){.cap{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.cap{grid-template-columns:repeat(2,1fr)}h1{font-size:23px}}
+/* Concentrado */
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.sheet-title{font-size:20px;font-weight:900}
+.sheet-sub{font-size:12px;color:var(--muted);margin-top:3px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-bottom:16px}
+table.rk{border-collapse:collapse;width:100%;min-width:980px;font-size:12px}
+.rk th,.rk td{border-bottom:1px solid #1b3047;padding:6px 6px;text-align:center;vertical-align:middle}
+.rk th{background:#11243a;color:#cfe2fa;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.rk th.grp{background:#163a60;color:#fff;text-align:left;font-size:13px;letter-spacing:.08em}
+.rk td.nm{text-align:left;font-weight:800;white-space:nowrap}
+.rk td.nm small{display:block;font-weight:500;color:var(--muted);font-size:10px}
+.rk td.lg{font-weight:900;font-size:15px}
+.rk td.ef{font-weight:900;color:var(--green);font-size:14px}
+.rk td.aa{font-weight:800}
+.cell{display:grid;grid-template-columns:auto auto auto auto;gap:1px 4px;justify-content:center;align-items:baseline;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell span{font-size:9px;color:var(--muted);text-align:right}
+.np0{color:#6f86a0;font-size:11px}
+.cell b{font-size:12px;text-align:left}
+.cell .p{color:var(--green)}
+.rk tr.dns td{color:#6f86a0}
+.rk tr.dns td.nm{color:#8aa0b8}
+.empty{color:var(--muted);padding:30px;text-align:center}
+.legend{font-size:11px;color:var(--muted);line-height:1.5}
+@media print{
+  @page{size:landscape;margin:8mm}
+  body{background:#fff!important;color:#000!important}
+  .wrap{max-width:none;padding:0}
+  .top,.no-print,#capPanel,#akc-modo-prueba{display:none!important}
+  .panel{border:0;padding:0;background:#fff;margin:0}
+  .sheet-title{color:#000}.sheet-sub,.legend{color:#333}
+  .tw{overflow:visible;border:1px solid #999;border-radius:0;break-inside:auto}
+  table.rk{min-width:0;font-size:9px}
+  .rk th{background:#e6e6e6!important;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rk th.grp{background:#cfd8e3!important;color:#000}
+  .rk th,.rk td{border:1px solid #bbb;padding:3px 3px;color:#000}
+  .rk td.ef{color:#000}.cell .p{color:#000;font-weight:900}
+  .cell span{color:#444}.rk td.nm small{color:#444}
+  .rk tr.dns td{color:#777}
+  .np0{color:#555!important}
+  tr{break-inside:avoid}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="../../../cliente/fuentes.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div><div class="eyebrow">ÁGUILAS KC · ENTRENADORES</div><h1>Reporte para entrenadores</h1><p>Resultados por competencia y ranking interno por eficiencia.</p></div>
+    <a class="back" href="../index.html">REPORTES</a>
+  </div>
+
+  <section class="panel no-print">
+    <div class="toolbar">
+      <div><label for="selComp">Competencia</label><select id="selComp"><option value="">Cargando…</option></select></div>
+      <button class="btn big" type="button" id="btnSubir">Subir información de competencia</button>
+      <button class="btn ghost" type="button" id="btnPrint">Imprimir concentrado</button>
+    </div>
+    <div class="hint" id="estado">Conectando con la nube…</div>
+  </section>
+
+  <!-- Captura -->
+  <section class="panel hidden" id="capPanel">
+    <h2>Subir información de competencia</h2>
+    <div class="row">
+      <div><label for="capComp">Competencia</label><select id="capComp"></select></div>
+      <button class="btn ghost" type="button" id="btnNueva">+ Nueva competencia</button>
+    </div>
+    <div class="row hidden" id="nuevaBox" style="margin-top:10px">
+      <div style="flex:2 1 260px"><label for="ncNombre">Nombre de la competencia</label><input id="ncNombre" placeholder="Ej. NACIONAL 2026" autocomplete="off"></div>
+      <div><label for="ncFecha">Fecha</label><input id="ncFecha" type="date"></div>
+      <button class="btn" type="button" id="btnCrear">Crear competencia</button>
+    </div>
+    <div class="hint">Al crearla queda disponible para todos los atletas.</div>
+
+    <div id="capAtleta" class="hidden" style="margin-top:14px">
+      <div class="row">
+        <div style="flex:2 1 260px"><label for="capAtl">Atleta</label><select id="capAtl"></select></div>
+        <div><label for="capTipo">Rutina</label><select id="capTipo"><option value="L">Libre</option><option value="O">Obligatoria</option></select></div>
+        <div style="flex:0 1 110px"><label for="capNivel">Nivel</label><input id="capNivel" inputmode="text" autocomplete="off"></div>
+        <div style="flex:0 1 110px"><label for="capCat">Categoría</label><input id="capCat" autocomplete="off"></div>
+      </div>
+      <div class="hint">Por aparato: la <b>NP de la rutina</b> es la del editor de rutinas (lo que debe presentar). Escribe la <b>NP del juez</b> y la <b>NF</b>. Si no presentó un aparato, déjalo vacío: no cuenta en su eficiencia.</div>
+      <div class="cap" id="capAps"></div>
+      <div class="row" style="margin-top:12px">
+        <div style="flex:0 1 160px"><label for="capLugar">Lugar que quedó</label><input id="capLugar" inputmode="numeric" autocomplete="off"></div>
+        <div style="flex:0 1 160px"><label for="capPart">Participantes</label><input id="capPart" inputmode="numeric" autocomplete="off"></div>
+        <div class="prev" id="capPrev"></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn big" type="button" id="btnGuardar">Guardar</button>
+        <button class="btn ghost" type="button" id="btnGuardarSig">Guardar y siguiente atleta</button>
+        <button class="btn danger hidden" type="button" id="btnBorrar">Borrar resultado de este atleta</button>
+        <button class="btn ghost" type="button" id="btnCerrar">Cerrar</button>
+      </div>
+      <div class="msg" id="capMsg"></div>
+    </div>
+  </section>
+
+  <!-- Concentrado -->
+  <section class="panel" id="sheet"><div class="empty">Elige una competencia.</div></section>
+</div>
+
+<script>
+"use strict";
+const APS=[['PISO','Piso'],['ARZON','Arzón'],['ANILLOS','Anillos'],['SALTO','Salto'],['PARALELAS','Paralelas'],['FIJA','Barra fija']];
+const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
+// Nombre de cada atleta en Estadísticas (historial individual). Clave: nombre en Rutinas.
+const ESTAD={'DIEGO J':'DIEGO JAIME','CHAMPI':'DIEGO RODRIGUEZ','ISAAC':'ISAAC MARTINEZ','VELA':'DIEGO VELA','CHAVEZ':'DIEGO CHAVEZ','MAX':'MAX DIAZ','SANTI LEE':'SANTI SIGLER','NICO CAPI':'NICO CAPITANACCI','CARLOS AZNAR':'CHARLY','EMI':'EMI GONZALEZ','DAVID RANGEL':'DAVID','JOSE MARIA':'CHEMA','MAURO REGAND':'MAURO','BRITAN AKIM':'BRITTAN','ALFREDO':'ALFRED'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const num=v=>{if(v===null||v===undefined)return null;const t=String(v).trim().replace(',','.');if(t==='')return null;const n=Number(t);return Number.isFinite(n)?n:NaN};
+const f1=v=>v==null?'—':Number(v).toFixed(1);
+const f3=v=>v==null?'—':Number(v).toFixed(3);
+const pc=v=>v==null?'—':Number(v).toFixed(1)+'%';
+
+let db=null,RUT=null,COMP={competencias:{},resultados:{}},ROSTER=[],compSel='',capKey='';
+
+// ---------- Datos ----------
+function rosterDe(rut){
+  const out=[];if(!rut)return out;
+  const bajas=new Set((rut.bajas||[]).map(x=>String(x).toUpperCase()));
+  (rut.orden&&rut.orden.length?rut.orden:Object.keys(rut.atletas||{})).forEach(n=>{
+    const a=rut.atletas&&rut.atletas[n];if(!a||n==='PRUEBAS'||bajas.has(String(n).toUpperCase()))return;
+    const np={};APS.forEach(([k])=>{const x=a.vista&&a.vista[k];np[k]=x&&Number.isFinite(Number(x.np))?Number(x.np):null});
+    out.push({key:n,tipo:'L',nivel:a.nivel!=null?String(a.nivel):'',np});
+  });
+  const ob=rut.obligatorios||{},ov=ob.vista||{},ob_bajas=new Set((ob.bajas||[]).map(x=>String(x).toUpperCase()));
+  (ov.orden||Object.keys(ov.atletas||{})).forEach(n=>{
+    const x=ov.atletas&&ov.atletas[n];if(!x||ob_bajas.has(String(n).toUpperCase())||out.some(o=>o.key===n))return;
+    const np={};APS.forEach(([k])=>{np[k]=x.np&&Number.isFinite(Number(x.np[k]))?Number(x.np[k]):null});
+    out.push({key:n,tipo:'O',nivel:x.nivel!=null?String(x.nivel):'',np});
+  });
+  return out;
+}
+const nombre=k=>ESTAD[k]||k;
+function compsOrdenadas(){
+  return Object.entries(COMP.competencias||{}).map(([id,c])=>({id,...c})).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||''))||String(b.creada||'').localeCompare(String(a.creada||'')));
+}
+// Eficiencia: por aparato presentado, NF ÷ NP de la rutina × 100 (si no hay NP de rutina, se usa la NP del juez).
+// Los aparatos que no presentó no cuentan.
+function calcular(r){
+  const ap={};let suma=0,n=0,aa=0;
+  APS.forEach(([k])=>{
+    const np=r&&r.np?r.np[k]:null,nf=r&&r.nf?r.nf[k]:null,ref=r&&r.ref?r.ref[k]:null;
+    if(np==null||nf==null){ap[k]=null;return}
+    const base=ref!=null&&ref>0?ref:np;const p=base>0?nf/base*100:0;
+    ap[k]={np,nf,ref,ded:np-nf,p,sinRef:!(ref!=null&&ref>0)};suma+=p;n++;aa+=nf;
+  });
+  return {ap,n,aa,ef:n?suma/n:null};
+}
+
+// ---------- Firebase ----------
+function conectar(){
+  try{if(!firebase.apps.length)firebase.initializeApp(FB);db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();}
+  catch(e){$('estado').textContent='No se pudo conectar con la nube: '+e.message;return}
+  db.collection('rutinasAKC').doc('estado').get().then(s=>{RUT=s.exists?s.data():null;ROSTER=rosterDe(RUT);pintarTodo()}).catch(e=>{$('estado').textContent='No se pudieron leer las rutinas: '+e.message});
+  db.collection('rutinasAKC').doc('estado').onSnapshot(s=>{RUT=s.exists?s.data():null;ROSTER=rosterDe(RUT);pintarTodo()},()=>{});
+  db.collection('competenciasAKC').doc('estado').onSnapshot(s=>{
+    const d=s.exists?s.data():{};COMP={competencias:d.competencias||{},resultados:d.resultados||{}};
+    $('estado').textContent='Sincronizado con la nube. Lo que se guarde aquí se ve al momento en todos los equipos.';
+    pintarTodo();
+  },e=>{$('estado').textContent='No se pudo leer la información de competencias: '+e.message});
+}
+const docComp=()=>db.collection('competenciasAKC').doc('estado');
+
+// ---------- Selectores ----------
+function llenarComps(){
+  const cs=compsOrdenadas();
+  const opts=cs.map(c=>`<option value="${esc(c.id)}">${esc(c.nombre)}${c.fecha?' · '+esc(c.fecha):''}</option>`).join('');
+  if(compSel&&!COMP.competencias[compSel])compSel='';
+  if(!compSel&&cs.length)compSel=cs[0].id;
+  $('selComp').innerHTML=cs.length?opts:'<option value="">Todavía no hay competencias</option>';
+  $('selComp').value=compSel;
+  $('capComp').innerHTML=cs.length?opts:'<option value="">Crea la primera competencia</option>';
+  $('capComp').value=compSel;
+  $('capAtleta').classList.toggle('hidden',!compSel);
+}
+function llenarAtletas(){
+  const res=(COMP.resultados||{})[compSel]||{};
+  const opt=a=>`<option value="${esc(a.key)}">${res[a.key]?'✓ ':''}${esc(nombre(a.key))}${a.nivel?' · '+esc(/^\d/.test(a.nivel)?'N'+a.nivel:a.nivel):''}</option>`;
+  const L=ROSTER.filter(a=>a.tipo==='L'),O=ROSTER.filter(a=>a.tipo==='O');
+  const extra=Object.keys(res).filter(k=>!ROSTER.some(a=>a.key===k));
+  $('capAtl').innerHTML=(L.length?`<optgroup label="Libres">${L.map(opt).join('')}</optgroup>`:'')+(O.length?`<optgroup label="Obligatorios">${O.map(opt).join('')}</optgroup>`:'')+(extra.length?`<optgroup label="Otros con resultado">${extra.map(k=>`<option value="${esc(k)}">✓ ${esc(nombre(k))}</option>`).join('')}</optgroup>`:'');
+  if(capKey&&[...$('capAtl').options].some(o=>o.value===capKey))$('capAtl').value=capKey;else capKey=$('capAtl').value;
+}
+
+// ---------- Captura ----------
+function cargarCaptura(){
+  capKey=$('capAtl').value;$('capMsg').textContent='';$('capMsg').className='msg';
+  const a=ROSTER.find(x=>x.key===capKey)||{key:capKey,tipo:'L',nivel:'',np:{}};
+  const r=((COMP.resultados||{})[compSel]||{})[capKey];
+  $('capTipo').value=r?r.tipo:a.tipo;$('capNivel').value=r?(r.nivel||''):(a.nivel||'');$('capCat').value=r?(r.cat||''):'';
+  $('capLugar').value=r&&r.lugar!=null?r.lugar:'';$('capPart').value=r&&r.part!=null?r.part:'';
+  $('btnBorrar').classList.toggle('hidden',!r);
+  $('capAps').innerHTML=APS.map(([k,l])=>{
+    const ref=r&&r.ref&&r.ref[k]!=null?r.ref[k]:(a.np?a.np[k]:null);
+    return `<div class="ap" data-ap="${k}"><h3>${l}</h3><div class="ref">NP de la rutina: <b data-ref="${ref==null?'':ref}">${f1(ref)}</b></div>
+      <div><label for="np_${k}">NP del juez</label><input id="np_${k}" inputmode="decimal" autocomplete="off" value="${r&&r.np&&r.np[k]!=null?r.np[k]:''}"></div>
+      <div><label for="nf_${k}">NF</label><input id="nf_${k}" inputmode="decimal" autocomplete="off" value="${r&&r.nf&&r.nf[k]!=null?r.nf[k]:''}"></div>
+      <div class="pct" id="pct_${k}"></div></div>`;
+  }).join('');
+  previa();
+}
+function leerCaptura(){
+  const r={np:{},nf:{},ref:{}},err=[];
+  APS.forEach(([k,l])=>{
+    const np=num($('np_'+k).value),nf=num($('nf_'+k).value),refTxt=document.querySelector(`[data-ap="${k}"] [data-ref]`).dataset.ref;
+    const ref=refTxt===''?null:Number(refTxt);
+    if(Number.isNaN(np)||Number.isNaN(nf))err.push(l+': escribe solo números (ej. 12.3).');
+    else if((np==null)!==(nf==null))err.push(l+': falta '+(np==null?'la NP del juez':'la NF')+'. Si no lo presentó, deja los dos vacíos.');
+    else if(np!=null&&(np<0||nf<0||np>20||nf>20))err.push(l+': revisa la nota (debe estar entre 0 y 20).');
+    r.np[k]=Number.isNaN(np)?null:np;r.nf[k]=Number.isNaN(nf)?null:nf;r.ref[k]=ref;
+  });
+  return {r,err};
+}
+function previa(){
+  const {r}=leerCaptura(),c=calcular(r);
+  APS.forEach(([k])=>{const x=c.ap[k],el=$('pct_'+k),box=document.querySelector(`[data-ap="${k}"]`);
+    box.classList.toggle('off',!x);
+    el.innerHTML=x?`Ded. ${x.ded.toFixed(3)} · <b>${x.p.toFixed(1)}%</b>${x.sinRef?' <span title="Sin NP de rutina: se usó la NP del juez">*</span>':''}`:'No presentó';});
+  $('capPrev').innerHTML=`<div><span>Aparatos presentados</span><b>${c.n} de 6</b></div><div><span>AA</span><b>${c.n?c.aa.toFixed(3):'—'}</b></div><div><span>Eficiencia</span><b style="color:var(--green)">${c.ef==null?'—':c.ef.toFixed(1)+'%'}</b></div>`;
+}
+async function guardar(sig){
+  const m=$('capMsg');m.className='msg';
+  if(!compSel||!capKey){m.textContent='Elige competencia y atleta.';m.className='msg err';return}
+  const {r,err}=leerCaptura();
+  const lugar=num($('capLugar').value),part=num($('capPart').value);
+  if(Number.isNaN(lugar)||Number.isNaN(part)||(lugar!=null&&lugar<1)||(part!=null&&part<1))err.push('Lugar y participantes: escribe números enteros.');
+  else if(lugar!=null&&part!=null&&lugar>part)err.push('El lugar no puede ser mayor que el número de participantes.');
+  if(err.length){m.innerHTML=err.map(esc).join('<br>');m.className='msg err';return}
+  const c=calcular(r);
+  if(!c.n&&lugar==null){m.textContent='No hay notas que guardar. Si no compitió, no subas nada: aparecerá al final con ceros.';m.className='msg err';return}
+  const data={tipo:$('capTipo').value,nivel:$('capNivel').value.trim(),cat:$('capCat').value.trim(),np:r.np,nf:r.nf,ref:r.ref,lugar:lugar==null?null:Math.round(lugar),part:part==null?null:Math.round(part),guardado:new Date().toISOString()};
+  $('btnGuardar').disabled=$('btnGuardarSig').disabled=true;
+  try{
+    await docComp().set({resultados:{[compSel]:{[capKey]:data}}},{merge:true});
+    $('btnBorrar').classList.remove('hidden');m.textContent='Guardado: '+nombre(capKey)+'. El concentrado y su historial ya lo incluyen.';m.className='msg ok';
+    if(sig){const o=[...$('capAtl').options],i=o.findIndex(x=>x.value===capKey);if(i>=0&&i<o.length-1){$('capAtl').value=o[i+1].value;cargarCaptura();$('capMsg').textContent='Guardado. Sigue: '+nombre($('capAtl').value)+'.';$('capMsg').className='msg ok';}}
+  }catch(e){m.textContent='No se pudo guardar: '+e.message;m.className='msg err'}
+  $('btnGuardar').disabled=$('btnGuardarSig').disabled=false;
+}
+async function borrar(){
+  const m=$('capMsg');
+  if(!confirm('¿Borrar el resultado de '+nombre(capKey)+' en esta competencia? Quedará como "no compitió".'))return;
+  try{await docComp().update(new firebase.firestore.FieldPath('resultados',compSel,capKey),firebase.firestore.FieldValue.delete());cargarCaptura();m.textContent='Resultado borrado: '+nombre(capKey)+' queda como «no compitió».';m.className='msg ok'}
+  catch(e){m.textContent='No se pudo borrar: '+e.message;m.className='msg err'}
+}
+async function crearComp(){
+  const nom=$('ncNombre').value.trim().toUpperCase(),fecha=$('ncFecha').value;
+  const m=$('capMsg');
+  if(!nom){$('ncNombre').focus();return}
+  if(Object.values(COMP.competencias||{}).some(c=>String(c.nombre).toUpperCase()===nom)){alert('Ya existe una competencia con ese nombre.');return}
+  const id='c'+Date.now().toString(36);
+  try{await docComp().set({competencias:{[id]:{nombre:nom,fecha:fecha||'',creada:new Date().toISOString()}}},{merge:true});
+    compSel=id;$('ncNombre').value='';$('ncFecha').value='';$('nuevaBox').classList.add('hidden');m.textContent='Competencia creada: '+nom+'.';m.className='msg ok';}
+  catch(e){alert('No se pudo crear: '+e.message)}
+}
+
+// ---------- Concentrado ----------
+function pintarConcentrado(){
+  const el=$('sheet');
+  const c=COMP.competencias&&COMP.competencias[compSel];
+  if(!c){el.innerHTML='<div class="empty">Todavía no hay competencias. Toca «Subir información de competencia» para crear la primera.</div>';return}
+  const res=(COMP.resultados||{})[compSel]||{};
+  const keys=[...ROSTER.map(a=>a.key),...Object.keys(res).filter(k=>!ROSTER.some(a=>a.key===k))];
+  const filas=keys.map(k=>{const a=ROSTER.find(x=>x.key===k),r=res[k],calc=calcular(r);return {k,a,r,calc,tipo:r?r.tipo:(a?a.tipo:'L'),nivel:r?r.nivel:(a?a.nivel:'')}});
+  const tabla=(tipo,titulo)=>{
+    const g=filas.filter(x=>x.tipo===tipo);if(!g.length)return '';
+    const comp=g.filter(x=>x.calc.n).sort((a,b)=>b.calc.ef-a.calc.ef||b.calc.aa-a.calc.aa);
+    const dns=g.filter(x=>!x.calc.n).sort((a,b)=>nombre(a.k).localeCompare(nombre(b.k),'es'));
+    let h=`<div class="tw"><table class="rk"><thead><tr><th class="grp" colspan="${APS.length+6}">${titulo}</th></tr><tr><th>Lugar</th><th>Nombre</th><th>Nivel</th>${APS.map(([,l])=>`<th>${l}</th>`).join('')}<th>AA</th><th>% Eficiencia</th><th>Lugar en la competencia</th></tr></thead><tbody>`;
+    comp.forEach((x,i)=>{
+      h+=`<tr><td class="lg">${i+1}</td><td class="nm">${esc(nombre(x.k))}${x.r&&x.r.cat?`<small>Cat. ${esc(x.r.cat)}</small>`:''}</td><td>${esc(x.nivel||'—')}</td>${APS.map(([k])=>{const z=x.calc.ap[k];return z?`<td><div class="cell"><span>NP</span><b>${f1(z.np)}</b><span>NF</span><b>${f3(z.nf)}</b><span>Rut.</span><b>${f1(z.ref!=null?z.ref:null)}${z.sinRef?'*':''}</b><span>%</span><b class="p">${z.p.toFixed(1)}</b></div></td>`:`<td class="np0">No presentó</td>`}).join('')}<td class="aa">${x.calc.aa.toFixed(3)}</td><td class="ef">${x.calc.ef.toFixed(1)}%</td><td>${x.r&&x.r.lugar!=null?`<b>${x.r.lugar}°</b>${x.r.part!=null?' de '+x.r.part:''}`:'—'}</td></tr>`;
+    });
+    dns.forEach(x=>{
+      h+=`<tr class="dns"><td class="lg">—</td><td class="nm">${esc(nombre(x.k))}<small>No compitió</small></td><td>${esc(x.nivel||'—')}</td>${APS.map(()=>`<td class="np0">0</td>`).join('')}<td class="aa">0</td><td class="ef">0%</td><td>—</td></tr>`;
+    });
+    return h+'</tbody></table></div>';
+  };
+  const subidos=Object.keys(res).length;
+  el.innerHTML=`<div class="sheet-head"><div><div class="sheet-title">${esc(c.nombre)} · Ranking interno por eficiencia</div><div class="sheet-sub">${c.fecha?esc(c.fecha)+' · ':''}${subidos} atleta${subidos===1?'':'s'} con resultados · AKC Gimnasia Artística Varonil</div></div></div>`+
+    tabla('L','LIBRES')+tabla('O','OBLIGATORIOS')+
+    `<div class="legend">NP = nota de partida del juez · NF = nota final · Rut. = NP de la rutina que debía presentar (editor de rutinas) · % = NF ÷ NP de la rutina × 100.<br>% Eficiencia = promedio de los aparatos que presentó; los que no presentó no cuentan. Ranking interno: mayor eficiencia primero; si empatan, mayor AA. Quien no compitió va al final con ceros.${filas.some(x=>Object.values(x.calc.ap).some(z=>z&&z.sinRef))?'<br>* Sin NP de rutina guardada: se usó la NP del juez.':''}</div>`;
+}
+function pintarTodo(){llenarComps();if(!$('capPanel').classList.contains('hidden')&&compSel){const prev=capKey;llenarAtletas();if(prev!==capKey||!$('capAps').innerHTML)cargarCaptura();}pintarConcentrado();}
+
+// ---------- Eventos ----------
+$('selComp').onchange=e=>{compSel=e.target.value;pintarTodo()};
+$('btnSubir').onclick=()=>{$('capPanel').classList.remove('hidden');llenarComps();if(compSel){llenarAtletas();cargarCaptura()}else{$('nuevaBox').classList.remove('hidden');$('ncNombre').focus()}$('capPanel').scrollIntoView({behavior:'smooth',block:'start'})};
+$('btnCerrar').onclick=()=>$('capPanel').classList.add('hidden');
+$('btnNueva').onclick=()=>{$('nuevaBox').classList.toggle('hidden');if(!$('nuevaBox').classList.contains('hidden'))$('ncNombre').focus()};
+$('btnCrear').onclick=crearComp;
+$('capComp').onchange=e=>{compSel=e.target.value;$('selComp').value=compSel;llenarAtletas();cargarCaptura();pintarConcentrado()};
+$('capAtl').onchange=cargarCaptura;
+$('capAps').addEventListener('input',previa);
+$('btnGuardar').onclick=()=>guardar(false);
+$('btnGuardarSig').onclick=()=>guardar(true);
+$('btnBorrar').onclick=borrar;
+$('btnPrint').onclick=()=>{if(!compSel){alert('Elige una competencia.');return}window.print()};
+conectar();
+</script>
+</body>
+</html>

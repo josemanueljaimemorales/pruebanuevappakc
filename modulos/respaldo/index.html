@@ -31,7 +31,7 @@
 const firebaseConfig={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
-const COLECCIONES=["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros"];
+const COLECCIONES=["normativosAKC","rutinasAKC","calendarioAKC","mvpAKC","cargasAKC","registros","competenciasAKC"];
 
 // Convierte Timestamps de Firestore a texto ISO para que el JSON sea legible
 function limpiar(v){

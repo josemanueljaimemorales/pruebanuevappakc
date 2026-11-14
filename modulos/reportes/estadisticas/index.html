@@ -50,7 +50,28 @@ function chart(rows){
  const grid=yTicks.map(v=>`<g><line x1="${pLeft}" y1="${y(v)}" x2="${w-pRight}" y2="${y(v)}" stroke="#1b3047"/><text x="${pLeft-8}" y="${y(v)+4}" text-anchor="end" fill="#8197ae" font-size="9">${n(v)}</text></g>`).join('');
  return `<div class="chart"><div class="chart-scroll"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Evolución del AA por competencia">${grid}<line x1="${pLeft}" y1="${pTop}" x2="${pLeft}" y2="${h-pBottom}" stroke="#29425d"/><line x1="${pLeft}" y1="${h-pBottom}" x2="${w-pRight}" y2="${h-pBottom}" stroke="#29425d"/><polyline points="${pts}" fill="none" stroke="#64d8b2" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>${dots}${labs}<text x="10" y="14" fill="#9eb1c8" font-size="10">AA</text></svg></div><div class="chart-hint">Desliza horizontalmente para recorrer todas las competencias.</div></div>`
 }
-function showDetail(r){state.selected=r;$('detail').classList.remove('hidden');const notes=['PISO','ARZON','ANILLO','SALTO','PARALELA','FIJA'];$('detail').innerHTML=`<div class="detail-head"><div><div class="detail-title">${esc(r.COPA)}</div><div class="detail-sub">Nivel ${esc(r.NIVEL)} · Categoría ${esc(r.CAT)}</div></div><button class="close" onclick="$('detail').classList.add('hidden')">Cerrar</button></div><div class="notes">${notes.map(k=>`<div class="note"><span>${labels[k]}</span><b>${n(r[k])}</b></div>`).join('')}</div><div class="detail-results"><div class="result"><span>AA</span><b class="aa">${n(r.AA)}</b></div><div class="result"><span>Lugar</span><b>${n(r.LUGAR)}°</b></div><div class="result"><span>Participantes</span><b>${n(r.PART)}</b></div></div>`;$('detail').scrollIntoView({behavior:'smooth',block:'start'})}
+function showDetail(r){state.selected=r;$('detail').classList.remove('hidden');const notes=['PISO','ARZON','ANILLO','SALTO','PARALELA','FIJA'];$('detail').innerHTML=`<div class="detail-head"><div><div class="detail-title">${esc(r.COPA)}</div><div class="detail-sub">Nivel ${esc(r.NIVEL)} · Categoría ${esc(r.CAT)}</div></div><button class="close" onclick="$('detail').classList.add('hidden')">Cerrar</button></div><div class="notes">${notes.map(k=>`<div class="note"><span>${labels[k]}</span><b>${n(r[k])}</b></div>`).join('')}</div><div class="detail-results"><div class="result"><span>AA</span><b class="aa">${n(r.AA)}</b></div><div class="result"><span>Lugar</span><b>${n(r.LUGAR)}°</b></div><div class="result"><span>Participantes</span><b>${n(r.PART)}</b></div>${r.EFIC!=null?`<div class="result"><span>Eficiencia (reporte de entrenadores)</span><b class="aa">${Number(r.EFIC).toFixed(1)}%</b></div>`:''}</div>`;$('detail').scrollIntoView({behavior:'smooth',block:'start'})}
+// Resultados subidos en «Reporte para entrenadores» (nube): se agregan al historial de cada atleta.
+// Si una competencia ya está en el Excel con el mismo nombre, manda la de la nube.
+const COMP_ESTAD={'DIEGO J':'DIEGO JAIME','CHAMPI':'DIEGO RODRIGUEZ','ISAAC':'ISAAC MARTINEZ','VELA':'DIEGO VELA','CHAVEZ':'DIEGO CHAVEZ','MAX':'MAX DIAZ','SANTI LEE':'SANTI SIGLER','NICO CAPI':'NICO CAPITANACCI','CARLOS AZNAR':'CHARLY','EMI':'EMI GONZALEZ','DAVID RANGEL':'DAVID','JOSE MARIA':'CHEMA','MAURO REGAND':'MAURO','BRITAN AKIM':'BRITTAN','ALFREDO':'ALFRED'};
+async function mergeCloudComps(data){
+ if(!cloudNorm)return data;
+ try{
+  const s=await cloudNorm.collection('competenciasAKC').doc('estado').get();if(!s.exists)return data;const d=s.data();
+  const comps=Object.entries(d.competencias||{}).map(([id,c])=>({id,...c})).sort((a,b)=>String(a.fecha||a.creada||'').localeCompare(String(b.fecha||b.creada||'')));
+  const AP={PISO:'PISO',ARZON:'ARZON',ANILLOS:'ANILLO',SALTO:'SALTO',PARALELAS:'PARALELA',FIJA:'FIJA'};
+  const out=data.slice();
+  comps.forEach(c=>Object.entries((d.resultados||{})[c.id]||{}).forEach(([k,r])=>{
+   const row={GIMNASTA:COMP_ESTAD[k]||k,COPA:c.nombre,NIVEL:r.nivel||undefined,CAT:r.cat||undefined,LUGAR:r.lugar??undefined,PART:r.part??undefined,NUBE:true};
+   let aa=0,n=0,suma=0;
+   Object.entries(AP).forEach(([a,b])=>{const np=r.np?.[a],nf=r.nf?.[a];if(np==null||nf==null){row[b]=undefined;return}row[b]=nf;aa+=nf;n++;const ref=r.ref?.[a];const base=ref>0?ref:np;suma+=base>0?nf/base*100:0});
+   if(!n)return;row.AA=aa;row.EFIC=suma/n;
+   const i=out.findIndex(x=>x.GIMNASTA===row.GIMNASTA&&String(x.COPA??'').trim().toUpperCase()===String(row.COPA).trim().toUpperCase());
+   if(i>=0)out.splice(i,1);out.push(row);
+  }));
+  return out;
+ }catch(e){console.warn('Competencias de la nube no disponibles:',e);return data}
+}
 // Estadísticas: lee el Excel (fuentes.js lo pide a Drive; si falla, copia del repo). data.json queda como respaldo.
 const COMP_XLSX='Estadistica de competencias totales.xlsx';
 function compRowsFromSheet(rows){
@@ -80,7 +101,7 @@ async function loadCompData(){
   return fetch('data.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.json());
  }
 }
-loadCompData().then(data=>{state.rows=data;const names=[...new Set(data.map(r=>r.GIMNASTA))].sort((a,b)=>a.localeCompare(b,'es'));$('athlete').innerHTML='<option value="">Selecciona un atleta...</option>'+names.map(x=>`<option>${esc(x)}</option>`).join('');if(reportView==='normativos')fillNormAthletes();$('athlete').onchange=e=>{state.athlete=e.target.value;$('detail').classList.add('hidden');$('normPanel').classList.add('hidden');$('normPanel').innerHTML='';if(reportView==='normativos'){ $('content').classList.toggle('hidden',!state.athlete); if(state.athlete)renderNormativos(state.athlete); }else{render()}};const normBtn=$('normBtn');if(normBtn){normBtn.onclick=()=>{if(!state.athlete)return;renderNormativos(state.athlete)};if(reportView==='normativos')normBtn.style.display='none';}}).catch(err=>{console.error('Error al inicializar estadísticas:',err);if(state.rows.length){$('athleteHint').textContent='Elige un atleta para ver únicamente sus competencias.';}else{$('athleteHint').textContent='No se pudo cargar la base de estadísticas.';}});
+loadCompData().then(mergeCloudComps).then(data=>{state.rows=data;const names=[...new Set(data.map(r=>r.GIMNASTA))].sort((a,b)=>a.localeCompare(b,'es'));$('athlete').innerHTML='<option value="">Selecciona un atleta...</option>'+names.map(x=>`<option>${esc(x)}</option>`).join('');if(reportView==='normativos')fillNormAthletes();$('athlete').onchange=e=>{state.athlete=e.target.value;$('detail').classList.add('hidden');$('normPanel').classList.add('hidden');$('normPanel').innerHTML='';if(reportView==='normativos'){ $('content').classList.toggle('hidden',!state.athlete); if(state.athlete)renderNormativos(state.athlete); }else{render()}};const normBtn=$('normBtn');if(normBtn){normBtn.onclick=()=>{if(!state.athlete)return;renderNormativos(state.athlete)};if(reportView==='normativos')normBtn.style.display='none';}}).catch(err=>{console.error('Error al inicializar estadísticas:',err);if(state.rows.length){$('athleteHint').textContent='Elige un atleta para ver únicamente sus competencias.';}else{$('athleteHint').textContent='No se pudo cargar la base de estadísticas.';}});
 
 const NORM_APPS=[['PISO','Piso'],['ARZON','Arzón'],['ANILLOS','Anillos'],['SALTO DE CABALLO','Salto'],['BARRAS PARALELAS','Paralelas'],['BARRA FIJA','Barra fija']];
 let normDb=null,normUnsubscribe=null;
