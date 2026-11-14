@@ -105,6 +105,63 @@
       });
     });
 
+    // Colores con significado (Manu, 14-nov-2026):
+    //  · Nombre de la copa (B) = su ciclo: blanco 24-25, amarillo 25-26 (los del Excel) y uno nuevo por ciclo desde 26-27.
+    //    Solo se pinta en las copas nuevas; las del Excel se quedan como están.
+    //  · Verde claro = la nota más alta de ese aparato del atleta en ese nivel; verde fuerte = su AA más alto en ese nivel.
+    //    Se recalcula solo en los niveles de un atleta que reciben copas del sitio.
+    if (stDoc && xfs) {
+      const fillsEl = stDoc.getElementsByTagNameNS(NS, "fills")[0];
+      const lista = () => [...fillsEl.getElementsByTagNameNS(NS, "fill")];
+      const color = f => { const c = f.getElementsByTagNameNS(NS, "fgColor")[0]; return c ? (c.getAttribute("rgb") || (c.hasAttribute("theme") ? "t" + c.getAttribute("theme") + ":" + (Number(c.getAttribute("tint") || 0)).toFixed(1) : "")) : ""; };
+      const relleno = (buscar, rgb) => {
+        let i = lista().findIndex(f => buscar.includes(color(f)));
+        if (i >= 0) return i;
+        const f = dp.parseFromString(`<fill xmlns="${NS}"><patternFill patternType="solid"><fgColor rgb="${rgb}"/><bgColor indexed="64"/></patternFill></fill>`, "application/xml").documentElement;
+        fillsEl.appendChild(stDoc.importNode(f, true)); fillsEl.setAttribute("count", lista().length);
+        return lista().length - 1;
+      };
+      const VERDE = relleno(["t9:0.6"], "FFC6E0B4"), VERDE_AA = relleno(["FF00B050"], "FF00B050"), BLANCO = relleno(["t0:0.0"], "FFFFFFFF");
+      const CICLOS = {"24-25": () => BLANCO, "25-26": () => relleno(["t7:0.4"], "FFFFE699"), "26-27": () => relleno(["FFBDD7EE"], "FFBDD7EE"),
+        "27-28": () => relleno(["FFD9C3E9"], "FFD9C3E9"), "28-29": () => relleno(["FFFCE4D6"], "FFFCE4D6"), "29-30": () => relleno(["FFE2EFDA"], "FFE2EFDA")};
+      const xfLista = [...xfs.getElementsByTagNameNS(NS, "xf")], cache = {};
+      const conRelleno = (s, fillId) => {
+        if (s == null) return s;
+        const base = xfLista[Number(s)]; if (!base) return s;
+        if (Number(base.getAttribute("fillId") || 0) === fillId) return s;
+        const k = s + "|" + fillId; if (cache[k] != null) return cache[k];
+        const nx = base.cloneNode(true); nx.setAttribute("fillId", fillId); nx.setAttribute("applyFill", "1");
+        xfs.appendChild(nx); xfLista.push(nx); xfs.setAttribute("count", xfLista.length);
+        return (cache[k] = String(xfLista.length - 1));
+      };
+      const esVerde = s => { const b = xfLista[Number(s)]; const f = b && lista()[Number(b.getAttribute("fillId") || 0)]; return !!f && ["t9:0.6", "FF00B050"].includes(color(f)); };
+      const num = v => { const x = Number(v); return v != null && v !== "" && isFinite(x) ? x : null; };
+      bloques.forEach(b => {
+        // Color de ciclo en las copas nuevas.
+        b.filas.forEach(x => { if (x.nube && !x.orig) { const c = CICLOS[x.nube.CICLO]; if (c) x.st.B = conRelleno(x.st.B, c()); } });
+        // Mejores notas por nivel, en los niveles que recibieron algo del sitio.
+        const porNivel = {};
+        b.filas.forEach(x => {
+          const nv = norm(x.nube ? x.nube.NIVEL : valor(x.orig.celdas.C));
+          const ap = x.nube ? AP.map(a => num(x.nube[a])) : "EFGHIJ".split("").map(c => num(valor(x.orig.celdas[c])));
+          const aa = ap.reduce((s, v) => s + (v || 0), 0);
+          (porNivel[nv] = porNivel[nv] || {filas: [], nube: false}).filas.push({x, ap, aa});
+          if (x.nube) porNivel[nv].nube = true;
+        });
+        Object.values(porNivel).filter(g => g.nube).forEach(g => {
+          "EFGHIJ".split("").forEach((c, k) => {
+            const max = Math.max(...g.filas.map(f => f.ap[k] || 0));
+            g.filas.forEach(f => { const top = max > 0 && Math.abs((f.ap[k] || 0) - max) < 1e-9;
+              if (top) f.x.st[c] = conRelleno(f.x.st[c], VERDE); else if (esVerde(f.x.st[c])) f.x.st[c] = conRelleno(f.x.st[c], BLANCO); });
+          });
+          const maxAA = Math.max(...g.filas.map(f => f.aa));
+          g.filas.forEach(f => { const top = maxAA > 0 && Math.abs(f.aa - maxAA) < 1e-9;
+            if (top) f.x.st.K = conRelleno(f.x.st.K, VERDE_AA); else if (esVerde(f.x.st.K)) f.x.st.K = conRelleno(f.x.st.K, BLANCO); });
+        });
+      });
+      zip.file("xl/styles.xml", new XMLSerializer().serializeToString(stDoc));
+    }
+
     // Arma las filas de nuevo, numeradas en orden.
     let n = 1;
     const out = [], nuevosMerges = [];
@@ -179,5 +236,10 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     return r;
   }
-  window.AKC_EXCEL_HIST = {generar, descargar};
+  // Ciclo de una fecha «AAAA-MM-DD»: empieza en agosto (nov-2026 → «26-27»).
+  function ciclo(fecha){
+    const m = String(fecha || "").match(/^(\d{4})-(\d{2})/); const d = m ? {y: +m[1], mes: +m[2]} : {y: new Date().getFullYear(), mes: new Date().getMonth() + 1};
+    const ini = d.mes >= 8 ? d.y : d.y - 1; return String(ini % 100).padStart(2, "0") + "-" + String((ini + 1) % 100).padStart(2, "0");
+  }
+  window.AKC_EXCEL_HIST = {generar, descargar, ciclo};
 })();
