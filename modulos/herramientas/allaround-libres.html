@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>All around de libres · AKC</title>
+<style>
+:root{--panel:#0c1a2b;--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff;--green:#2fbf71;--gold:#ffd166;--red:#ff8a8a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 70px}
+.back{display:inline-block;border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;text-decoration:none}
+.eyebrow{color:#68b4ff;font-size:11px;font-weight:800;letter-spacing:.16em;margin-top:12px}
+h1{margin:4px 0 2px;font-size:25px}
+.sub{color:var(--muted);font-size:13px;margin:0}
+.barra{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.estado{font-size:12px;color:var(--muted);margin-left:auto}
+.estado.ok{color:#8ff0b8}.estado.err{color:var(--red)}
+button{font-family:inherit;cursor:pointer}
+.btn{border:1px solid #31506f;background:#11243a;color:#fff;border-radius:11px;padding:10px 14px;font-weight:800;font-size:14px}
+.btn.prim{background:#1266c9;border-color:#1266c9}
+.btn.verde{background:#15803d;border-color:#15803d}
+.btn:disabled{opacity:.45;cursor:default}
+.pasos{display:flex;gap:6px;margin:6px 0 14px;flex-wrap:wrap}
+.pasos button{flex:1 1 150px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:12px;padding:11px;font-weight:900;font-size:13px}
+.pasos button[aria-pressed="true"]{background:#163a60;color:#fff;border-color:#3b79b5}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.panel h2{margin:0 0 10px;font-size:16px}
+.grupo{margin-bottom:12px}
+.grupo .gcab{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.grupo .gcab b{font-size:13px;letter-spacing:.06em;color:#cfe2fa}
+.grupo .gcab button{border:0;background:none;color:var(--blue);font-weight:800;font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:flex;align-items:center;gap:7px;border:1px solid #31506f;border-radius:12px;padding:9px 12px;background:#071321;cursor:pointer;font-size:14px;font-weight:700}
+.chip small{display:block;color:var(--muted);font-size:10px;font-weight:600}
+.chip input{width:18px;height:18px;accent-color:#2fbf71}
+.chip:has(input:checked){border-color:var(--green);background:#123d2a}
+.aps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.aps button{border:1px solid var(--line);background:var(--panel);color:#cfe2fa;border-radius:12px;padding:10px 4px;font-weight:900;font-size:13px}
+.aps button[aria-pressed="true"]{background:#1266c9;border-color:#1266c9;color:#fff}
+.aps button small{display:block;font-weight:600;font-size:10px;color:#9eb1c8}
+.aps button[aria-pressed="true"] small{color:#dbeafe}
+.atl{display:grid;grid-template-columns:minmax(120px,1fr) auto minmax(260px,1.4fr);gap:10px;align-items:center;background:#0a1726;border:1px solid #1e3550;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.atl .nom b{display:block;font-size:15px}
+.atl .nom small{color:var(--muted);font-size:11px}
+.bonos{display:flex;gap:6px}
+.bono{width:46px;height:44px;border-radius:10px;border:2px solid #31506f;background:#071321;color:#9eb1c8;font-weight:900;font-size:13px}
+.bono[aria-pressed="true"]{background:#15803d;border-color:#22c55e;color:#fff}
+.campo{display:flex;flex-direction:column;align-items:center;gap:3px}
+.campo label{font-size:10px;color:var(--muted);font-weight:800;letter-spacing:.05em}
+.contador{display:flex;align-items:center;gap:4px}
+.contador button{width:36px;height:40px;border-radius:10px;border:1px solid #31506f;background:#11243a;color:#fff;font-size:20px;font-weight:900}
+.contador output{min-width:26px;text-align:center;font-size:20px;font-weight:900}
+.contador output.hay{color:var(--red)}
+.ded{width:76px;height:42px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-size:18px;font-weight:800;text-align:center}
+.vacio{color:var(--muted);font-size:14px;padding:10px 2px}
+.bej{color:#ffd166;font-weight:800}.nota .neg{color:#ff8a8a}
+.elems{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.elab{width:100%;font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.03em}
+.el{border:1px solid #31506f;background:#071321;color:#d6e3f2;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;text-align:left;min-height:44px}
+.el small{display:block;color:#9eb1c8;font-size:10px;font-weight:700}
+.el[aria-pressed="true"]{background:#5b1520;border-color:#ef4444;color:#fff;text-decoration:line-through}
+.el[aria-pressed="true"] small{color:#fecaca}
+.atl .extra{grid-column:1/-1}
+.hses{display:flex;gap:10px;align-items:center;background:#0a1726;border:1px solid #1e3550;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.hses.sel{border-color:#2fbf71;background:#0f2a1e}
+.hchk{display:flex;gap:10px;align-items:flex-start;flex:1;cursor:pointer;min-width:0}
+.hchk input{width:20px;height:20px;accent-color:#2fbf71;margin-top:2px;flex:none}
+.hchk b{font-size:15px}.hchk small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.tagc{font-size:10px;font-weight:800;background:#ffd166;color:#06131f;border-radius:999px;padding:2px 7px;margin-left:4px}
+.hver{padding:8px 12px;font-size:13px;flex:none}
+.h3{font-size:14px;margin:14px 0 6px;color:#cfe2fa}
+.resumen-mejora{font-size:14px;color:#d6e3f2;line-height:1.5;background:#0d1d31;border-radius:10px;padding:10px 12px}
+.sube{color:#8ff0b8;font-weight:900}.baja{color:#ff8a8a;font-weight:900}.igual{color:var(--muted)}
+.dedfila{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center}
+.dbtn{height:56px;min-width:58px;border-radius:12px;border:2px solid #7a3b48;background:#2a1018;color:#ffb3bf;font-weight:900;font-size:20px}
+.dbtn:active{background:#7f1d1d;color:#fff}
+.dbtn.undo{border-color:#31506f;background:#11243a;color:#cfe2fa;min-width:52px}
+.dbtn:disabled{opacity:.35}
+.extra{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.plant{height:44px;border-radius:10px;border:2px solid #31506f;background:#071321;color:#9eb1c8;font-weight:900;font-size:12px;padding:0 10px}
+.plant[aria-pressed="true"]{background:#1d4ed8;border-color:#60a5fa;color:#fff}
+.nopres{height:32px;border-radius:9px;border:1px solid #5b3040;background:#1b0f16;color:#ff9aa8;font-weight:800;font-size:11px;padding:0 9px}
+.nopres[aria-pressed="true"]{background:#7f1d1d;border-color:#ef4444;color:#fff}
+.vsel{height:44px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-weight:800;font-size:13px;padding:0 8px;max-width:210px}
+.nota{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#cfe2fa;border-top:1px dashed #1e3550;padding-top:7px}
+.nota b{font-size:16px}.nota .nf b{color:#8ff0b8}
+.atl.fuera{opacity:.55}
+.atl.fuera .bonos,.atl.fuera .campo,.atl.fuera .plant,.atl.fuera .vsel{pointer-events:none;opacity:.4}
+.formula{font-size:13px;color:#d6e3f2;line-height:1.6}
+.formula input{width:64px;padding:6px;border-radius:8px;border:1px solid #31506f;background:#071321;color:#fff;font-weight:800;font-size:15px;text-align:center}
+.tw{overflow-x:auto;border:1px solid #1e3550;border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 8px;border-bottom:1px solid #1b3047;text-align:center;white-space:nowrap}
+th{background:#11243a;color:#cfe2fa;font-size:11px;letter-spacing:.04em}
+td.izq,th.izq{text-align:left}
+td.lg{font-weight:900;font-size:17px}
+tr.m1 td.lg{color:#e6b422}tr.m2 td.lg{color:#c8c8c8}tr.m3 td.lg{color:#d08a5a}
+td.pts{font-weight:900;font-size:16px;color:#8ff0b8}
+td.neg{color:var(--red)}
+small.n{display:block;color:var(--muted);font-size:11px}
+.filtro{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.filtro button{border:1px solid var(--line);background:#071321;color:#cfe2fa;border-radius:999px;padding:6px 12px;font-weight:800;font-size:12px}
+.filtro button[aria-pressed="true"]{background:#163a60;border-color:#3b79b5;color:#fff}
+.det td,.det th{font-size:12px;padding:6px 5px}
+.oculto{display:none!important}
+@media(max-width:640px){
+  #tabla th,#tabla td{padding:8px 3px;font-size:13px}#tabla th{font-size:10px;letter-spacing:0}#tabla td.lg{font-size:15px}#tabla small.n{font-size:10px}
+  .aps{grid-template-columns:repeat(3,1fr)}
+  .atl{grid-template-columns:1fr 1fr;gap:8px}
+  .atl .nom{grid-column:1/-1}
+  .atl .bonos{grid-column:1/-1;justify-content:space-between}
+  .bono{flex:1;width:auto}
+  .atl .campo.dedc{grid-column:1/-1}.dedfila{flex-wrap:nowrap;width:100%}.dedfila .ded{flex:1;min-width:0;height:56px;font-size:20px}.dbtn{flex:1;min-width:0}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .back,.barra,.pasos,#paso1,#paso2,.filtro,.formula input{display:none!important}
+  .panel{border:0;background:#fff;padding:0}
+  .tw{border:1px solid #999}
+  th{background:#e6e6e6!important;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td{color:#000;border-bottom:1px solid #bbb}
+  td.pts{color:#000}td.neg{color:#b00}
+  small.n{color:#444}
+  .eyebrow{color:#000}
+  .formula,.sub,h2{color:#000}.no-imp{display:none!important}.solo-imp{display:inline!important}
+}
+.solo-imp{display:none}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="../../cliente/fuentes.js"></script>
+<script src="../../cliente/xlsx-reader.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Herramientas</a>
+  <div class="eyebrow">HERRAMIENTAS DEL ENTRENADOR · ALL AROUND</div>
+  <h1>All around de libres</h1>
+  <p class="sub" id="fechaTxt">Niveles 7 a FIG</p>
+  <div class="barra">
+    <button class="btn" id="btnNuevo" type="button">＋ Nuevo all around</button>
+    <span class="estado" id="estado" role="status">Cargando…</span>
+  </div>
+  <div class="pasos" role="tablist">
+    <button type="button" data-paso="1" aria-pressed="true">1 · Atletas</button>
+    <button type="button" data-paso="2" aria-pressed="false">2 · Registrar por aparato</button>
+    <button type="button" data-paso="3" aria-pressed="false">3 · Resultado</button>
+    <button type="button" data-paso="4" aria-pressed="false">📜 Historial</button>
+  </div>
+
+  <section class="panel" id="paso1">
+    <h2>Selecciona los atletas que participarán en el all around</h2>
+    <div id="lista"></div>
+    <button class="btn prim" type="button" id="btnListo" style="width:100%;margin-top:8px">Listo, registrar por aparato →</button>
+  </section>
+
+  <section class="panel oculto" id="paso2">
+    <div class="aps" id="aps"></div>
+    <p class="sub" style="margin:-4px 0 10px">La nota de partida sale de su rutina (editor de rutinas). Tú registras <b>deducciones y caídas</b> (−1.0, Código FIG; N7 y N8 también, por el manual USAG). Si no hizo un elemento, tócalo y se resta su valor (N7, N8 y N9: con menos de 6 elementos, −1.0 por cada uno que falte). «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D o más +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma además el bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4).</p>
+    <div id="registro"></div>
+    <button class="btn verde" type="button" id="btnResultado" style="width:100%;margin-top:6px">Ver resultado del all around →</button>
+  </section>
+
+  <section class="panel oculto" id="paso4">
+    <h2>Historial de all arounds</h2>
+    <p class="sub" style="margin:-4px 0 10px">Cada all around queda guardado al empezar uno nuevo. Marca dos o más para compararlos y ver cómo van mejorando.</p>
+    <div id="hLista"></div>
+    <div id="hVer"></div>
+    <div id="hComp"></div>
+  </section>
+
+  <section class="panel oculto" id="paso3">
+    <h2>Resultado de este all around</h2>
+    <p class="formula"><b>Nota de partida</b> de cada aparato = la de su rutina − el valor de los elementos que no hizo + bono si plantó.<br><b>Ejecución</b> = 10 − deducciones − caídas × <b class="solo-imp" id="valCaidaTxt"></b><input id="valCaida" type="number" step="0.1" min="0" inputmode="decimal" aria-label="Lo que resta cada caída">. <b>Nota final</b> = nota de partida − (10 − ejecución) + bono por ejecución de N8 (8.6–8.85 +0.1, 8.9–9.15 +0.2, 9.2–9.45 +0.3, 9.5–10 +0.4; manual USAG). <b>All around</b> = suma de las notas finales. <b>Eficiencia</b> = suma de notas finales ÷ suma de notas de partida de su rutina (cuánto logró de lo que podía sacar).</p>
+    <div class="filtro" id="modoRk"><button type="button" data-rk="total" aria-pressed="true">🏆 Por nota total</button><button type="button" data-rk="ef" aria-pressed="false">🎯 Por eficiencia</button></div>
+    <div class="filtro" id="filtro"></div>
+    <div class="tw"><table id="tabla"></table></div>
+    <h2 style="margin-top:16px">Por aparato</h2>
+    <div class="tw"><table class="det" id="detalle"></table></div>
+    <button class="btn no-imp" type="button" style="margin-top:12px" onclick="print()">🖨️ Imprimir resultado</button>
+  </section>
+</div>
+<script>
+"use strict";
+// All around de libres (Manu, 14-nov-2026; niveles 7 a FIG). Atletas y notas de partida del editor de rutinas (rutinasAKC/estado:
+// atletas[n].vista[AP] = {np, rows: [{n, vd, l}]}; se guarda una copia al elegirlos, así el historial no cambia si se edita la
+// rutina). Por aparato: elementos no realizados (nr, índices: restan su valor), plantó (p; N7 sin bono; N8 según la salida —
+// manual USAG/FMG: B 0.2, C 0.3, D+ 0.4— o el salto (sb); N9, N10 y FIG +0.1 con salida C o mayor, como el editor), caídas
+// (−1.0, Código FIG; N7-N8 se rigen por el FIG Juvenil), deducciones (+.1/+.2/+.3, h) y no presentó (x). Nota final =
+// partida − deducciones − caídas (+ bono por ejecución de N8: 8.6 +0.1, 8.9 +0.2, 9.2 +0.3, 9.5 +0.4; N7-N9 rutina corta −1.0 por
+// elemento faltante para 6, manual USAG); all around = suma; eficiencia = Σ finales ÷ Σ partidas de la rutina. Dos rankings.
+// Nube: herramientasAKC/allaroundL (igual que allaroundO). Los nombres vienen de los datos: escapados.
+const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
+const APS=[["PISO","Piso"],["ARZON","Arzón"],["ANILLOS","Anillos"],["SALTO","Salto"],["PARALELAS","Paralelas"],["FIJA","Fija"]];
+const CAIDA_DEF=1;  // Código FIG: caída 1.0 (N7 y N8 usan el Código FIG Juvenil según el manual USAG)
+const LETRAS="ABCDEFGHIJ", N8_SALIDA={B:0.2,C:0.3}, N8_SALTO=[["MA","Mortal agrupado o carpado",0.2],["EX","Extendido o con medio giro",0.3],["AG","Agrupado con giro",0.3],["EG","Extendido con 1 giro o más",0.4]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const clave=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g,"_").replace(/^_|_$/g,"");
+const hoy=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const fechaTxt=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"})};
+let modoRk="total", ref=null, plantel=[], doc={}, actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
+
+function estado(t,c){const e=$("estado");e.textContent=t;e.className="estado"+(c?" "+c:"")}
+function nuevaSesion(){return {id:"aa"+Date.now(),fecha:hoy(),creada:new Date().toISOString(),atletas:[],datos:{},caida:CAIDA_DEF}}
+function dato(k,a){const d=(actual.datos[k]=actual.datos[k]||{});return d[a]=d[a]||{nr:[],c:0,d:0,p:0,x:0,sb:""}}
+const r1=v=>Math.round(v*1000)/1000;
+const nivelDe=a=>{const t=String(a.nivel||"").toUpperCase();const m=t.match(/\d+/);return /FIG|JR|JUV|MAY|ELITE/.test(t)?"FIG":(m?m[0]:t)};
+const vistaDe=(a,k)=>((a.vista||{})[k])||{np:0,rows:[]};
+const letraSalida=(a,k)=>{const r=vistaDe(a,k).rows||[];return String((r[r.length-1]||{}).l||"").toUpperCase()};
+const cOMas=l=>LETRAS.indexOf(l)>=2;
+// Bono por plantar ya incluido por el editor (N9, N10, FIG con su casilla «salida plantada»): se quita para que lo decida esta herramienta.
+function plantEditor(a,k){const nv=nivelDe(a);if(nv==="7"||nv==="8"||!(a.pe||{})[k])return 0;if(k==="ARZON")return 0;return k==="SALTO"||cOMas(letraSalida(a,k))?0.1:0}
+// Bono por plantar en este all around.
+function bonoPlant(a,k,d){
+  const nv=nivelDe(a);if(!d||!d.p||nv==="7")return 0;
+  if(nv==="8"){if(k==="SALTO"){const o=N8_SALTO.find(x=>x[0]===d.sb)||N8_SALTO[0];return o[2]}const l=letraSalida(a,k);return N8_SALIDA[l]!=null?N8_SALIDA[l]:(LETRAS.indexOf(l)>=3?0.4:0)}
+  if(k==="ARZON")return 0;return k==="SALTO"||cOMas(letraSalida(a,k))?0.1:0;
+}
+function etiquetaPlant(a,k,d){const nv=nivelDe(a);if(nv==="7")return "";const v=bonoPlant(a,k,{...(d||{}),p:1});return v>0?`Plantó +${v.toFixed(1)}`:"Plantó (sin bono)"}
+// Nota de partida y final de un aparato.
+function notaAp(a,k,d,ses){
+  ses=ses||actual;
+  d=d||{nr:[],c:0,d:0,p:0,x:0};
+  if(d.x)return {np:0,nf:0,nb:0,fuera:true,base:0};
+  const v=vistaDe(a,k),rows=v.rows||[];
+  const nr=(d.nr||[]).filter(i=>rows[i]);
+  const menos=nr.reduce((s,i)=>s+(Number(rows[i].vd)||0),0);
+  const base=r1(Math.max(0,(Number(v.np)||0)-plantEditor(a,k)));
+  // N7, N8 y N9: rutina con menos de 6 elementos = −1.0 por cada uno que falte (manual USAG); solo lo que bajó por los que no hizo.
+  const nv=nivelDe(a);let corta=0;
+  if(k!=="SALTO"&&["7","8","9"].includes(nv)){const falta=n=>Math.max(0,6-n);corta=falta(rows.length-nr.length)-falta(rows.length)}
+  const np=r1(Math.max(0,base-menos-corta+bonoPlant(a,k,d)));
+  // Ejecución = 10 − deducciones − caídas. N8: bonificación por ejecución (manual USAG, todos los aparatos).
+  const ej=r1(10-(d.d||0)-(d.c||0)*Number(ses.caida??CAIDA_DEF));
+  const bej=nv==="8"?(ej>=9.5?0.4:ej>=9.2?0.3:ej>=8.9?0.2:ej>=8.6?0.1:0):0;
+  const nf=r1(Math.max(0,np-(10-ej)+bej));
+  return {np,nf,nb:nr.length,base,ej,bej,corta};
+}
+const f2=v=>Number(v).toFixed(2).replace(/0$/,"");
+function notaHTML(a,k,d){const n=notaAp(a,k,d);return n.fuera?'<span>No presentó este aparato</span>':`<span>Partida <b>${f2(n.np)}</b></span><span>Ejecución <b>${f2(n.ej)}</b>${n.bej?` <small class="bej">+${n.bej.toFixed(1)} bono N8</small>`:""}</span>${n.corta?`<span class="neg">Rutina corta −${n.corta.toFixed(1)}</span>`:""}<span class="nf">Final <b>${f2(n.nf)}</b></span>`}
+
+// ---- Guardado: cada cambio se manda en cuanto se toca (lo de deducciones, al dejar de escribir) ----
+function guardar(campos,inmediato){
+  Object.assign(pendientes,campos);
+  clearTimeout(timer);estado("Guardando…");
+  timer=setTimeout(enviar,inmediato?0:500);
+}
+async function enviar(){
+  const p=pendientes;pendientes={};if(!Object.keys(p).length)return;
+  try{await ref.update(p);estado("Guardado ✓","ok")}
+  catch(e){Object.assign(pendientes,p);estado("No se pudo guardar: "+e.message+" (se reintenta al siguiente cambio)","err")}
+}
+
+// ---- Paso 1: atletas ----
+function pintarLista(){
+  const sel=new Set((actual.atletas||[]).map(a=>a.k));
+  const grupos={};plantel.forEach(a=>{(grupos[a.grupo||"Sin grupo"]=grupos[a.grupo||"Sin grupo"]||[]).push(a)});
+  $("lista").innerHTML=plantel.length?Object.entries(grupos).map(([g,l])=>`<div class="grupo"><div class="gcab"><b>${esc(g)}</b><button type="button" data-todo="${esc(g)}">Todo el grupo</button></div><div class="chips">${l.map(a=>`<label class="chip"><input type="checkbox" data-k="${esc(a.k)}"${sel.has(a.k)?" checked":""}><span>${esc(a.apodo)}<small>Nivel ${esc(nivelDe(a))}</small></span></label>`).join("")}</div></div>`).join(""):'<div class="vacio">No se encontraron atletas de libres en el editor de rutinas.</div>';
+}
+function leerSeleccion(){
+  const ks=[...document.querySelectorAll("#lista input[data-k]:checked")].map(x=>x.dataset.k);
+  actual.atletas=plantel.filter(a=>ks.includes(a.k));
+  guardar({"actual.atletas":actual.atletas},true);
+}
+$("lista").addEventListener("change",leerSeleccion);
+$("lista").addEventListener("click",e=>{const g=e.target.closest("[data-todo]");if(!g)return;
+  const ins=[...e.target.closest(".grupo").querySelectorAll("input[data-k]")];const todos=ins.every(i=>i.checked);ins.forEach(i=>i.checked=!todos);leerSeleccion()});
+
+// ---- Paso 2: registro por aparato ----
+function pintarAps(){
+  $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>{const d=(actual.datos[a.k]||{})[k];return d&&((d.nr||[]).length||d.c||d.d||d.p||d.x)}).length;
+    return `<button type="button" data-ap="${k}" aria-pressed="${k===ap}">${l}<small>${n}/${(actual.atletas||[]).length}</small></button>`}).join("");
+}
+function pintarRegistro(){
+  pintarAps();
+  const at=actual.atletas||[];
+  if(!at.length){$("registro").innerHTML='<div class="vacio">Primero elige a los atletas en el paso 1.</div>';return}
+  $("registro").innerHTML=at.map(a=>{const d=dato(a.k,ap);
+    return `<div class="atl" data-k="${esc(a.k)}"><div class="nom"><b>${esc(a.apodo)}</b><small>Nivel ${esc(nivelDe(a))}</small></div>
+    <div class="elems">${(vistaDe(a,ap).rows||[]).length?`<span class="elab">Toca lo que NO hizo · NP de su rutina ${f2(vistaDe(a,ap).np||0)}</span>`+(vistaDe(a,ap).rows||[]).map((r,i)=>`<button type="button" class="el" data-e="${i}" aria-pressed="${(d.nr||[]).includes(i)}">${esc(r.n)}<small>${esc(r.l||"")}${r.l?" · ":""}${esc(r.vd||"")}</small></button>`).join(""):'<span class="elab">Sin rutina cargada en este aparato (editor de rutinas).</span>'}</div>
+    <div class="extra">${nivelDe(a)==="7"?'<span class="elab">N7: sin bono por plantar</span>':`<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">${esc(etiquetaPlant(a,ap,d))}</button>${nivelDe(a)==="8"&&ap==="SALTO"?`<select class="vsel" aria-label="Tipo de salto">${N8_SALTO.map(o=>`<option value="${o[0]}"${(d.sb||"MA")===o[0]?" selected":""}>${esc(o[1])} +${o[2]}</option>`).join("")}</select>`:""}`}</div>
+    <div class="campo"><label>CAÍDAS (−1.0)</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>
+    <div class="campo dedc"><label>DEDUCCIONES</label><div class="dedfila"><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"><button type="button" class="dbtn" data-dd="0.1">+.1</button><button type="button" class="dbtn" data-dd="0.2">+.2</button><button type="button" class="dbtn" data-dd="0.3">+.3</button><button type="button" class="dbtn undo" data-dd="undo" aria-label="Deshacer la última deducción" ${(d.h||[]).length?"":"disabled"}>↶</button></div></div>
+    <div class="nota">${notaHTML(a,ap,d)}<button type="button" class="nopres" data-x="1" aria-pressed="${!!d.x}" style="margin-left:auto">No presentó</button></div></div>`}).join("");
+  document.querySelectorAll("#registro .atl").forEach(f=>{const d=dato(f.dataset.k,ap);f.classList.toggle("fuera",!!d.x)});
+}
+$("aps").addEventListener("click",e=>{const b=e.target.closest("[data-ap]");if(!b)return;ap=b.dataset.ap;pintarRegistro()});
+$("registro").addEventListener("click",e=>{
+  const fila=e.target.closest(".atl");if(!fila)return;const k=fila.dataset.k,d=dato(k,ap);
+  const b=e.target.closest("[data-b]"),c=e.target.closest("[data-c]"),pl=e.target.closest("[data-p]"),x=e.target.closest("[data-x]");
+  const el=e.target.closest("[data-e]");
+  if(el){const i=+el.dataset.e;d.nr=Array.isArray(d.nr)?d.nr:[];d.nr=d.nr.includes(i)?d.nr.filter(x=>x!==i):d.nr.concat(i);el.setAttribute("aria-pressed",d.nr.includes(i))}
+  else if(b){}
+  else if(pl){d.p=d.p?0:1;pl.setAttribute("aria-pressed",!!d.p)}
+  else if(x){d.x=d.x?0:1;x.setAttribute("aria-pressed",!!d.x);fila.classList.toggle("fuera",!!d.x)}
+  else if(c){d.c=Math.max(0,(d.c||0)+(+c.dataset.c));const o=c.parentNode.querySelector("output");o.textContent=d.c;o.className=d.c?"hay":""}
+  else if(e.target.closest("[data-dd]")){const bd=e.target.closest("[data-dd]"),v=bd.dataset.dd;d.h=Array.isArray(d.h)?d.h:[];
+    if(v==="undo"){const u=d.h.pop();if(u==null)return;d.d=r1(Math.max(0,(d.d||0)-u))}else{d.h.push(+v);d.d=r1((d.d||0)+(+v))}
+    fila.querySelector(".ded").value=d.d||"";fila.querySelector(".undo").disabled=!d.h.length}
+  else return;
+  actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true);pintarAps();
+});
+function actualizarNota(fila,k,d){const a=(actual.atletas||[]).find(x=>x.k===k);const n=fila.querySelector(".nota");if(!a||!n)return;const bx=n.querySelector("[data-x]");n.innerHTML=notaHTML(a,ap,d);n.appendChild(bx)}
+$("registro").addEventListener("change",e=>{if(!e.target.classList.contains("vsel"))return;const fila=e.target.closest(".atl"),k=fila.dataset.k,d=dato(k,ap);d.sb=e.target.value;const pb=fila.querySelector("[data-p]");if(pb){const a=(actual.atletas||[]).find(x=>x.k===k);pb.textContent=etiquetaPlant(a,ap,d)}actualizarNota(fila,k,d);guardar({["actual.datos."+k+"."+ap]:d},true)});
+$("registro").addEventListener("input",e=>{
+  if(!e.target.classList.contains("ded"))return;const k=e.target.closest(".atl").dataset.k,d=dato(k,ap);
+  const v=parseFloat(String(e.target.value).replace(",","."));d.d=isFinite(v)&&v>0?Math.round(v*1000)/1000:0;d.h=[];const ub=e.target.closest(".atl").querySelector(".undo");if(ub)ub.disabled=true;
+  actualizarNota(e.target.closest(".atl"),k,d);guardar({["actual.datos."+k+"."+ap]:d});pintarAps();
+});
+
+// ---- Paso 3: resultado ----
+function totales(a,ses){
+  ses=ses||actual;
+  let bonos=0,caidas=0,omit=0,ded=0,aa=0,sumNp=0,nAp=0,posibles=0;const por={};
+  APS.forEach(([k])=>{const d=((ses.datos||{})[a.k]||{})[k];const n=notaAp(a,k,d,ses);const dd=d||{};
+    if(!n.fuera){bonos+=n.nb;caidas+=dd.c||0;ded+=dd.d||0;aa+=n.nf;sumNp+=n.base;nAp++;posibles+=(vistaDe(a,k).rows||[]).length}
+    por[k]={...n,c:dd.c||0,o:0,d:dd.d||0,p:!!dd.p}});
+  // Eficiencia = notas finales ÷ notas de partida de su rutina (lo que logró de lo que podía sacar).
+  return {a,bonos,caidas,omit,ded,por,aa:r1(aa),nAp,posibles,ef:sumNp>0?Math.min(100,aa/sumNp*100):0};  // nunca más de 100 (el bono por plantar puede pasar la nota de su rutina)
+}
+function pintarResultado(){
+  $("valCaida").value=actual.caida??CAIDA_DEF;$("valCaidaTxt").textContent=actual.caida??CAIDA_DEF;
+  const at=actual.atletas||[];
+  const niveles=[...new Set(at.map(a=>nivelDe(a)))].sort((x,y)=>(+x||99)-(+y||99));
+  if(filtroNivel&&!niveles.includes(filtroNivel))filtroNivel="";
+  $("filtro").innerHTML=niveles.length>1?[["","General"],...niveles.map(n=>[n,"Nivel "+n])].map(([v,l])=>`<button type="button" data-n="${esc(v)}" aria-pressed="${v===filtroNivel}">${esc(l)}</button>`).join(""):"";
+  const filas=at.filter(a=>!filtroNivel||nivelDe(a)===filtroNivel).map(a=>totales(a))
+    .sort((x,y)=>(modoRk==="ef"?y.ef-x.ef||y.aa-x.aa:y.aa-x.aa||y.ef-x.ef)||x.caidas-y.caidas||x.ded-y.ded||x.a.apodo.localeCompare(y.a.apodo,"es"));
+  let lugar=0,prev=null;filas.forEach((f,i)=>{const id=(modoRk==="ef"?[f.ef.toFixed(2),f.aa]:[f.aa,f.ef.toFixed(2)]).concat([f.caidas,f.ded]).join("|");if(id!==prev){lugar=i+1;prev=id}f.lugar=lugar});
+  const f3=v=>String(Math.round(Number(v)*100)/100);
+  $("tabla").innerHTML=filas.length?`<thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>No hizo</th><th>Caídas</th><th>Ded.</th><th>${modoRk==="ef"?"Total":"<b>Total</b>"}</th><th>${modoRk==="ef"?"<b>Efic.</b>":"Efic."}</th></tr></thead><tbody>${filas.map(f=>`<tr class="${f.lugar<=3?"m"+f.lugar:""}"><td class="lg">${f.lugar===1?"🥇":f.lugar===2?"🥈":f.lugar===3?"🥉":f.lugar}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">Nivel ${esc(nivelDe(f.a))}</small></td><td class="${f.bonos?"neg":""}">${f.bonos}</td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td class="${f.ded?"neg":""}">${f3(f.ded)}</td><td class="${modoRk==="ef"?"":"pts"}">${f.aa.toFixed(3)}</td><td class="${modoRk==="ef"?"pts":""}">${f.ef.toFixed(1)}%</td></tr>`).join("")}</tbody>`:'<tbody><tr><td class="vacio">Todavía no hay atletas en este all around.</td></tr></tbody>';
+  $("detalle").innerHTML=filas.length?`<thead><tr><th class="izq">Atleta</th>${APS.map(([,l])=>`<th>${l}<small class="n">partida → final</small></th>`).join("")}</tr></thead><tbody>${filas.map(f=>`<tr><td class="izq"><b>${esc(f.a.apodo)}</b></td>${APS.map(([k])=>{const p=f.por[k];return p.fuera?'<td><small class="n">No presentó</small></td>':`<td>${f2(p.np)} → <b>${f2(p.nf)}</b><small class="n">${p.nb?p.nb+" no hizo · ":""}${p.p?"plantó · ":""}${p.c}C · ${p.d?f3(p.d):"0"}D</small></td>`}).join("")}</tr>`).join("")}</tbody>`:"";
+}
+$("modoRk").addEventListener("click",e=>{const b=e.target.closest("[data-rk]");if(!b)return;modoRk=b.dataset.rk;document.querySelectorAll("#modoRk button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.rk===modoRk));pintarResultado()});
+$("filtro").addEventListener("click",e=>{const b=e.target.closest("[data-n]");if(!b)return;filtroNivel=b.dataset.n;pintarResultado()});
+$("valCaida").addEventListener("change",e=>{const v=parseFloat(String(e.target.value).replace(",","."));actual.caida=isFinite(v)&&v>=0?v:CAIDA_DEF;actual.caidaManual=true;guardar({"actual.caida":actual.caida,"actual.caidaManual":true},true);pintarResultado()});
+
+// ---- Historial: todos los all arounds guardados, verlos y compararlos (Manu, 14-nov-2026) ----
+let hSel=new Set(), hVer="";
+function sesiones(){
+  const l=[];if(actual&&(actual.atletas||[]).length)l.push({...actual,enCurso:true});
+  (Array.isArray(doc.anteriores)?doc.anteriores:[]).forEach(x=>{if(x&&x.id&&(x.atletas||[]).length&&!l.some(y=>y.id===x.id))l.push(x)});
+  return l.sort((a,b)=>String(b.fecha||b.creada||"").localeCompare(String(a.fecha||a.creada||""))||String(b.creada||"").localeCompare(String(a.creada||"")));
+}
+function resumen(ses){
+  const filas=(ses.atletas||[]).map(a=>totales(a,ses)).filter(f=>f.nAp).sort((x,y)=>y.aa-x.aa||y.bonos-x.bonos||x.caidas-y.caidas);
+  const n=filas.length,suma=(k)=>filas.reduce((s,f)=>s+f[k],0);
+  return {filas,n,prom:n?suma("aa")/n:0,ef:n?suma("ef")/n:0,caidas:suma("caidas"),omit:suma("omit"),bonos:suma("bonos"),posibles:suma("posibles"),gan:filas[0]};
+}
+const fCorta=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDateString("es-MX",{day:"numeric",month:"short",year:"numeric"})};
+const flechaInv=(v,dec)=>v<-0.0005?`<span class="sube">▼ ${v.toFixed(dec)}</span>`:v>0.0005?`<span class="baja">▲ +${v.toFixed(dec)}</span>`:`<span class="igual">＝</span>`;  // bajar es mejorar
+const flecha=(v,dec)=>v>0.0005?`<span class="sube">▲ +${v.toFixed(dec)}</span>`:v<-0.0005?`<span class="baja">▼ ${v.toFixed(dec)}</span>`:`<span class="igual">＝</span>`;
+function pintarHistorial(){
+  const ls=sesiones();
+  [...hSel].forEach(id=>{if(!ls.some(x=>x.id===id))hSel.delete(id)});
+  $("hLista").innerHTML=ls.length?ls.map(x=>{const r=resumen(x);return `<div class="hses${hSel.has(x.id)?" sel":""}"><label class="hchk"><input type="checkbox" data-hs="${esc(x.id)}"${hSel.has(x.id)?" checked":""}><span><b>${esc(fCorta(x.fecha))}</b>${x.enCurso?' <span class="tagc">En curso</span>':""}<small>${r.n} atletas · ganador: ${r.gan?esc(r.gan.a.apodo)+" ("+r.gan.aa.toFixed(3)+")":"—"}</small><small>Promedio ${r.prom.toFixed(3)} · eficiencia ${r.ef.toFixed(1)}% · ${r.caidas} caídas · ${r.bonos} elementos no hechos</small></span></label><button type="button" class="btn hver" data-hv="${esc(x.id)}">${hVer===x.id?"Ocultar":"Ver"}</button></div>`}).join(""):'<div class="vacio">Todavía no hay all arounds guardados.</div>';
+  // Ver uno
+  const v=ls.find(x=>x.id===hVer);
+  $("hVer").innerHTML=v?(()=>{const r=resumen(v);return `<h2 style="margin-top:14px">All around del ${esc(fechaTxt(v.fecha))}</h2><div class="tw"><table><thead><tr><th>Lugar</th><th class="izq">Atleta</th><th>No hizo</th><th>Caídas</th><th>Efic.</th><th>All around</th></tr></thead><tbody>${r.filas.map((f,i)=>`<tr><td class="lg">${i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}</td><td class="izq"><b>${esc(f.a.apodo)}</b><small class="n">Nivel ${esc(nivelDe(f.a))}</small></td><td class="${f.bonos?"neg":""}">${f.bonos}</td><td class="${f.caidas?"neg":""}">${f.caidas}</td><td>${f.ef.toFixed(1)}%</td><td class="pts">${f.aa.toFixed(3)}</td></tr>`).join("")}</tbody></table></div>`})():"";
+  // Comparar
+  const sel=ls.filter(x=>hSel.has(x.id)).reverse();   // de la más vieja a la más nueva
+  if(sel.length<2){$("hComp").innerHTML=ls.length>1?'<p class="sub" style="margin-top:12px">Marca dos o más all arounds para compararlos.</p>':"";return}
+  const rs=sel.map(resumen);
+  const ks=[];sel.forEach(x=>(x.atletas||[]).forEach(a=>{if(!ks.some(y=>y.k===a.k))ks.push(a)}));
+  const filaAt=ks.map(a=>{const vals=rs.map(r=>r.filas.find(f=>f.a.k===a.k)||null);const hay=vals.filter(Boolean);
+    const dAA=hay.length>1?hay[hay.length-1].aa-hay[0].aa:null,dEf=hay.length>1?hay[hay.length-1].ef-hay[0].ef:null;return {a,vals,dAA,dEf}})
+    .sort((x,y)=>(y.dEf??-999)-(x.dEf??-999));
+  const mejoran=filaAt.filter(x=>x.dEf!=null&&x.dEf>0.0005).length,comparables=filaAt.filter(x=>x.dEf!=null).length;
+  const cab=sel.map(x=>`<th>${esc(fCorta(x.fecha))}</th>`).join("");
+  const apProm=(r,k)=>{const v=r.filas.map(f=>f.por[k]).filter(p=>p&&!p.fuera);return v.length?v.reduce((s,p)=>s+p.nf,0)/v.length:null};
+  $("hComp").innerHTML=`<h2 style="margin-top:16px">Comparación</h2>
+  <p class="resumen-mejora">${comparables?`<b>${mejoran} de ${comparables}</b> atletas mejoraron su eficiencia entre el primero y el último all around elegido.`:"Ningún atleta aparece en dos de los all arounds elegidos."} La eficiencia (nota final ÷ nota de partida) permite comparar aunque cambien los aparatos presentados.</p>
+  <h3 class="h3">Equipo</h3><div class="tw"><table class="det"><thead><tr><th class="izq"></th>${cab}<th>Cambio</th></tr></thead><tbody>
+  ${[["Atletas",r=>r.n,0,false],["Promedio all around",r=>r.prom,3,false],["Eficiencia promedio",r=>r.ef,1,false,"%"],["Caídas por atleta",r=>r.n?r.caidas/r.n:0,2,true],["Elementos no hechos por atleta",r=>r.n?r.bonos/r.n:0,2,true],["Elementos logrados",r=>r.posibles?(r.posibles-r.bonos)/r.posibles*100:0,1,false,"%"]].map(([l,fn,dec,menosMejor,suf])=>{const vs=rs.map(fn);const d=vs[vs.length-1]-vs[0];
+    return `<tr><td class="izq">${l}</td>${vs.map(v=>`<td>${v.toFixed(dec)}${suf||""}</td>`).join("")}<td>${l==="Atletas"?"":(menosMejor?flechaInv(d,dec):flecha(d,dec))}</td></tr>`}).join("")}</tbody></table></div>
+  <h3 class="h3">Por atleta</h3><div class="tw"><table class="det"><thead><tr><th class="izq">Atleta</th>${cab}<th>Cambio AA</th><th>Cambio efic.</th></tr></thead><tbody>
+  ${filaAt.map(x=>`<tr><td class="izq"><b>${esc(x.a.apodo)}</b><small class="n">Nivel ${esc(nivelDe(x.a))}</small></td>${x.vals.map(v=>`<td>${v?`<b>${v.aa.toFixed(3)}</b><small class="n">${v.ef.toFixed(1)}%</small>`:'<small class="n">—</small>'}</td>`).join("")}<td>${x.dAA==null?"—":flecha(x.dAA,3)}</td><td>${x.dEf==null?"—":flecha(x.dEf,1)}</td></tr>`).join("")}</tbody></table></div>
+  <h3 class="h3">Por aparato (nota final promedio)</h3><div class="tw"><table class="det"><thead><tr><th class="izq">Aparato</th>${cab}<th>Cambio</th></tr></thead><tbody>
+  ${APS.map(([k,l])=>{const vs=rs.map(r=>apProm(r,k));const ok=vs.filter(v=>v!=null);return `<tr><td class="izq">${l}</td>${vs.map(v=>`<td>${v==null?"—":v.toFixed(3)}</td>`).join("")}<td>${ok.length>1?flecha(ok[ok.length-1]-ok[0],3):"—"}</td></tr>`}).join("")}</tbody></table></div>
+  <p class="sub" style="margin-top:8px">El cambio compara el primer y el último all around elegidos en que aparece cada uno. En caídas y elementos no hechos, bajar es mejorar.</p>`;
+}
+$("hLista").addEventListener("change",e=>{const c=e.target.closest("[data-hs]");if(!c)return;c.checked?hSel.add(c.dataset.hs):hSel.delete(c.dataset.hs);pintarHistorial()});
+$("hLista").addEventListener("click",e=>{const b=e.target.closest("[data-hv]");if(!b)return;hVer=hVer===b.dataset.hv?"":b.dataset.hv;pintarHistorial()});
+
+// ---- Navegación entre pasos ----
+function irA(p){paso=p;document.querySelectorAll(".pasos button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.paso===p));
+  ["1","2","3","4"].forEach(n=>$("paso"+n).classList.toggle("oculto",n!==p));pintar();window.scrollTo({top:0,behavior:"smooth"})}
+document.querySelector(".pasos").addEventListener("click",e=>{const b=e.target.closest("[data-paso]");if(b)irA(b.dataset.paso)});
+$("btnListo").onclick=()=>irA("2");$("btnResultado").onclick=()=>irA("3");
+function pintar(){
+  $("fechaTxt").textContent="Niveles 7 a FIG · "+fechaTxt(actual.fecha);
+  if(paso==="1")pintarLista();else if(paso==="2")pintarRegistro();else if(paso==="4")pintarHistorial();else pintarResultado();
+}
+$("btnNuevo").onclick=async()=>{
+  if((actual.atletas||[]).length&&!confirm("¿Empezar un all around nuevo? El actual se guarda en el historial."))return;
+  const ant=Array.isArray(doc.anteriores)?doc.anteriores:[];
+  const viejo=(actual.atletas||[]).length?[actual]:[];
+  actual=nuevaSesion();
+  try{await ref.set({actual,anteriores:viejo.concat(ant).slice(0,60)},{merge:true});estado("Nuevo all around listo ✓","ok")}catch(e){estado("No se pudo guardar: "+e.message,"err")}
+  irA("1");
+};
+
+// ---- Carga ----
+async function cargarPlantel(db){
+  const sn=await db.collection("rutinasAKC").doc("estado").get();const R=sn.exists?sn.data():{};
+  const bajas=new Set((R.bajas||[]).map(String)),orden=R.orden||[],at=R.atletas||{};
+  const titulo=n=>String(n).toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
+  const ordNiv={"7":1,"8":2,"9":3,"10":4,"FIG":5};
+  return Object.keys(at).filter(n=>!bajas.has(n)&&!/^PRUEBA/i.test(n)&&at[n]&&at[n].vista).map(n=>{const a=at[n],v={};
+      APS.forEach(([k])=>{const x=(a.vista||{})[k];if(x)v[k]={np:Number(x.np)||0,rows:(x.rows||[]).map(r=>({n:String(r.n||""),vd:String(r.vd??r.l??""),l:String(r.l||"")}))}});
+      const o={k:clave(n),apodo:titulo(n),nombre:n,nivel:String(a.nivel||""),vista:v,pe:a.p||{}};o.grupo="Nivel "+nivelDe(o);return o})
+    .sort((x,y)=>(ordNiv[nivelDe(x)]||9)-(ordNiv[nivelDe(y)]||9)||(orden.indexOf(x.nombre)-orden.indexOf(y.nombre))||x.apodo.localeCompare(y.apodo,"es"));
+}
+(async()=>{
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FB);const db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();
+    ref=db.collection("herramientasAKC").doc("allaroundL");
+    try{plantel=await cargarPlantel(db)}catch(e){console.error(e);estado("No se pudo leer el editor de rutinas.","err")}
+    const s=await ref.get();doc=s.exists?s.data():{};
+    if(!doc.actual){actual=nuevaSesion();await ref.set({actual},{merge:true})}else actual=doc.actual;
+    actual.datos=actual.datos||{};actual.atletas=actual.atletas||[];
+    estado((actual.atletas.length?"All around en curso":"Listo")+" ✓","ok");
+    if(actual.atletas.length)paso="2";irA(paso);
+    // Otro entrenador puede registrar al mismo tiempo: se actualiza solo (sin interrumpir lo que se está escribiendo).
+    ref.onSnapshot(sn=>{if(!sn.exists)return;doc=sn.data();const nv=doc.actual;if(!nv||Object.keys(pendientes).length)return;
+      const cambio=nv.id!==actual.id;actual=nv;actual.datos=actual.datos||{};actual.atletas=actual.atletas||[];
+      const foco=document.activeElement;if(foco&&foco.classList&&(foco.classList.contains("ded")||foco.id==="valCaida"))return;
+      if(cambio&&paso!=="1")paso=actual.atletas.length?paso:"1";pintar()});
+  }catch(e){console.error(e);estado("No se pudo cargar: "+e.message,"err")}
+})();
+</script>
+</body>
+</html>
