@@ -55,7 +55,15 @@ button{font-family:inherit;cursor:pointer}
 .ded{width:76px;height:42px;border-radius:10px;border:1px solid #31506f;background:#071321;color:#fff;font-size:18px;font-weight:800;text-align:center}
 .vacio{color:var(--muted);font-size:14px;padding:10px 2px}
 .bej{color:#ffd166;font-weight:800}.nota .neg{color:#ff8a8a}
-.elems{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.elems{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.abrirEl{border:1px solid #7a5b20;background:#2a2010;color:#ffd166;border-radius:12px;padding:12px;font-weight:900;font-size:14px;text-align:left;display:flex;justify-content:space-between;gap:8px;min-height:48px}
+.elsum{display:flex;flex-wrap:wrap;gap:6px}.mk{font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px}.mk.nr{background:#5b1520;color:#fecaca}.mk.fe{background:#3b2a07;color:#ffd166}
+.elpanel{display:flex;flex-direction:column;gap:6px;background:#071321;border:1px solid #1e3550;border-radius:12px;padding:10px}
+.elrow{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;border-top:1px solid #12263b;padding-top:6px}.elrow:first-of-type{border-top:0}
+.eln{font-size:14px;font-weight:700}.eln small{display:block;color:#9eb1c8;font-size:11px}
+.elb{min-height:44px;border-radius:10px;border:1px solid #7a3b48;background:#2a1018;color:#ffb3bf;font-weight:800;font-size:12px;padding:0 10px}
+.elb[aria-pressed="true"]{background:#b91c1c;border-color:#ef4444;color:#fff}
+.elb.fe{border-color:#7a5b20;background:#2a2010;color:#ffd166}.elb.fe[aria-pressed="true"]{background:#b45309;border-color:#f59e0b;color:#fff}
 .elab{width:100%;font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.03em}
 .el{border:1px solid #31506f;background:#071321;color:#d6e3f2;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:700;text-align:left;min-height:44px}
 .el small{display:block;color:#9eb1c8;font-size:10px;font-weight:700}
@@ -157,7 +165,7 @@ small.n{display:block;color:var(--muted);font-size:11px}
 
   <section class="panel oculto" id="paso2">
     <div class="aps" id="aps"></div>
-    <p class="sub" style="margin:-4px 0 10px">La nota de partida sale de su rutina (editor de rutinas). Tú registras <b>deducciones y caídas</b> (−1.0, Código FIG; N7 y N8 también, por el manual USAG). Si no hizo un elemento, tócalo y se resta su valor (N7, N8 y N9: con menos de 6 elementos, −1.0 por cada uno que falte). «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D o más +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma además el bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4).</p>
+    <p class="sub" style="margin:-4px 0 10px">La nota de partida sale de su rutina (editor de rutinas). Tú registras <b>deducciones y caídas</b> (−1.0, Código FIG; N7 y N8 también, por el manual USAG). Con «Elemento no presentado o caída» eliges el elemento: <b>no lo presentó</b> resta su valor (si quedan menos de 6 elementos: N7 y N8 −1.0 por cada uno que falte; 9, 10 y FIG con la tabla del Código FIG) y <b>se cayó</b> cuenta la caída y el elemento conserva su valor. «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D o más +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma además el bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4).</p>
     <div id="registro"></div>
     <button class="btn verde" type="button" id="btnResultado" style="width:100%;margin-top:6px">Ver resultado del all around →</button>
   </section>
@@ -187,7 +195,7 @@ small.n{display:block;color:var(--muted);font-size:11px}
 // atletas[n].vista[AP] = {np, rows: [{n, vd, l}]}; se guarda una copia al elegirlos, así el historial no cambia si se edita la
 // rutina). Por aparato: elementos no realizados (nr, índices: restan su valor), plantó (p; N7 sin bono; N8 según la salida —
 // manual USAG/FMG: B 0.2, C 0.3, D+ 0.4— o el salto (sb); N9, N10 y FIG +0.1 con salida C o mayor, como el editor), caídas
-// (−1.0, Código FIG; N7-N8 se rigen por el FIG Juvenil), deducciones (+.1/+.2/+.3, h) y no presentó (x). Nota final =
+// (−1.0, Código FIG; N7-N8 se rigen por el FIG Juvenil; fe = caídas en un elemento, que conserva su valor), deducciones (+.1/+.2/+.3, h) y no presentó (x). Nota final =
 // partida − deducciones − caídas (+ bono por ejecución de N8: 8.6 +0.1, 8.9 +0.2, 9.2 +0.3, 9.5 +0.4; N7-N9 rutina corta −1.0 por
 // elemento faltante para 6, manual USAG); all around = suma; eficiencia = Σ finales ÷ Σ partidas de la rutina. Dos rankings.
 // Nube: herramientasAKC/allaroundL (igual que allaroundO). Los nombres vienen de los datos: escapados.
@@ -200,11 +208,11 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const clave=s=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g,"_").replace(/^_|_$/g,"");
 const hoy=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fechaTxt=f=>{const d=new Date((f||hoy())+"T12:00:00");return d.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long",year:"numeric"})};
-let modoRk="total", ref=null, plantel=[], doc={}, actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
+let modoRk="total", abiertos=new Set(), ref=null, plantel=[], doc={}, actual=null, ap="PISO", paso="1", filtroNivel="", pendientes={}, timer=null;
 
 function estado(t,c){const e=$("estado");e.textContent=t;e.className="estado"+(c?" "+c:"")}
 function nuevaSesion(){return {id:"aa"+Date.now(),fecha:hoy(),creada:new Date().toISOString(),atletas:[],datos:{},caida:CAIDA_DEF}}
-function dato(k,a){const d=(actual.datos[k]=actual.datos[k]||{});return d[a]=d[a]||{nr:[],c:0,d:0,p:0,x:0,sb:""}}
+function dato(k,a){const d=(actual.datos[k]=actual.datos[k]||{});return d[a]=d[a]||{nr:[],fe:[],c:0,d:0,p:0,x:0,sb:""}}
 const r1=v=>Math.round(v*1000)/1000;
 const nivelDe=a=>{const t=String(a.nivel||"").toUpperCase();const m=t.match(/\d+/);return /FIG|JR|JUV|MAY|ELITE/.test(t)?"FIG":(m?m[0]:t)};
 const vistaDe=(a,k)=>((a.vista||{})[k])||{np:0,rows:[]};
@@ -228,12 +236,14 @@ function notaAp(a,k,d,ses){
   const nr=(d.nr||[]).filter(i=>rows[i]);
   const menos=nr.reduce((s,i)=>s+(Number(rows[i].vd)||0),0);
   const base=r1(Math.max(0,(Number(v.np)||0)-plantEditor(a,k)));
-  // N7, N8 y N9: rutina con menos de 6 elementos = −1.0 por cada uno que falte (manual USAG); solo lo que bajó por los que no hizo.
+  // Rutina con menos de 6 elementos (como el editor de rutinas): N7 y N8 −1.0 por cada uno que falte (manual USAG); N9, N10 y
+  // FIG con la tabla del Código FIG (5 → 3.0, 4 → 4.0, 3 → 5.0, 2 → 6.0, 1 → 7.0, 0 → 10.0). Solo lo que bajó por los que no presentó.
   const nv=nivelDe(a);let corta=0;
-  if(k!=="SALTO"&&["7","8","9"].includes(nv)){const falta=n=>Math.max(0,6-n);corta=falta(rows.length-nr.length)-falta(rows.length)}
+  if(k!=="SALTO"){const T={5:3,4:4,3:5,2:6,1:7,0:10};const nd=n=>n>=6?0:(nv==="7"||nv==="8"?(6-n):T[n]);corta=nd(rows.length-nr.length)-nd(rows.length)}
   const np=r1(Math.max(0,base-menos-corta+bonoPlant(a,k,d)));
   // Ejecución = 10 − deducciones − caídas. N8: bonificación por ejecución (manual USAG, todos los aparatos).
-  const ej=r1(10-(d.d||0)-(d.c||0)*Number(ses.caida??CAIDA_DEF));
+  const caidas=(d.c||0)+(d.fe||[]).filter(i=>rows[i]).length;   // caídas sueltas + caídas en un elemento (el elemento conserva su valor)
+  const ej=r1(10-(d.d||0)-caidas*Number(ses.caida??CAIDA_DEF));
   const bej=nv==="8"?(ej>=9.5?0.4:ej>=9.2?0.3:ej>=8.9?0.2:ej>=8.6?0.1:0):0;
   const nf=r1(Math.max(0,np-(10-ej)+bej));
   return {np,nf,nb:nr.length,base,ej,bej,corta};
@@ -270,7 +280,7 @@ $("lista").addEventListener("click",e=>{const g=e.target.closest("[data-todo]");
 
 // ---- Paso 2: registro por aparato ----
 function pintarAps(){
-  $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>{const d=(actual.datos[a.k]||{})[k];return d&&((d.nr||[]).length||d.c||d.d||d.p||d.x)}).length;
+  $("aps").innerHTML=APS.map(([k,l])=>{const n=(actual.atletas||[]).filter(a=>{const d=(actual.datos[a.k]||{})[k];return d&&((d.nr||[]).length||(d.fe||[]).length||d.c||d.d||d.p||d.x)}).length;
     return `<button type="button" data-ap="${k}" aria-pressed="${k===ap}">${l}<small>${n}/${(actual.atletas||[]).length}</small></button>`}).join("");
 }
 function pintarRegistro(){
@@ -279,9 +289,13 @@ function pintarRegistro(){
   if(!at.length){$("registro").innerHTML='<div class="vacio">Primero elige a los atletas en el paso 1.</div>';return}
   $("registro").innerHTML=at.map(a=>{const d=dato(a.k,ap);
     return `<div class="atl" data-k="${esc(a.k)}"><div class="nom"><b>${esc(a.apodo)}</b><small>Nivel ${esc(nivelDe(a))}</small></div>
-    <div class="elems">${(vistaDe(a,ap).rows||[]).length?`<span class="elab">Toca lo que NO hizo · NP de su rutina ${f2(vistaDe(a,ap).np||0)}</span>`+(vistaDe(a,ap).rows||[]).map((r,i)=>`<button type="button" class="el" data-e="${i}" aria-pressed="${(d.nr||[]).includes(i)}">${esc(r.n)}<small>${esc(r.l||"")}${r.l?" · ":""}${esc(r.vd||"")}</small></button>`).join(""):'<span class="elab">Sin rutina cargada en este aparato (editor de rutinas).</span>'}</div>
+    <div class="elems">${(()=>{const rows=vistaDe(a,ap).rows||[];if(!rows.length)return '<span class="elab">Sin rutina cargada en este aparato (editor de rutinas).</span>';
+      const nr=d.nr||[],fe=d.fe||[],marc=nr.length+fe.length,abierto=abiertos.has(a.k+"|"+ap);
+      return `<button type="button" class="abrirEl" data-abrir="1" aria-expanded="${abierto}">⚠️ Elemento no presentado o caída${marc?` <b>(${marc})</b>`:""} <span>${abierto?"▲":"▼"}</span></button>`+
+        (marc?`<div class="elsum">${nr.map(i=>rows[i]?`<span class="mk nr">✗ ${esc(rows[i].n)} · no lo presentó</span>`:"").join("")}${fe.map(i=>rows[i]?`<span class="mk fe">⬇ ${esc(rows[i].n)} · se cayó</span>`:"").join("")}</div>`:"")+
+        (abierto?`<div class="elpanel"><span class="elab">Elige el elemento · NP de su rutina ${f2(vistaDe(a,ap).np||0)}</span>${rows.map((r,i)=>`<div class="elrow"><span class="eln">${esc(r.n)}<small>${esc(r.l||"")}${r.l?" · ":""}${esc(r.vd||"")}</small></span><button type="button" class="elb" data-nr="${i}" aria-pressed="${nr.includes(i)}">No lo presentó</button><button type="button" class="elb fe" data-fe="${i}" aria-pressed="${fe.includes(i)}">Se cayó</button></div>`).join("")}</div>`:"")})()}</div>
     <div class="extra">${nivelDe(a)==="7"?'<span class="elab">N7: sin bono por plantar</span>':`<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">${esc(etiquetaPlant(a,ap,d))}</button>${nivelDe(a)==="8"&&ap==="SALTO"?`<select class="vsel" aria-label="Tipo de salto">${N8_SALTO.map(o=>`<option value="${o[0]}"${(d.sb||"MA")===o[0]?" selected":""}>${esc(o[1])} +${o[2]}</option>`).join("")}</select>`:""}`}</div>
-    <div class="campo"><label>CAÍDAS (−1.0)</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>
+    <div class="campo"><label>CAÍDAS (−1.0)${(d.fe||[]).length?` <span class="bej">+${(d.fe||[]).length} en elementos</span>`:""}</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>
     <div class="campo dedc"><label>DEDUCCIONES</label><div class="dedfila"><input class="ded" type="number" step="0.1" min="0" inputmode="decimal" value="${d.d||""}" placeholder="0.0"><button type="button" class="dbtn" data-dd="0.1">+.1</button><button type="button" class="dbtn" data-dd="0.2">+.2</button><button type="button" class="dbtn" data-dd="0.3">+.3</button><button type="button" class="dbtn undo" data-dd="undo" aria-label="Deshacer la última deducción" ${(d.h||[]).length?"":"disabled"}>↶</button></div></div>
     <div class="nota">${notaHTML(a,ap,d)}<button type="button" class="nopres" data-x="1" aria-pressed="${!!d.x}" style="margin-left:auto">No presentó</button></div></div>`}).join("");
   document.querySelectorAll("#registro .atl").forEach(f=>{const d=dato(f.dataset.k,ap);f.classList.toggle("fuera",!!d.x)});
@@ -290,8 +304,13 @@ $("aps").addEventListener("click",e=>{const b=e.target.closest("[data-ap]");if(!
 $("registro").addEventListener("click",e=>{
   const fila=e.target.closest(".atl");if(!fila)return;const k=fila.dataset.k,d=dato(k,ap);
   const b=e.target.closest("[data-b]"),c=e.target.closest("[data-c]"),pl=e.target.closest("[data-p]"),x=e.target.closest("[data-x]");
-  const el=e.target.closest("[data-e]");
-  if(el){const i=+el.dataset.e;d.nr=Array.isArray(d.nr)?d.nr:[];d.nr=d.nr.includes(i)?d.nr.filter(x=>x!==i):d.nr.concat(i);el.setAttribute("aria-pressed",d.nr.includes(i))}
+  const ab=e.target.closest("[data-abrir]"),bnr=e.target.closest("[data-nr]"),bfe=e.target.closest("[data-fe]");
+  if(ab){const key=k+"|"+ap;abiertos.has(key)?abiertos.delete(key):abiertos.add(key);pintarRegistro();return}
+  if(bnr||bfe){const i=+(bnr||bfe).dataset[bnr?"nr":"fe"];d.nr=Array.isArray(d.nr)?d.nr:[];d.fe=Array.isArray(d.fe)?d.fe:[];
+    // Un elemento es «no lo presentó» o «se cayó», no los dos.
+    if(bnr){d.fe=d.fe.filter(x=>x!==i);d.nr=d.nr.includes(i)?d.nr.filter(x=>x!==i):d.nr.concat(i)}
+    else{d.nr=d.nr.filter(x=>x!==i);d.fe=d.fe.includes(i)?d.fe.filter(x=>x!==i):d.fe.concat(i)}
+    guardar({["actual.datos."+k+"."+ap]:d},true);pintarRegistro();return}
   else if(b){}
   else if(pl){d.p=d.p?0:1;pl.setAttribute("aria-pressed",!!d.p)}
   else if(x){d.x=d.x?0:1;x.setAttribute("aria-pressed",!!d.x);fila.classList.toggle("fuera",!!d.x)}
@@ -315,8 +334,8 @@ function totales(a,ses){
   ses=ses||actual;
   let bonos=0,caidas=0,omit=0,ded=0,aa=0,sumNp=0,nAp=0,posibles=0;const por={};
   APS.forEach(([k])=>{const d=((ses.datos||{})[a.k]||{})[k];const n=notaAp(a,k,d,ses);const dd=d||{};
-    if(!n.fuera){bonos+=n.nb;caidas+=dd.c||0;ded+=dd.d||0;aa+=n.nf;sumNp+=n.base;nAp++;posibles+=(vistaDe(a,k).rows||[]).length}
-    por[k]={...n,c:dd.c||0,o:0,d:dd.d||0,p:!!dd.p}});
+    if(!n.fuera){bonos+=n.nb;caidas+=(dd.c||0)+(dd.fe||[]).length;ded+=dd.d||0;aa+=n.nf;sumNp+=n.base;nAp++;posibles+=(vistaDe(a,k).rows||[]).length}
+    por[k]={...n,c:(dd.c||0)+(dd.fe||[]).length,o:0,d:dd.d||0,p:!!dd.p}});
   // Eficiencia = notas finales ÷ notas de partida de su rutina (lo que logró de lo que podía sacar).
   return {a,bonos,caidas,omit,ded,por,aa:r1(aa),nAp,posibles,ef:sumNp>0?Math.min(100,aa/sumNp*100):0};  // nunca más de 100 (el bono por plantar puede pasar la nota de su rutina)
 }
