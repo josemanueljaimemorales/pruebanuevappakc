@@ -295,7 +295,7 @@ function pintarResultado(){
   const niveles=[...new Set(at.map(a=>String(a.nivel)))].sort();
   if(filtroNivel&&!niveles.includes(filtroNivel))filtroNivel="";
   $("filtro").innerHTML=niveles.length>1?[["","General"],...niveles.map(n=>[n,"Nivel "+n])].map(([v,l])=>`<button type="button" data-n="${esc(v)}" aria-pressed="${v===filtroNivel}">${esc(l)}</button>`).join(""):"";
-  const filas=at.filter(a=>!filtroNivel||String(a.nivel)===filtroNivel).map(totales)
+  const filas=at.filter(a=>!filtroNivel||String(a.nivel)===filtroNivel).map(a=>totales(a))
     .sort((x,y)=>y.aa-x.aa||y.bonos-x.bonos||x.caidas-y.caidas||x.omit-y.omit||x.ded-y.ded||x.a.apodo.localeCompare(y.a.apodo,"es"));
   let lugar=0,prev=null;filas.forEach((f,i)=>{const id=[f.aa,f.bonos,f.caidas,f.ded].join("|");if(id!==prev){lugar=i+1;prev=id}f.lugar=lugar});
   const f3=v=>String(Math.round(Number(v)*100)/100);
