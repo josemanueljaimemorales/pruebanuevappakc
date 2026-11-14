@@ -180,7 +180,7 @@ details.reglas p{font-size:12.5px;color:#d6e3f2;line-height:1.5;margin:8px 0 0}
     <div class="aps" id="aps"></div>
     <details class="reglas"><summary>¿Cómo se califica?</summary>
       <p><span class="tipo O">OBLIGATORIOS</span> Nota de partida = 9.0 + 0.3 por bono (máx. 3) + 0.1 si plantó (máx. 10; salto: el valor de su salto + 0.1). Caída −0.5, parte omitida −1.0, parte a medias −0.5 (en «Otras deducciones»); el bono no cuenta si hubo caída o error grande en ese elemento (Manual de Competencia Juvenil, p. 19). <b>Se cuentan cada vez</b>: caídas, partes omitidas o a medias, balanceos intermedios, pausas y ayudas; el error de composición, <b>una sola vez</b>. Salto: segundo intento −1.0 y nunca menos de 1.00.</p>
-      <p><span class="tipo L">LIBRES</span> Nota de partida = la de su rutina (editor de rutinas). Caída −1.0 (Código FIG; N7 y N8 también, por el manual USAG). «Elemento no presentado o caída»: no lo presentó resta su valor (si quedan menos de 6: N7 y N8 −1.0 por cada uno que falte; 9, 10 y FIG con la tabla FIG); se cayó cuenta la caída y el elemento conserva su valor. «Plantó»: N7 nada; N8 según la salida (B +0.2, C +0.3, D+ +0.4) o el salto; 9, 10 y FIG +0.1 con salida C o mayor. N8 suma bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4). Deducciones de ejecución como en el Código FIG: pequeña 0.1, mediana 0.3, grande 0.5 (el manual USAG solo las cambia a 0.1/0.2/0.3 en obligatorios). «Deducciones neutrales» (se restan de la nota final): salirse del área en piso o caer fuera de la zona en salto (0.1 un pie o mano; 0.3 dos pies, dos manos u otra parte del cuerpo) y, si lo tenía en su rutina, no presentar la balanza (0.3), el mortal doble (0.3, 9, 10 y FIG) o el impulso al apoyo invertido en anillos (0.3, 9, 10 y FIG). <b>Se cuentan cada vez</b>: caídas (−1.0 cada una), salirse del área, vuelos intermedios (−0.5; en N7 máximo −0.5 en total) y ayudas del entrenador (−1.0); la balanza, el mortal doble, el impulso y el intento perdido en salto, <b>una sola vez</b>. «Otras deducciones» sirve para casos extraordinarios: se puede escribir lo que pasó y cuánto se resta.</p>
+      <p><span class="tipo L">LIBRES</span> Nota de partida = la de su rutina (editor de rutinas). Caída −1.0 (Código FIG; N7 y N8 también, por el manual USAG). «Elemento no presentado o caída»: no lo presentó resta su valor (si quedan menos de 6: N7 y N8 −1.0 por cada uno que falte; 9, 10 y FIG con la tabla FIG); se cayó cuenta la caída y el elemento conserva su valor. «Plantó» (el bono sale solo de la salida o el salto de su rutina): N7 nada; N8 según la salida (B +0.2, C +0.3, D o más +0.4) o el salto (agrupado o carpado +0.2, extendido o con medio giro +0.3, agrupado con giro +0.3, extendido con 1 giro o más +0.4; acuerdos FMG del manual); 9, 10 y FIG +0.1 con salida C o mayor (en arzón no hay; en salto, solo si tiene mortal). N8 suma bono por ejecución (8.6 +0.1 · 8.9 +0.2 · 9.2 +0.3 · 9.5 +0.4). Deducciones de ejecución como en el Código FIG: pequeña 0.1, mediana 0.3, grande 0.5 (el manual USAG solo las cambia a 0.1/0.2/0.3 en obligatorios). «Deducciones neutrales» (se restan de la nota final): salirse del área en piso o caer fuera de la zona en salto (0.1 un pie o mano; 0.3 dos pies, dos manos u otra parte del cuerpo) y, si lo tenía en su rutina, no presentar la balanza (0.3), el mortal doble (0.3, 9, 10 y FIG) o el impulso al apoyo invertido en anillos (0.3, 9, 10 y FIG). <b>Se cuentan cada vez</b>: caídas (−1.0 cada una), salirse del área, vuelos intermedios (−0.5; en N7 máximo −0.5 en total) y ayudas del entrenador (−1.0); la balanza, el mortal doble, el impulso y el intento perdido en salto, <b>una sola vez</b>. «Otras deducciones» sirve para casos extraordinarios: se puede escribir lo que pasó y cuánto se resta.</p>
     </details>
     <div id="registro"></div>
     <button class="btn verde" type="button" id="btnResultado" style="width:100%;margin-top:6px">Ver resultado del all around →</button>
@@ -284,13 +284,31 @@ function notaO(a,k,d,ses){
 const vistaDe=(a,k)=>((a.vista||{})[k])||{np:0,rows:[]};
 const letraSalida=(a,k)=>{const r=vistaDe(a,k).rows||[];return String((r[r.length-1]||{}).l||"").toUpperCase()};
 const cOMas=l=>LETRAS.indexOf(l)>=2;
-function plantEditor(a,k){const nv=nivelDe(a);if(nv==="7"||nv==="8"||!(a.pe||{})[k])return 0;if(k==="ARZON")return 0;return k==="SALTO"||cOMas(letraSalida(a,k))?0.1:0}
+// Salto de libres: tipo del primer salto de su rutina, con la descripción del Código FIG (elementos.json, el mismo
+// del editor) por su número; si no está, por el nombre que tiene en la rutina.
+let ELEM={};
+const N8_SALTO_V={MA:0.2,EX:0.3,AG:0.3,EG:0.4};
+function tipoSalto(a){
+  const r=(vistaDe(a,"SALTO").rows||[])[0];if(!r)return null;
+  const e=ELEM["SALTO|"+r.g+"|"+r.id];
+  const t=" "+(((e&&e.d)||"").split("(")[0]+" "+r.n).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")+" ";
+  if(!/mortal|tsuk|kasam|yurch|cuervo|roche|akopian|blanik|dragul|kroll|nemov|hutcheon/.test(t))return {mortal:false,cat:"",txt:"sin mortal"};
+  let g=0;for(const m of t.matchAll(/(\d)\/(\d)|½/g)){const v=m[0]==="½"?0.5:(+m[1])/(+m[2]);if(v>=0.5)g=Math.max(g,v)}
+  if(!g&&/con (un )?giro /.test(t))g=1;  // «con giro» sin decir cuánto (nombre puesto en la rutina)
+  const ext=/ ext|extend/.test(t);
+  const cat=g>=1?(ext?"EG":"AG"):g?(ext?"EX":"AG"):(ext?"EX":"MA");
+  return {mortal:true,cat,txt:{MA:"agrupado o carpado",EX:ext&&g?"extendido con medio giro":"extendido",AG:"agrupado o carpado con giro",EG:"extendido con 1 giro o más"}[cat]};
+}
+function plantEditor(a,k){const nv=nivelDe(a);if(nv==="7"||nv==="8"||!(a.pe||{})[k])return 0;if(k==="ARZON")return 0;if(k==="SALTO"){const ts=tipoSalto(a);return ts&&!ts.mortal?0:0.1}return cOMas(letraSalida(a,k))?0.1:0}
 function bonoPlant(a,k,d){
   const nv=nivelDe(a);if(!d||!d.p||nv==="7")return 0;
-  if(nv==="8"){if(k==="SALTO"){const o=N8_SALTO.find(x=>x[0]===d.sb)||N8_SALTO[0];return o[2]}const l=letraSalida(a,k);return N8_SALIDA[l]!=null?N8_SALIDA[l]:(LETRAS.indexOf(l)>=3?0.4:0)}
-  if(k==="ARZON")return 0;return k==="SALTO"||cOMas(letraSalida(a,k))?0.1:0;
+  if(nv==="8"){if(k==="SALTO"){const ts=tipoSalto(a);if(ts)return ts.mortal?N8_SALTO_V[ts.cat]:0;const o=N8_SALTO.find(x=>x[0]===d.sb)||N8_SALTO[0];return o[2]}const l=letraSalida(a,k);return N8_SALIDA[l]!=null?N8_SALIDA[l]:(LETRAS.indexOf(l)>=3?0.4:0)}
+  if(k==="ARZON")return 0;if(k==="SALTO"){const ts=tipoSalto(a);return ts&&!ts.mortal?0:0.1}return cOMas(letraSalida(a,k))?0.1:0;
 }
-function etiquetaPlant(a,k,d){if(tipoDe(a)==="O")return "Plantó +0.1";const nv=nivelDe(a);if(nv==="7")return "";const v=bonoPlant(a,k,{...(d||{}),p:1});return v>0?`Plantó +${v.toFixed(1)}`:"Plantó (sin bono)"}
+function etiquetaPlant(a,k,d){if(tipoDe(a)==="O")return "Plantó +0.1";const nv=nivelDe(a);if(nv==="7")return "";const v=bonoPlant(a,k,{...(d||{}),p:1});
+  let por="";if(k==="SALTO"){const ts=tipoSalto(a);por=ts?"salto "+ts.txt:""}else{const l=letraSalida(a,k);por=l?"salida "+l:""}
+  if(k==="ARZON"&&nv!=="8")por="en arzón no hay bono";
+  return v>0?`Plantó +${v.toFixed(1)}${por?" · "+por:""}`:`Plantó (sin bono${por?": "+por:""})`}
 function notaL(a,k,d,ses){
   d=d||{};if(d.x)return {np:0,nf:0,nb:0,fuera:true,base:0};
   const v=vistaDe(a,k),rows=v.rows||[];
@@ -366,7 +384,7 @@ function controlesL(a,d){
     (nTot&&!nAb?`<div class="elsum">${ns.filter(([id])=>nn[id]).map(([id,t,v])=>`<span class="mk nu">${esc(t)} −${v.toFixed(1)}${nn[id]>1?" ×"+nn[id]:""}</span>`).join("")}</div>`:"")+
     (nAb?`<div class="elpanel"><span class="elab">Se restan de la nota final. Las de «no presentó» solo si lo tenía en su rutina.</span>${ns.map(([id,t,v,uno])=>`<div class="nurow"><span class="eln">${esc(t)}<small>−${v.toFixed(1)}${uno?"":" cada vez"}</small></span><button type="button" class="nb" data-nu="${id}" data-dv="-1" aria-label="Quitar">−</button><output>${nn[id]||0}</output><button type="button" class="nb" data-nu="${id}" data-dv="1" aria-label="Sumar"${uno&&nn[id]?" disabled":""}>+</button></div>`).join("")}</div>`:"");
   return `<div class="elems">${elems}${neu}${panelOtras(a,d)}</div>
-    <div class="extra">${nivelDe(a)==="7"?'<span class="elab">N7: sin bono por plantar</span>':`<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">${esc(etiquetaPlant(a,ap,d))}</button>${nivelDe(a)==="8"&&ap==="SALTO"?`<select class="vsel" data-sel="sb" aria-label="Tipo de salto">${N8_SALTO.map(o=>`<option value="${o[0]}"${(d.sb||"MA")===o[0]?" selected":""}>${esc(o[1])} +${o[2]}</option>`).join("")}</select>`:""}`}</div>
+    <div class="extra">${nivelDe(a)==="7"?'<span class="elab">N7: sin bono por plantar</span>':`<button type="button" class="plant" data-p="1" aria-pressed="${!!d.p}">${esc(etiquetaPlant(a,ap,d))}</button>${nivelDe(a)==="8"&&ap==="SALTO"&&!tipoSalto(a)?`<select class="vsel" data-sel="sb" aria-label="Tipo de salto">${N8_SALTO.map(o=>`<option value="${o[0]}"${(d.sb||"MA")===o[0]?" selected":""}>${esc(o[1])} +${o[2]}</option>`).join("")}</select>`:""}`}</div>
     <div class="campo"><label>CAÍDAS (−${caidaDe(actual,"L")} cada una)${fe.length?` <span class="bej">+${fe.length} en elementos</span>`:""}</label><div class="contador"><button type="button" data-c="-1" aria-label="Quitar caída">−</button><output class="${d.c?"hay":""}">${d.c||0}</output><button type="button" data-c="1" aria-label="Sumar caída">+</button></div></div>`;
 }
 function pintarRegistro(){
@@ -541,7 +559,7 @@ async function plantelL(db){
   const titulo=n=>String(n).toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());
   const ordNiv={"7":1,"8":2,"9":3,"10":4,"FIG":5};
   return Object.keys(at).filter(n=>!bajas.has(n)&&!/^PRUEBA/i.test(n)&&at[n]&&at[n].vista).map(n=>{const a=at[n],v={};
-      APS.forEach(([k])=>{const x=(a.vista||{})[k];if(x)v[k]={np:Number(x.np)||0,rows:(x.rows||[]).map(r=>({n:String(r.n||""),vd:String(r.vd??r.l??""),l:String(r.l||"")}))}});
+      APS.forEach(([k])=>{const x=(a.vista||{})[k];if(x)v[k]={np:Number(x.np)||0,rows:(x.rows||[]).map(r=>({n:String(r.n||""),vd:String(r.vd??r.l??""),l:String(r.l||""),g:r.g??"",id:String(r.id??"")}))}});
       const o={k:"L_"+clave(n),tipo:"L",apodo:titulo(n),nombre:n,nivel:String(a.nivel||""),vista:v,pe:a.p||{}};o.grupo="Libres · Nivel "+nivelDe(o);return o})
     .sort((x,y)=>(ordNiv[nivelDe(x)]||9)-(ordNiv[nivelDe(y)]||9)||(orden.indexOf(x.nombre)-orden.indexOf(y.nombre))||x.apodo.localeCompare(y.apodo,"es"));
 }
@@ -563,6 +581,7 @@ async function anterioresViejos(db){
     const [pO,pL]=await Promise.all([plantelO().catch(e=>{console.error(e);return []}),plantelL(db).catch(e=>{console.error(e);return []})]);
     plantel=pO.concat(pL);
     try{const r=await fetch("../rutinas/obligatorios.json",{cache:"no-store"});SALTOS=(await r.json()).salto||{}}catch(e){console.warn("Saltos de obligatorios:",e)}
+    try{const r=await fetch("../rutinas/elementos.json",{cache:"no-store"});ELEM=(await r.json()).E||{}}catch(e){console.warn("Código FIG (elementos.json):",e)}
     viejos=await anterioresViejos(db);
     const s=await ref.get();doc=s.exists?s.data():{};
     if(!doc.actual){actual=nuevaSesion();await ref.set({actual},{merge:true})}else actual=doc.actual;
