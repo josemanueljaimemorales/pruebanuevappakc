@@ -8,16 +8,17 @@
 :root{--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff}
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
-.wrap{max-width:820px;margin:auto;padding:22px 16px 60px}
+.wrap{max-width:860px;margin:auto;padding:22px 16px 60px}
 .eyebrow{color:#68b4ff;font-size:11px;font-weight:800;letter-spacing:.16em}
 h1{margin:6px 0 4px;font-size:28px}
-p.sub{color:var(--muted);font-size:14px;margin:0 0 18px}
-h2{font-size:15px;letter-spacing:.08em;color:#cfe2fa;margin:18px 0 10px}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--text);background:linear-gradient(160deg,#10243a,#0a1727);border:1px solid var(--line);border-radius:18px;padding:18px}
-.card .ico{font-size:30px}
-.card b{display:block;font-size:17px}
-.card small{color:var(--muted);font-size:12px}
+p.sub{color:var(--muted);font-size:14px;margin:0 0 6px}
+h2{font-size:13px;letter-spacing:.12em;color:#cfe2fa;margin:22px 0 10px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{display:flex;gap:12px;align-items:center;text-decoration:none;color:var(--text);background:linear-gradient(160deg,#10243a,#0a1727);border:1px solid var(--line);border-radius:16px;padding:15px}
+.card:hover{border-color:#3b79b5}
+.card .ico{font-size:26px;width:34px;text-align:center;flex:none}
+.card b{display:block;font-size:15px}
+.card small{color:var(--muted);font-size:12px;line-height:1.35}
 .card.off{opacity:.5;pointer-events:none}
 .card .tag{display:inline-block;margin-top:4px;font-size:10px;font-weight:800;letter-spacing:.06em;background:#2a3d55;color:#cfe2fa;border-radius:999px;padding:2px 8px}
 @media(max-width:560px){.cards{grid-template-columns:1fr}}
@@ -27,12 +28,42 @@ h2{font-size:15px;letter-spacing:.08em;color:#cfe2fa;margin:18px 0 10px}
 <div class="wrap">
   <div class="eyebrow">ÁGUILAS KC · SOLO ENTRENADORES</div>
   <h1>Herramientas del entrenador</h1>
-  <p class="sub">Registros rápidos para el entrenamiento.</p>
-  <h2>ALL AROUND</h2>
+  <p class="sub">Todo lo que solo el entrenador puede hacer y que cambia lo que ven los atletas y los papás en la app.</p>
+
+  <h2>COMPETENCIAS Y ALL AROUND</h2>
   <div class="cards">
-    <a class="card" href="allaround-obligatorios.html"><span class="ico">🤸‍♂️</span><span><b>All around de obligatorios</b><small>Niveles 3 a 6 · bonos, caídas y deducciones por aparato</small></span></a>
+    <a class="card" href="../reportes/entrenadores/index.html"><span class="ico">🏆</span><span><b>Subir información de competencia</b><small>Notas por aparato, lugar y fotos de los más eficientes</small></span></a>
+    <a class="card" href="allaround-obligatorios.html"><span class="ico">🤸‍♂️</span><span><b>All around de obligatorios</b><small>Niveles 3 a 6 · bonos, caídas y deducciones</small></span></a>
     <a class="card off" aria-disabled="true"><span class="ico">🏅</span><span><b>All around de libres</b><small>Niveles 7 a FIG</small><br><span class="tag">PRÓXIMAMENTE</span></span></a>
   </div>
+
+  <h2>MVP</h2>
+  <div class="cards">
+    <a class="card" href="../mvp/index.html"><span class="ico">⭐</span><span><b>Capturar MVP</b><small>Registros de MVP del día («Registros de MVP»)</small></span></a>
+    <a class="card" href="../mvp/index.html"><span class="ico">📸</span><span><b>Subir fotos del MVP</b><small>Las dos fotos de la semana («Subir fotos MVP»)</small></span></a>
+  </div>
+
+  <h2>DESARROLLO TÉCNICO</h2>
+  <div class="cards">
+    <a class="card" href="../normativos/index.html"><span class="ico">✅</span><span><b>Normativos</b><small>Editar los avances de cada atleta</small></span></a>
+    <a class="card" href="../gav-training/index.html"><span class="ico">🎯</span><span><b>Trabajo en desarrollo del atleta</b><small>Consolidar, cambiar estado y agregar elementos</small></span></a>
+    <a class="card" href="../rutinas/editor.html"><span class="ico">📝</span><span><b>Editor de rutinas</b><small>Libres y obligatorios</small></span></a>
+  </div>
+
+  <h2>FUERZA Y CARGA</h2>
+  <div class="cards">
+    <a class="card" href="../fuerza/index.html"><span class="ico">💪</span><span><b>Fuerza</b><small>Marcar ejercicios por atleta y reiniciar el conteo</small></span></a>
+    <a class="card" href="../fuerzafig/index.html"><span class="ico">🏋️‍♂️</span><span><b>Fuerza FIG</b><small>Incluye los planes de adaptación</small></span></a>
+    <a class="card" href="../cargas/index.html"><span class="ico">📊</span><span><b>Carga semanal</b><small>Edición del entrenador («Edición Entrenador»)</small></span></a>
+  </div>
+
+  <section>
+  <h2>ADMINISTRACIÓN</h2>
+  <div class="cards">
+    <a class="card" href="../fuentes/index.html"><span class="ico">🗂️</span><span><b>Fuentes de datos</b><small>Subir y revisar los Excel de la app</small></span></a>
+    <a class="card" href="../calendario/index.html"><span class="ico">🗓️</span><span><b>Calendario de la app</b><small>Del MACRO</small></span></a>
+  </div>
+  </section>
 </div>
 </body>
 </html>
