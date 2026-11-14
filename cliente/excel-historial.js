@@ -152,6 +152,16 @@
       };
       bloques.forEach(b => { const o = b.filas.filter(x => x.orig); if (!o.length) return; const k = b.filas.indexOf(o[o.length - 1]);
         if (k < b.filas.length - 1 && k > 0) COLS.forEach(c => { if (c !== "A") b.filas[k].st[c] = conBorde(b.filas[k].st[c], bordeMedio(c)); }); });
+      // Colores de nivel (C) y de categoría (D), como en el resto del Excel (Manu, 14-nov-2026: «respeta los colores de nivel
+      // y de categoría»): para cada valor, el relleno que más se usa con él.
+      const rellenoDe = {C: {}, D: {}};
+      bloques.forEach(b => b.filas.forEach(x => { if (!x.orig) return; ["C", "D"].forEach(c => {
+        const cel = x.orig.celdas[c], v = norm(valor(cel)), st = cel && cel.getAttribute("s"), xf = st != null && xfLista[Number(st)];
+        if (!v || !xf) return; const m = rellenoDe[c][v] = rellenoDe[c][v] || {}; const fid = xf.getAttribute("fillId") || "0"; m[fid] = (m[fid] || 0) + 1; }); }));
+      const rellenoPara = (c, v) => { const m = rellenoDe[c][norm(v)]; return m ? Number(Object.entries(m).sort((a, b) => b[1] - a[1])[0][0]) : null; };
+      bloques.forEach(b => b.filas.forEach(x => { if (!x.nube) return; [["C", x.nube.NIVEL], ["D", x.nube.CAT]].forEach(([c, v]) => {
+        if (x.orig && norm(valor(x.orig.celdas[c])) === norm(v)) return;  // sin cambio: se queda como estaba
+        const fid = rellenoPara(c, v); if (fid != null) x.st[c] = conRelleno(x.st[c], fid); }); }));
       bloques.forEach(b => {
         // Color de ciclo en las copas nuevas.
         b.filas.forEach(x => { if (x.nube && !x.orig) { const c = CICLOS[x.nube.CICLO]; if (c) x.st.B = conRelleno(x.st.B, c()); } });
