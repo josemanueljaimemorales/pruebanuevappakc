@@ -13,6 +13,7 @@ body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#
 h1{margin:6px 0 4px;font-size:28px;line-height:1.1}
 .copa{font-size:20px;font-weight:900;color:var(--gold);margin:0}
 .sub{color:var(--muted);font-size:13px;margin:4px 0 0}
+.hist{display:inline-block;margin-top:12px;border:1px solid #3b79b5;background:#163a60;color:#fff;border-radius:12px;padding:10px 14px;font-weight:900;font-size:14px;text-decoration:none}
 .ganadores{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
 .gan{background:linear-gradient(160deg,#10243a,#0a1727);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
 .gan .foto{aspect-ratio:4/5;max-height:440px;width:100%;background:#071321;display:grid;place-items:center;font-size:64px}
@@ -80,6 +81,7 @@ table.det-t{min-width:0}
   <h1>El atleta más eficiente de la copa</h1>
   <p class="copa" id="copa">Cargando…</p>
   <p class="sub" id="sub"></p>
+  <a class="hist" href="historial.html">📜 Historial de los más eficientes</a>
   <div id="contenido"></div>
 </div>
 <script>

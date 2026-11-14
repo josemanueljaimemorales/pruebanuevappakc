@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Historial del atleta más eficiente · AKC</title>
+<style>
+:root{--bg:#07111f;--panel:#0c1a2b;--line:#213a55;--text:#f3f7fc;--muted:#9eb1c8;--blue:#54a7ff;--green:#64d8b2;--gold:#ffd166;--l:#54a7ff;--o:#31e76b}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 20% 0,#123052 0,#07111f 42%,#050b12 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:900px;margin:auto;padding:22px 16px 60px}
+.back{display:inline-block;border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;text-decoration:none}
+.eyebrow{color:#68b4ff;font-size:11px;font-weight:800;letter-spacing:.16em;margin-top:14px}
+h1{margin:6px 0 4px;font-size:28px;line-height:1.1}
+.desde{color:var(--gold);font-weight:700;font-size:15px;margin:10px 0}
+.estado{color:var(--muted);font-size:13px;min-height:18px}
+.panel{background:linear-gradient(145deg,rgba(17,34,51,.94),rgba(4,12,21,.94));border:1px solid var(--line);border-radius:18px;padding:16px;margin:0 0 14px}
+.panel h2{margin:0 0 12px;font-size:17px}
+.bloques{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bloque h3{margin:0 0 8px;font-size:13px;letter-spacing:.08em;padding:6px 10px;border-radius:10px;background:rgba(84,167,255,.14);border-left:4px solid var(--l)}
+.bloque.o h3{background:rgba(49,231,107,.12);border-left-color:var(--o)}
+.bloque h3 small{display:block;font-weight:600;letter-spacing:0;color:var(--muted);font-size:11px}
+.conteo{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.conteo li{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.conteo .pos{width:28px;text-align:center;font-size:18px}
+.conteo .quien{flex:1;min-width:0}
+.conteo .quien b{display:block;font-size:15px;overflow-wrap:anywhere}
+.conteo .quien small{color:var(--muted);font-size:12px}
+.conteo .veces{font-weight:900;font-size:20px;color:var(--gold);white-space:nowrap}
+.conteo .veces span{font-size:12px;font-weight:600;color:var(--muted)}
+.vacio{color:var(--muted);font-size:13px;padding:6px 2px}
+.copa{border-top:1px solid var(--line);padding:12px 0}
+.copa:first-child{border-top:0;padding-top:0}
+.copa .cab{margin-bottom:8px}
+.copa .cab b{font-size:15px}
+.copa .cab small{display:block;color:var(--muted);font-size:12px}
+.copa .cab .ult{font-size:11px;font-weight:800;color:#06131f;background:var(--gold);border-radius:999px;padding:2px 8px;margin-left:6px}
+.gans{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border-left:4px solid var(--l)}
+.g.o{border-left-color:var(--o)}
+.g small{display:block;color:var(--muted);font-size:11px;letter-spacing:.06em}
+.g b{display:block;font-size:15px;margin-top:2px;overflow-wrap:anywhere}
+.g .ef{color:var(--green);font-weight:800;font-size:13px}
+.g .det{color:var(--muted);font-size:12px}
+.nota{font-size:12px;color:var(--muted);text-align:center;margin:8px 0 24px}
+@media(max-width:560px){.bloques,.gans{grid-template-columns:1fr}h1{font-size:24px}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<script src="../../cliente/fuentes.js"></script>
+<script src="../../cliente/eficiencia.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← El más eficiente</a>
+  <div class="eyebrow">ÁGUILAS KC · GIMNASIA ARTÍSTICA VARONIL</div>
+  <h1>Historial del atleta más eficiente</h1>
+  <p class="desde" id="desde"></p>
+  <div class="estado" id="estado" role="status">Cargando…</div>
+  <section class="panel" id="panelConteo" hidden>
+    <h2>🏆 ¿Cuántas veces ha sido el más eficiente?</h2>
+    <div class="bloques" id="conteo"></div>
+  </section>
+  <section class="panel" id="panelCopas" hidden>
+    <h2>📅 Copa por copa</h2>
+    <div id="copas"></div>
+  </section>
+  <p class="nota">Se arma solo con la información de cada copa que se sube en «Subir información de competencia». Si empatan en eficiencia, gana el de mayor AA.</p>
+</div>
+<script>
+"use strict";
+// Historial del atleta más eficiente de cada copa (Manu, 14-nov-2026), en dos bloques: Libres y Obligatorios.
+// Se calcula con AKC_EFIC.ranking sobre competenciasAKC/estado; no guarda nada. Nombres de los datos: siempre textContent.
+const FB={apiKey:"AIzaSyBNRAkDXLlw5fyiT01-ZfUyB0A7ShsAxyg",authDomain:"akc-con-reporte.firebaseapp.com",projectId:"akc-con-reporte"};
+const E=window.AKC_EFIC;
+const $=id=>document.getElementById(id);
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+const BLOQUES=[['L','LIBRES','Niveles 7, 8, 9, 10 y FIG'],['O','OBLIGATORIOS','Niveles 3, 4, 5 y 6']];
+function fechaTxt(f){if(!f)return '';const d=new Date(f+'T12:00:00');return isNaN(d)?f:d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'})}
+
+function pintar(estado){
+  // Copas con resultados, la más reciente primero, con su ganador de cada bloque.
+  const copas=E.comps(estado).map(c=>{const rk=E.ranking(estado,c.id);return {c,L:(rk.L||[]).find(x=>x.compitio),O:(rk.O||[]).find(x=>x.compitio)}}).filter(x=>x.L||x.O);
+  $('estado').textContent=copas.length?'':'Todavía no hay copas con resultados.';
+  $('panelConteo').hidden=$('panelCopas').hidden=!copas.length;
+  $('desde').textContent=copas.length?'Desde: '+copas[copas.length-1].c.nombre+' · '+copas.length+(copas.length===1?' copa':' copas'):'';
+  if(!copas.length)return;
+
+  const conteo=$('conteo');conteo.innerHTML='';
+  BLOQUES.forEach(([g,tit,sub])=>{
+    const b=el('div','bloque'+(g==='O'?' o':''));const h=el('h3',null,(g==='L'?'🟦 ':'🟩 ')+tit);h.appendChild(el('small',null,sub));b.appendChild(h);
+    const veces=new Map();
+    copas.forEach(x=>{const w=x[g];if(!w)return;const v=veces.get(w.nombre)||{n:0,nivel:w.nivel,gav:w.gav};v.n++;veces.set(w.nombre,v)});
+    if(!veces.size){b.appendChild(el('div','vacio','Todavía no hay ganadores.'));conteo.appendChild(b);return}
+    const ol=el('ol','conteo');let pos=0,antes=null;
+    [...veces].sort((a,b2)=>b2[1].n-a[1].n||a[0].localeCompare(b2[0],'es')).forEach(([nombre,v],i)=>{
+      if(v.n!==antes){pos=i+1;antes=v.n}
+      const li=el('li');li.appendChild(el('span','pos',pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':String(pos)));
+      const q=el('span','quien');q.appendChild(el('b',null,nombre));q.appendChild(el('small',null,[E.nivelTexto(v.nivel),v.gav].filter(Boolean).join(' · ')));li.appendChild(q);
+      const c=el('span','veces',String(v.n));c.appendChild(el('span',null,v.n===1?' vez':' veces'));li.appendChild(c);ol.appendChild(li);
+    });
+    b.appendChild(ol);conteo.appendChild(b);
+  });
+
+  const box=$('copas');box.innerHTML='';
+  copas.forEach((x,i)=>{
+    const a=el('article','copa');const cab=el('div','cab');const t=el('b',null,x.c.nombre);
+    if(i===0)t.appendChild(el('span','ult','Última copa'));cab.appendChild(t);
+    if(x.c.fecha)cab.appendChild(el('small',null,fechaTxt(x.c.fecha)));a.appendChild(cab);
+    const gs=el('div','gans');
+    BLOQUES.forEach(([g,tit])=>{
+      const w=x[g],d=el('div','g'+(g==='O'?' o':''));d.appendChild(el('small',null,(g==='L'?'🟦 ':'🟩 ')+tit));
+      d.appendChild(el('b',null,w?w.nombre:'—'));
+      if(w){d.appendChild(el('span','ef',w.calc.ef.toFixed(1)+'% de eficiencia'));d.appendChild(el('div','det',[E.nivelTexto(w.nivel),'AA '+w.calc.aa.toFixed(3),w.r&&w.r.lugar!=null?w.r.lugar+'° en la copa'+(w.r.part?' de '+w.r.part:''):''].filter(Boolean).join(' · ')))}
+      gs.appendChild(d);
+    });
+    a.appendChild(gs);box.appendChild(a);
+  });
+}
+try{
+  if(!firebase.apps.length)firebase.initializeApp(FB);const db=firebase.firestore();if(window.AKC_FUENTES)AKC_FUENTES.conectarFirebase();
+  db.collection('competenciasAKC').doc('estado').onSnapshot(s=>pintar(s.exists?s.data():{}),e=>{$('estado').textContent='No se pudo cargar el historial: '+e.message});
+}catch(e){$('estado').textContent='No se pudo cargar el historial.'}
+</script>
+</body>
+</html>
