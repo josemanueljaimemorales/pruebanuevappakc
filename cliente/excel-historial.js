@@ -152,16 +152,42 @@
       };
       bloques.forEach(b => { const o = b.filas.filter(x => x.orig); if (!o.length) return; const k = b.filas.indexOf(o[o.length - 1]);
         if (k < b.filas.length - 1 && k > 0) COLS.forEach(c => { if (c !== "A") b.filas[k].st[c] = conBorde(b.filas[k].st[c], bordeMedio(c)); }); });
-      // Colores de nivel (C) y de categoría (D), como en el resto del Excel (Manu, 14-nov-2026: «respeta los colores de nivel
-      // y de categoría»): para cada valor, el relleno que más se usa con él.
+      // Colores de categoría (D), como en el resto del Excel (Manu, 14-nov-2026: «respeta los colores de nivel y de
+      // categoría»): para cada letra, el relleno que más se usa con ella.
       const rellenoDe = {C: {}, D: {}};
       bloques.forEach(b => b.filas.forEach(x => { if (!x.orig) return; ["C", "D"].forEach(c => {
         const cel = x.orig.celdas[c], v = norm(valor(cel)), st = cel && cel.getAttribute("s"), xf = st != null && xfLista[Number(st)];
         if (!v || !xf) return; const m = rellenoDe[c][v] = rellenoDe[c][v] || {}; const fid = xf.getAttribute("fillId") || "0"; m[fid] = (m[fid] || 0) + 1; }); }));
       const rellenoPara = (c, v) => { const m = rellenoDe[c][norm(v)]; return m ? Number(Object.entries(m).sort((a, b) => b[1] - a[1])[0][0]) : null; };
-      bloques.forEach(b => b.filas.forEach(x => { if (!x.nube) return; [["C", x.nube.NIVEL], ["D", x.nube.CAT]].forEach(([c, v]) => {
+      bloques.forEach(b => b.filas.forEach(x => { if (!x.nube) return; [["D", x.nube.CAT]].forEach(([c, v]) => {
         if (x.orig && norm(valor(x.orig.celdas[c])) === norm(v)) return;  // sin cambio: se queda como estaba
         const fid = rellenoPara(c, v); if (fid != null) x.st[c] = conRelleno(x.st[c], fid); }); }));
+      // Nivel (C): un color por nivel en todas las filas (Manu, 14-nov-2026), los mismos del concentrado de eficiencia
+      // (NIVEL_COLOR de eficiencia.js, de su Excel del Nacional). «4 H 3» toma el color de su primer número. En los
+      // colores oscuros la letra va en blanco.
+      const NIVEL_COLOR = {"3": "FFE699", "4": "2E75B5", "5": "548135", "6": "ED7D31", "7": "F4B083", "8": "BDD6EE", "9": "D0CECE", "10": "A8D08D", "FIG": "C55A11"};
+      const fontsEl = stDoc.getElementsByTagNameNS(NS, "fonts")[0];
+      const cacheF = {};
+      const fuenteBlanca = fontId => {
+        if (cacheF[fontId] != null) return cacheF[fontId];
+        const lst = [...fontsEl.getElementsByTagNameNS(NS, "font")], base = lst[Number(fontId) || 0];
+        const nf = base.cloneNode(true); [...nf.getElementsByTagNameNS(NS, "color")].forEach(c => c.parentNode.removeChild(c));
+        const col = stDoc.createElementNS(NS, "color"); col.setAttribute("rgb", "FFFFFFFF");
+        const ref = nf.getElementsByTagNameNS(NS, "sz")[0]; if (ref && ref.nextSibling) nf.insertBefore(col, ref.nextSibling); else nf.appendChild(col);
+        fontsEl.appendChild(nf); fontsEl.setAttribute("count", lst.length + 1);
+        return (cacheF[fontId] = String(lst.length));
+      };
+      const oscuro = hex => { const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16); return (0.299 * r + 0.587 * g + 0.114 * b) < 140; };
+      const conNivel = (s, nivel) => {
+        const t = norm(nivel), m = t.match(/^FIG|ELITE|^\d+/), clave = m ? (/^\d/.test(m[0]) ? m[0] : "FIG") : null, hex = clave && NIVEL_COLOR[clave];
+        if (!hex || s == null) return s;
+        let id = conRelleno(s, relleno(["FF" + hex], "FF" + hex));
+        if (oscuro(hex)) { const xf = xfLista[Number(id)], k = id + "|blanca"; if (cache[k] != null) return cache[k];
+          const nx = xf.cloneNode(true); nx.setAttribute("fontId", fuenteBlanca(xf.getAttribute("fontId") || "0")); nx.setAttribute("applyFont", "1");
+          xfs.appendChild(nx); xfLista.push(nx); xfs.setAttribute("count", xfLista.length); id = cache[k] = String(xfLista.length - 1); }
+        return id;
+      };
+      bloques.forEach(b => b.filas.forEach(x => { const nv = x.nube ? x.nube.NIVEL : valor(x.orig && x.orig.celdas.C); if (nv != null && nv !== "") x.st.C = conNivel(x.st.C, nv); }));
       bloques.forEach(b => {
         // Color de ciclo en las copas nuevas.
         b.filas.forEach(x => { if (x.nube && !x.orig) { const c = CICLOS[x.nube.CICLO]; if (c) x.st.B = conRelleno(x.st.B, c()); } });
