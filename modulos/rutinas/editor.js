@@ -454,6 +454,9 @@ function applySpecial(ap,items,res,nivel){
 // giros de apoyo atrás a la suspensión, art. 12.2.2 punto 5f; paralelas: mortales con recepción a braquial, art. 14.2.2 punto 5d).
 // N9 y N10 compiten con reglas de juvenil (Jr FIG): no se reconocen (tabla de penalizaciones: otro elemento prohibido).
 const JR_PROHIBIDOS=new Set(['ANILLOS|1|21','ANILLOS|1|22','PARALELAS|1|20','PARALELAS|1|24','PARALELAS|1|30','PARALELAS|1|34','PARALELAS|1|51','PARALELAS|1|54','PARALELAS|1|59','PARALELAS|2|45','PARALELAS|2|47','PARALELAS|2|48','PARALELAS|2|52','PARALELAS|2|54','PARALELAS|2|104','PARALELAS|2|106','PARALELAS|2|107','PARALELAS|2|113','PARALELAS|2|114','PARALELAS|2|117','PARALELAS|2|119','PARALELAS|3|10','PARALELAS|3|50','PARALELAS|3|52','PARALELAS|3|53','PARALELAS|3|59','PARALELAS|3|60','PARALELAS|3|66','PARALELAS|3|70','PARALELAS|3|72','PARALELAS|3|78','PARALELAS|3|83','PARALELAS|3|122','PARALELAS|3|123','PARALELAS|3|125','PARALELAS|3|126']);
+// Aclaraciones USAG/PDJ del Comité Técnico Varonil de la FMG para libres N7-N8.
+const esTinsica=r=>/ (tinsica|tinsika|rueda con 1\/4|rueda 1\/4|rueda con un cuarto) /.test(' '+nk(r?.n)+' ');
+const esTigre=r=>r?.k==='PISO|2|7'||/ tigre /.test(' '+nk(r?.n)+' ');
 function compute(ap,rows,nivel,plantada,opt){
   const res={dv:0,eg:0,cv:0,bon:0,nd:0,np:0,egDet:[],counted:new Set(),rep:new Set(),why:{},up:{},notes:[],dIdx:-1,vaults:[]};
   if(ap==='SALTO'){
@@ -476,6 +479,11 @@ function compute(ap,rows,nivel,plantada,opt){
     return res;
   }
   const items=rows.map((r,i)=>({i,r,val:valOf(r,nivel,ap),grp:grpOf(r,ap,nivel)}));
+  if(nivel==='N7'||nivel==='N8')items.forEach((it,i)=>{
+    // Piso: salto de tigre después de la tinsica sin fase de vuelo: no se reconoce.
+    if(ap==='PISO'&&it.r.svuelo&&esTigre(it.r)&&esTinsica(rows[i-1])&&it.val>0){it.val=0;res.rep.add(i);res.why[i]='Salto de tigre sin fase de vuelo después de la tinsica: no se reconoce (aclaración FMG N7–N8)';}
+    // Paralelas: parado de manos (II.1) y luego pirueta: solo se reconoce la pirueta.
+    const b=rows[i+1];if(ap==='PARALELAS'&&it.r.k==='PARALELAS|2|1'&&b&&/ (pirueta|giro|healy|stutzkehre|stutz|diamidov) /.test(txt(b))&&it.val>0){it.val=0;res.rep.add(i);res.why[i]=`Pirueta después del parado de manos ("${b.n}"): solo se reconoce la pirueta (aclaración FMG N7–N8)`;}});
   if(nivel==='N9'||nivel==='N10')items.forEach(it=>{if(it.r.k&&JR_PROHIBIDOS.has(it.r.k)&&it.val>0){it.val=0;res.rep.add(it.i);res.why[it.i]='Prohibido para juvenil (N9 y N10): elemento no reconocido';}});
   const seen=new Set();
   for(const it of items){const virt=(nivel==='N7'||nivel==='N8')&&ap==='PISO';
@@ -505,6 +513,25 @@ function compute(ap,rows,nivel,plantada,opt){
     const kipHS=kipAManos(a);
     const atras=/ (gigante|molino at(ras)?|stalder|quinta|salvada) /.test(tb)||/ 1\/2 g .*cubital/.test(tb);
     if(kipHS&&atras&&!/ (molino ad(elante)?|endo) /.test(tb))res.enotes.push(`Posible contrabalanceo: "${a.n}" y después "${b.n}". Error de composición -0.30 (jurado E) si van seguidos.`);});
+  if(nivel==='N7'||nivel==='N8'){
+    // Piso: el salto de tigre después de la tinsica solo vale con fase de vuelo.
+    if(ap==='PISO')rows.forEach((r,i)=>{if(esTigre(r)&&esTinsica(rows[i-1])&&!r.svuelo)res.enotes.push(`"${r.n}" después de la tinsica: solo se reconoce si tiene fase de vuelo (salto hacia arriba desde dos pies, altura visible). Si no la tuvo, márcalo en el elemento.`);});
+    // Fija: alemana y luego un impulso que invierte el sentido: la alemana vale A FIG y -0.3.
+    if(ap==='FIJA')rows.forEach((a,i)=>{const b=rows[i+1];if(!b||a.ct||FV_OPC[a.pv])return;
+      if(/ (alemana|aleman|kip|kipe|bascula) /.test(txt(a))&&(/ (gigante|molino at(ras)?|stalder|quinta|salvada|vuelta atras|vuelta libre atras|dominacion at(ras)?|inglesa) /.test(txt(b))||/ 1\/2 g .*cubital/.test(txt(b))))
+        res.enotes.push(`"${a.n}" y después "${b.n}": impulso que invierte el sentido después de la alemana. La alemana vale A FIG y -0.3 (aclaración FMG N7–N8).`);});
+    if(ap==='PARALELAS'){
+      // Subida al frente o Moy al apoyo y bajar enseguida a braquial: -0.3 por cambio de dirección.
+      rows.forEach((a,i)=>{const b=rows[i+1];if(!b)return;const ta=txt(a);
+        if(/ (moy|subida al frente|dominacion ad(elante)?) /.test(ta)&&!/ (braq|braquial|upper arm|apoyo invertido|ap inv|handstand) /.test(ta)&&bajaABraquial(b))
+          res.enotes.push(`"${a.n}" y enseguida "${b.n}" a braquial: -0.3 por cambio de dirección (aclaración FMG N7–N8).`);});
+      // Parado de manos II.1: si después del balanceo descendente no se enlaza un elemento, -0.3.
+      if(rows.length&&rows[rows.length-1].k==='PARALELAS|2|1')res.enotes.push(`"${rows[rows.length-1].n}" es el último elemento: si después del balanceo descendente no se enlaza un elemento, -0.3 (aclaración FMG N7–N8).`);
+    }
+    // Anillos: en los elementos con letra de incremento solo se aplican errores de -0.1 y -0.3.
+    if(ap==='ANILLOS'){const ex=rows.filter(r=>r.k&&USAG_ANILLOS_SUBE.has(r.k));
+      if(ex.length)res.enotes.push(`Excepción N7–N8 en ${ex.map(r=>`"${r.n}"`).join(', ')}: solo se aplican errores de -0.1 y -0.3; los de -0.5 se toman como -0.3. La posición debe corresponder al elemento.`);}
+  }
   // Paralelas (FIG, N9 y N10): después de llegar a manos balanceando atrás (vuelo o impulso a manos),
   // el siguiente elemento no puede bajar hacia adelante (Moy, Tippelt, molino/gigante, Kenmotsu, Bhavsar, Diamidov,
   // Makuts, Felge, Peters): contrabalanceo, -0.30 del jurado E (Código FIG 2025-2028, art. 14.2.1 4.a y 4.b).
@@ -782,6 +809,8 @@ function editPanel(r,i,a,pot){
   if(ui.ap==='PARALELAS'&&terminaEnL(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(LV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   else if(ui.ap==='PARALELAS'&&(llegaAManos(r)||alemanaAtras(r)))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(PV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t}</option>`).join('')}</select></label>`;
   if(ui.ap==='FIJA'&&r.g===2)h+=`<label>Al agarrar continúa con<select data-f="gig" data-i="${i}"><option value="" ${!r.gig?'selected':''}>Según el siguiente elemento</option><option value="gigante" ${r.gig==='gigante'?'selected':''}>Cae a gigante</option><option value="molino" ${r.gig==='molino'?'selected':''}>Cae a molino</option></select></label>`;
+  // Piso N7-N8: salto de tigre después de la tinsica, ¿tuvo fase de vuelo?
+  if(ui.ap==='PISO'&&(a.nivel==='N7'||a.nivel==='N8')&&esTigre(r)&&esTinsica(a.r.PISO[i-1]))h+=`<label>Fase de vuelo (después de la tinsica)<select data-f="svuelo" data-i="${i}"><option value="" ${!r.svuelo?'selected':''}>Sí: se reconoce</option><option value="1" ${r.svuelo?'selected':''}>No: no se reconoce</option></select></label>`;
   // Arzón: el flop o combinado puede seguir con un molino sin valor que corta la serie (como "a gigante" en fija).
   if(ui.ap==='ARZON'&&(CAT[r.k]?.flop==='flop'||CAT[r.k]?.flop==='comb'))h+=`<label>Después continúa con<select data-f="sm" data-i="${i}"><option value="" ${!r.sm?'selected':''}>Según el siguiente elemento</option><option value="1" ${r.sm?'selected':''}>Molino sin valor (corta la serie)</option></select></label>`;
   if(ui.ap==='FIJA'&&kipAManos(r))h+=`<label>Después hace (sin valor)<select data-f="pv" data-i="${i}"><option value="" ${!r.pv?'selected':''}>Según el siguiente elemento</option>${Object.entries(FV_OPC).map(([k,t])=>`<option value="${k}" ${r.pv===k?'selected':''}>${t} y sigue a gigante</option>`).join('')}</select></label>`;
@@ -878,6 +907,7 @@ root.addEventListener('change',e=>{
     if(f==='ct')r.ct=t.checked||undefined;
     if(f==='gig')r.gig=t.value||undefined;
     if(f==='sm')r.sm=t.value?1:undefined;
+    if(f==='svuelo')r.svuelo=t.value?1:undefined;
     if(f==='pv')r.pv=t.value||undefined;
     if(f==='cv')r.cv=t.value===''?undefined:t.value;
     if(f==='cvm'){if(t.value){r.c=true;r.cv=t.value;delete r.nc;}else{r.cv=undefined;r.c=false;}}
