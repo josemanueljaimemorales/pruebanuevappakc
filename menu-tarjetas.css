@@ -24,9 +24,11 @@
 
 /* MVP destacado: ocupa todo el ancho y sus dos fotos se ven grandes (Manu, 26-oct-2026) */
 .menu.tarjetas .btn.mvp{grid-column:1/-1;min-height:0;padding:14px 12px 14px}
-.menu.tarjetas .btn.mvp .vista{height:min(62vw,360px);gap:10px}
-.menu.tarjetas .btn.mvp .vista.dos img{max-width:none;border-radius:18px}
-.menu.tarjetas .btn.mvp .vista.una img{width:auto;max-width:100%;aspect-ratio:4/5}
+/* Carteles tamaño carta: se ven completos, sin recortar (Manu, 22-nov-2026) */
+.menu.tarjetas .btn.mvp .vista{height:auto;gap:10px;align-items:flex-start}
+.menu.tarjetas .btn.mvp .vista img{height:auto;aspect-ratio:8.5/11;object-fit:contain}
+.menu.tarjetas .btn.mvp .vista.dos img{width:0;max-width:none;border-radius:18px}
+.menu.tarjetas .btn.mvp .vista.una img{width:min(78%,360px);max-width:100%}
 .menu.tarjetas .btn.mvp .btn-copy strong{font-size:16px}
 .menu.tarjetas .btn.mvp .btn-copy small{font-size:13px}
 
